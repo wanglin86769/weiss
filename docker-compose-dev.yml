@@ -1,4 +1,53 @@
 services:
+  epicsbase:
+    image: epicsbase
+    build:
+      context: ./
+      dockerfile: docker/epicsBase/Dockerfile
+  pvserver:
+    build:
+      context: ./
+      dockerfile: docker/pvserver/Dockerfile
+    restart: always
+    network_mode: host
+    tty: true
+    stdin_open: true
+    env_file: .env
+    environment:
+      - ALARM_DATABASE=localhost
+      - ALARM_DATABASE_REPLICA_SET_NAME=devrs
+      - LOADSAVE_DATABASE=localhost
+      - LOADSAVE_DATABASE_REPLICA_SET_NAME=devrs
+      - ADMIN_DATABASE=localhost
+      - ADMIN_DATABASE_REPLICA_SET_NAME=devrs
+      - DEMO_ARCHIVER=http://localhost:17668
+      - pvServerLogLevel=INFO
+      - pvServerLogFile=/pvServer/log/pvServerLogFile
+      - pvServerPort=9001
+      - pvServerURL=http://127.0.0.1
+    volumes:
+      - ./certificates:/certificates/
+      - ./users:/pvServer/userAuthentication/users
+      - ./log/:/pvServer/log
+      - ./build:/pvServer/build
+    depends_on:
+      - epicsbase
+  nginx:
+    image: nginx:1.27.0
+    restart: always
+    network_mode: host
+    depends_on:
+      - pvserver
+    entrypoint:
+      - /custom/setupNginx.dev.sh
+      - /docker-entrypoint.sh
+    command: ["nginx", "-g", "daemon off;"]
+    volumes:
+      - ./nginx/setupNginx.dev.sh:/custom/setupNginx.dev.sh
+      - ./nginx/nginx.dev.conf:/custom/nginx.dev.conf
+      - ./nginx/nginx.httpredirect.conf:/custom/nginx.httpredirect.conf
+      - ./certificates:/etc/nginx/certificates
+    env_file: .env
   weiss-dev:
     build:
       context: "."
@@ -11,22 +60,9 @@ services:
       - /app/node_modules # Prevent host node_modules from interfering
     image: weiss-dev:${GIT_TAG}
     container_name: weiss-dev
-    network_mode: "host"
+    ports:
+      - "3001:3000"
     environment:
       - NODE_ENV=development
-    depends_on:
-      - weiss-pvapyws
-  weiss-pvapyws:
-    build:
-      context: ./pvaPyWS
-    volumes:
-      - ./pvaPyWS:/app
-    image: weiss-pvapyws:${GIT_TAG}
-    container_name: weiss-pvapyws
-    ports:
-      - "8080:8080" 
-    restart: always
-    environment:
-      EPICS_DEFAULT_PROTOCOL: ${EPICS_DEFAULT_PROTOCOL}
-      EPICS_CA_ADDR_LIST: ${EPICS_CA_ADDR_LIST}
-      EPICS_PVA_ADDR_LIST: ${EPICS_PVA_ADDR_LIST}
+    # depends_on:
+    #   - weiss-pvapyws

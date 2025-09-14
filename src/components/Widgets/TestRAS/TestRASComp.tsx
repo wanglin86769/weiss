@@ -1,9 +1,9 @@
 import React from "react";
 import type { WidgetUpdate } from "../../../types/widgets";
-import { FLEX_ALIGN_MAP, RUNTIME_MODE } from "../../../constants/constants";
+import { EDIT_MODE, FLEX_ALIGN_MAP, RUNTIME_MODE } from "../../../constants/constants";
 import { useEditorContext } from "../../../context/useEditorContext";
 import AlarmBorder from "../../AlarmBorder/AlarmBorder";
-import TextOutput from "ReactAutomationStudio/components/BaseComponents/TextOutput";
+import TextUpdate from "ReactAutomationStudio/components/BaseComponents/TextUpdate";
 
 const TestRASComp: React.FC<WidgetUpdate> = ({ data }) => {
   const p = data.editableProperties;
@@ -28,13 +28,14 @@ const TestRASComp: React.FC<WidgetUpdate> = ({ data }) => {
   return (
     <AlarmBorder alarmData={pvData?.alarm} enable={p.alarmBorder?.value ?? true}>
       <div>
-        <TextOutput
-          pv="test:ai"
-          usePvLabel={true}
+        <TextUpdate
+          pv={mode == EDIT_MODE ? "" : p.pvName?.value}
+          label={mode == EDIT_MODE ? p.pvName?.value : undefined}
           usePvPrecision={true}
           usePvUnits={true}
           usePvMinMax={true}
           alarmSensitive={true}
+          muiTypographyProps={{ sx: { color: "black" } }}
         />
       </div>
     </AlarmBorder>

@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const { editorWidgets } = useEditorContext();
   const gridProperties = useMemo(() => editorWidgets.find((w) => w.id === GRID_ID), [editorWidgets]);
   return (
-    <RasAppCore themes={themes} defaultTheme={"Navy"}>
+    <RasAppCore themes={themes} defaultTheme={"Light"}>
       <div className="app">
         <div className="appBar">
           <NavBar />

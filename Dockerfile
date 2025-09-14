@@ -1,15 +1,16 @@
 FROM alpine/git:latest AS source_fetch
 ARG GIT_REPO
 ARG GIT_TAG
-RUN git clone ${GIT_REPO} /app && cd /app && git checkout ${GIT_TAG}
+RUN git clone --recursive ${GIT_REPO} /app && cd /app && git checkout ${GIT_TAG}
 
 # Dev environment
 FROM node:20-alpine AS dev
 WORKDIR /app
 COPY --from=source_fetch /app ./
-RUN npm install
+RUN npm install --global corepack@latest && corepack enable pnpm
+RUN pnpm install
 
-CMD npm run dev -- --host
+CMD pnpm run dev --host
 # --------------------------------------------
 # Production environment
 FROM node:20-alpine AS build
