@@ -1,6 +1,8 @@
 export { ActionButton } from "./ActionButton";
-// export { BitIndicator } from "./BitIndicator";
-// export { InputField } from "./InputField";
+export { ToggleButton } from "./ToggleButton";
+export { LedIndicator } from "./LedIndicator";
+// export { MultiBitIndicator } from "./MultiBitIndicator";
+export { InputField } from "./InputField";
 export { TextUpdate } from "./TextUpdate";
 export { Ellipse } from "./Ellipse";
 export { Rectangle } from "./Rectangle";

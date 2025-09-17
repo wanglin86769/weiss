@@ -1,14 +1,14 @@
-import { BitIndicatorComp } from "./BitIndicatorComp";
+import { MultiBitIndicatorComp } from "./MultiBitIndicatorComp";
 import { PROPERTY_SCHEMAS, COMMON_PROPS } from "../../../types/widgetProperties";
 import type { Widget } from "../../../types/widgets";
 import FlakyIcon from "@mui/icons-material/Flaky";
 
 const { borderRadius, backgroundColor, ...FILTERED_COMMON_PROPS } = COMMON_PROPS;
 
-export const BitIndicator: Widget = {
+export const MultiBitIndicator: Widget = {
   id: "__BitIndicator__",
-  component: BitIndicatorComp,
-  widgetName: "BitIndicator",
+  component: MultiBitIndicatorComp,
+  widgetName: "MultiBitIndicator",
   widgetIcon: FlakyIcon,
   widgetLabel: "Bit Indicator",
   category: "Monitoring",
@@ -19,11 +19,12 @@ export const BitIndicator: Widget = {
     onColor: PROPERTY_SCHEMAS.onColor,
     offColor: PROPERTY_SCHEMAS.offColor,
     nBits: PROPERTY_SCHEMAS.nBits,
-    square: PROPERTY_SCHEMAS.square,
-    orientation: PROPERTY_SCHEMAS.orientation,
+    horizontal: PROPERTY_SCHEMAS.horizontal,
     invertBitOrder: PROPERTY_SCHEMAS.invertBitOrder,
-    spacing: PROPERTY_SCHEMAS.spacing,
     pvName: PROPERTY_SCHEMAS.pvName,
     alarmBorder: PROPERTY_SCHEMAS.alarmBorder,
+    labelFromPV: PROPERTY_SCHEMAS.labelFromPV,
+    bitLabelPlcmnt: PROPERTY_SCHEMAS.bitLabelPlcmnt,
+    bitLabels: PROPERTY_SCHEMAS.bitLabels,
   },
 } as const;

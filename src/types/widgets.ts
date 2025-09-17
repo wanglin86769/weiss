@@ -12,10 +12,10 @@ import { PROPERTY_SCHEMAS } from "./widgetProperties";
  * - "pvList": list of PVs (text input)
  * - "none": no selector (property not displayed)
  */
-export type PropertySelectorType = "text" | "number" | "boolean" | "colorSelector" | "select" | "pvList" | "none";
+export type PropertySelectorType = "text" | "number" | "boolean" | "colorSelector" | "select" | "strList" | "none";
 
 /** Allowed values for a widget property: string, number, boolean, or string dictionary */
-export type PropertyValue = string | number | boolean | Record<string, string>;
+export type PropertyValue = string | number | boolean | string[];
 
 /**
  * Represents a single widget property.
