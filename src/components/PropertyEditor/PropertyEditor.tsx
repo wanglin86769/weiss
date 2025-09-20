@@ -27,6 +27,7 @@ import SelectProperty from "./SelectProperty";
 import { CATEGORY_DISPLAY_ORDER } from "../../types/widgetProperties";
 import StrListProperty from "./StrListProperty";
 import StrRecordProperty from "./StrRecordProperty";
+import ColorListProperty from "./ColorListProperty";
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: PROPERTY_EDITOR_WIDTH,
@@ -228,8 +229,10 @@ const PropertyEditor: React.FC = () => {
                   return <StrRecordProperty key={propName} {...commonProps} />;
                 case "boolean":
                   return <BooleanProperty key={propName} {...commonProps} />;
-                case "colorSelector":
+                case "colorSel":
                   return <ColorProperty key={propName} {...commonProps} />;
+                case "colorSelList":
+                  return <ColorListProperty key={propName} {...commonProps} />;
                 case "select":
                   return <SelectProperty key={propName} {...commonProps} options={options ?? []} />;
                 default:

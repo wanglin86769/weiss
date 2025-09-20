@@ -21,7 +21,7 @@ record(ao, "test:ampl"){
 }
 
 record(calc, "test:sin"){
-  field(DESC, "Sinus wave")
+  field(DESC, "Sine wave")
   field(INPA, "test:seconds CP")
   field(INPB, "test:ampl")
   field(INPC, "test:freq")
@@ -32,9 +32,27 @@ record(calc, "test:sin"){
 }
 
 record(compress, "test:sinArr"){
-  field(DESC, "Sin array")
+  field(DESC, "Sine array")
   field(ALG, "Circular Buffer")
   field(INP, "test:sin CP")
+  field(NSAM, "80")
+}
+
+record(calc, "test:cos"){
+  field(DESC, "Cosine wave")
+  field(INPA, "test:seconds CP")
+  field(INPB, "test:ampl")
+  field(INPC, "test:freq")
+  field(CALC, "B*COS(2*PI*C*A)")
+  field(PREC, "3")
+  field(VAL, "0")
+  field(EGU, "V")
+}
+
+record(compress, "test:cosArr"){
+  field(DESC, "Cosine array")
+  field(ALG, "Circular Buffer")
+  field(INP, "test:cos CP")
   field(NSAM, "80")
 }
 

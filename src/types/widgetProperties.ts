@@ -30,13 +30,13 @@ export const PROPERTY_SCHEMAS = {
   tooltip:         defineProp({ selType: "text", label: "Tooltip", value: "" as string, category: "Layout" }),
   visible:         defineProp({ selType: "boolean", label: "Visible", value: true as boolean, category: "Layout" }),
   // Style
-  backgroundColor: defineProp({ selType: "colorSelector", label: "Background Color", value: COLORS.backgroundColor, category: "Style" }),
-  borderColor:     defineProp({ selType: "colorSelector", label: "Border Color", value: COLORS.textColor, category: "Style" }),
+  backgroundColor: defineProp({ selType: "colorSel", label: "Background Color", value: COLORS.backgroundColor, category: "Style" }),
+  borderColor:     defineProp({ selType: "colorSel", label: "Border Color", value: COLORS.textColor, category: "Style" }),
   borderWidth:     defineProp({ selType: "number", label: "Border Width", value: 1 as number, category: "Style" }),
   borderRadius:    defineProp({ selType: "number", label: "Border Radius", value: 2 as number, category: "Style" }),
   borderStyle:     defineProp({ selType: "select", label: "Border Style", value: "none" as string, options: ["solid", "dashed", "dotted", "none"], category: "Style" }),
   // Font
-  textColor:       defineProp({ selType: "colorSelector", label: "Text Color", value: COLORS.textColor, category: "Font" }),
+  textColor:       defineProp({ selType: "colorSel", label: "Text Color", value: COLORS.textColor, category: "Font" }),
   fontSize:        defineProp({ selType: "number", label: "Font Size", value: 14 as number, category: "Font" }),
   fontFamily:      defineProp({ selType: "select", label: "Font Family", value: "sans-serif" as string, options: ["serif", "sans-serif", "monospace", "fantasy", "cursive"], category: "Font" }),
   fontBold:        defineProp({ selType: "boolean", label: "Bold text", value: false as boolean, category: "Font" }),
@@ -44,7 +44,7 @@ export const PROPERTY_SCHEMAS = {
   textHAlign:      defineProp({ selType: "select", label: "Text Horiz. Align", value: "left" as string, options: ["left", "center", "right"], category: "Font" }),
   textVAlign:      defineProp({ selType: "select", label: "Text Vert. Align", value: "middle" as string, options: ["top", "middle", "bottom"], category: "Font" }),
   // Grid options
-  gridLineColor:   defineProp({ selType: "colorSelector", label: "Grid Line Color", value: COLORS.gridLineColor, category: "Style" }),
+  gridLineColor:   defineProp({ selType: "colorSel", label: "Grid Line Color", value: COLORS.gridLineColor, category: "Style" }),
   gridLineVisible: defineProp({ selType: "boolean", label: "Grid Visible", value: true as boolean, category: "Grid" }),
   gridSize:        defineProp({ selType: "number", label: "Grid Size", value: 20 as number, category: "Grid" }),
   snapToGrid:      defineProp({ selType: "boolean", label: "Snap items", value: true as boolean, category: "Grid" }),
@@ -66,17 +66,18 @@ export const PROPERTY_SCHEMAS = {
   bitLabels:       defineProp({ selType: "strList", label: "Bit labels", value: [] as string[], category: "EPICS" }),
   bitLabelPlcmnt:  defineProp({ selType: "select", label: "Bit label placement", value: "end" as string, options: ["top", "bottom", "end", "start"], category: "Layout" }),
   invertBitOrder:  defineProp({ selType: "boolean", label: "Invert bit order", value: false as boolean, category: "Layout" }),
-  onColor:         defineProp({ selType: "colorSelector", label: "On Color", value: COLORS.onColor, category: "Style" }),
-  offColor:        defineProp({ selType: "colorSelector", label: "Off Color", value: COLORS.offColor, category: "Style" }),
+  onColor:         defineProp({ selType: "colorSel", label: "On Color", value: COLORS.onColor, category: "Style" }),
+  offColor:        defineProp({ selType: "colorSel", label: "Off Color", value: COLORS.offColor, category: "Style" }),
   showValues:      defineProp({ selType: "boolean", label: "Show values", value: false as boolean, category: "Style" }),
   useStrValues:      defineProp({ selType: "boolean", label: "Use string values", value: true as boolean, category: "Style" }),
   // Graph
-  lineColor:       defineProp({ selType: "colorSelector", label: "Line Color", value: COLORS.graphLineColor, category: "Style" }),
+  lineColors:      defineProp({ selType: "colorSelList", label: "Line Color", value: [COLORS.graphLineColor] as string[], category: "Style" }),
   plotTitle:       defineProp({ selType: "text", label: "Title", value: "Title" as string, category: "Layout" }),
   xAxisTitle:      defineProp({ selType: "text", label: "X axis title", value: "X axis" as string, category: "Layout" }),
   yAxisTitle:      defineProp({ selType: "text", label: "Y axis title", value: "Y axis" as string, category: "Layout" }),
   logscaleY:       defineProp({ selType: "boolean", label: "Apply log to Y", value: false as boolean, category: "Layout" }),
-  plotLineStyle:   defineProp({ selType: "select", label: "Line style", value: "lines" as "lines+markers"|"lines"|"markers", options: ["lines+markers", "lines", "markers"], category: "Style" }),
+  showLegend:      defineProp({ selType: "boolean", label: "Show legend", value: true as boolean, category: "Layout" }),
+  useTimestamp:    defineProp({ selType: "boolean", label: "Use timestamp", value: false as boolean, category: "Layout" }),
   plotBufferSize:  defineProp({ selType: "number", label: "Buffer size (if scalar PVs)", value: 80 as number, category: "Layout" }),
 };
 
@@ -120,11 +121,12 @@ export const TEXT_PROPS: WidgetProperties = {
  */
 export const PLOT_PROPS: WidgetProperties = {
   backgroundColor: { ...PROPERTY_SCHEMAS.backgroundColor, value: "white" },
-  lineColor: PROPERTY_SCHEMAS.lineColor,
+  lineColors: PROPERTY_SCHEMAS.lineColors,
   plotTitle: PROPERTY_SCHEMAS.plotTitle,
   xAxisTitle: PROPERTY_SCHEMAS.xAxisTitle,
   yAxisTitle: PROPERTY_SCHEMAS.yAxisTitle,
-  plotLineStyle: PROPERTY_SCHEMAS.plotLineStyle,
   logscaleY: PROPERTY_SCHEMAS.logscaleY,
   plotBufferSize: PROPERTY_SCHEMAS.plotBufferSize,
+  showLegend: PROPERTY_SCHEMAS.showLegend,
+  useTimestamp: PROPERTY_SCHEMAS.useTimestamp,
 };
