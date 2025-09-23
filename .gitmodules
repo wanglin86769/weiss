@@ -1,3 +1,4 @@
 [submodule "submodules/React-Automation-Studio"]
 	path = submodules/React-Automation-Studio
-	url = git@github.com:AndreFavotto/react-automation-studio-weiss.git
+	url = https://github.com/React-Automation-Studio/React-Automation-Studio.git
+  branch = createEditMode
