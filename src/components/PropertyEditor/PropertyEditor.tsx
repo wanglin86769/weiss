@@ -11,6 +11,8 @@ import Tooltip from "@mui/material/Tooltip";
 import ListSubheader from "@mui/material/ListSubheader";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { useEditorContext } from "../../context/useEditorContext";
 import type {
   WidgetProperties,
@@ -118,6 +120,7 @@ const getGroupedProperties = (properties: WidgetProperties) => {
  * - Supports all PropertySelectorType definitions.
  * - Updates multiple widgets at once when properties are edited in batch.
  * - Toggle button to open/close the editor manually.
+ * - Pin button to keep it open.
  *
  * @notes
  * - Only visible in EDIT_MODE.
@@ -129,7 +132,7 @@ const PropertyEditor: React.FC = () => {
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
   const singleWidget = editingWidgets.length === 1;
   const [open, setOpen] = useState(false);
-  const [manuallyOpened, setManuallyOpened] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const properties: WidgetProperties = useMemo(() => {
     if (editingWidgets.length === 0) return {};
@@ -154,15 +157,15 @@ const PropertyEditor: React.FC = () => {
       setOpen(true);
       return;
     }
-    if (!manuallyOpened) setOpen(false);
-  }, [isOnlyGridSelected, manuallyOpened]);
+    if (!pinned) setOpen(false);
+  }, [pinned, isOnlyGridSelected]);
 
   const toggleDrawer = () => {
-    setOpen((prev) => {
-      const next = !prev;
-      setManuallyOpened(next);
-      return next;
-    });
+    setOpen((prev) => !prev);
+  };
+
+  const togglePin = () => {
+    setPinned((prev) => !prev);
   };
 
   const toggleGroup = (category: string) => {
@@ -264,9 +267,16 @@ const PropertyEditor: React.FC = () => {
         <List sx={{ width: "100%" }}>
           <ListItem
             secondaryAction={
-              <IconButton edge="end" onClick={toggleDrawer} size="small">
-                <ChevronRightIcon />
-              </IconButton>
+              <>
+                <Tooltip title={pinned ? "Unpin" : "Pin"}>
+                  <IconButton edge="end" onClick={togglePin} size="small">
+                    {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+                  </IconButton>
+                </Tooltip>
+                <IconButton edge="end" onClick={toggleDrawer} size="small" sx={{ display: pinned ? "none" : "auto" }}>
+                  <ChevronRightIcon />
+                </IconButton>
+              </>
             }
           >
             <ListItemText primary={header} />
