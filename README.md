@@ -1,4 +1,4 @@
-# WEISS - Web EPICS Interface Studio
+# WEISS - Web EPICS Interface & Synoptic Studio
 
 This is a no-code drag and drop tool for EPICS web operation interfaces.
 

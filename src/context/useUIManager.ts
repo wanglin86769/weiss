@@ -4,7 +4,7 @@ import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget } from "../types/widgets";
 
 /**
- * Hook that manages global UI state for the Web EPICS Interface Studio interface.
+ * Hook that manages global UI state for WEISS.
  *
  * Responsibilities:
  * - Tracks editor mode (`edit` vs `runtime`).

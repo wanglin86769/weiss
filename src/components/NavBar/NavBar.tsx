@@ -130,7 +130,7 @@ export default function NavBar() {
           >
             <MenuIcon />
           </IconButton>
-          <Tooltip title="Web EPICS Interface Studio">
+          <Tooltip title="Web EPICS Interface & Synoptic Studio">
             <Typography
               noWrap
               component="div"
