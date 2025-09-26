@@ -1,6 +1,6 @@
 FROM alpine/git:latest AS source_fetch
-ARG GIT_REPO
-ARG GIT_TAG
+ARG GIT_REPO=https://github.com/AndreFavotto/weiss.git
+ARG GIT_TAG=main
 RUN git clone --recursive ${GIT_REPO} /app && cd /app && git checkout ${GIT_TAG}
 
 # Dev environment
@@ -16,7 +16,7 @@ CMD pnpm run dev --host
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=source_fetch /app ./
-RUN npm install && npm run build
+RUN pnpm install && pnpm run build
 
 FROM nginx:1.25-alpine AS prod
 ARG PROD_PORT

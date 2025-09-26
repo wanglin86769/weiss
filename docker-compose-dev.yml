@@ -1,10 +1,13 @@
 services:
-  epicsbase:
-    image: epicsbase
+  ################ base-env ######################
+  weiss-base-env:
+    image: weiss-base-env
     build:
       context: ./
-      dockerfile: docker/epicsBase/Dockerfile
-  pvserver:
+      dockerfile: docker/base-env/Dockerfile
+
+  ############### pvserver ######################
+  weiss-pvserver:
     build:
       context: ./
       dockerfile: docker/pvserver/Dockerfile
@@ -25,38 +28,45 @@ services:
       - pvServerLogFile=/pvServer/log/pvServerLogFile
       - pvServerPort=9001
       - pvServerURL=http://127.0.0.1
+      - EPICS_CA_ADDR_LIST="localhost"
+      - EPICS_PVA_ADDR_LIST="localhost"
     volumes:
-      - ./certificates:/certificates/
-      - ./users:/pvServer/userAuthentication/users
-      - ./log/:/pvServer/log
-      - ./build:/pvServer/build
+      - ./docker/mount/certificates:/certificates/
+      - ./docker/mount/users:/pvServer/userAuthentication/users
+      - ./docker/mount/log/:/pvServer/log
+      - ./docker/mount/build:/pvServer/build
     depends_on:
-      - epicsbase
-  nginx:
+      - weiss-base-env
+
+  ############### nginx ######################
+  weiss-nginx:
     image: nginx:1.27.0
     restart: always
     network_mode: host
     depends_on:
-      - pvserver
+      - weiss-pvserver
     entrypoint:
       - /custom/setupNginx.dev.sh
       - /docker-entrypoint.sh
     command: ["nginx", "-g", "daemon off;"]
     volumes:
-      - ./nginx/setupNginx.dev.sh:/custom/setupNginx.dev.sh
-      - ./nginx/nginx.dev.conf:/custom/nginx.dev.conf
-      - ./nginx/nginx.httpredirect.conf:/custom/nginx.httpredirect.conf
-      - ./certificates:/etc/nginx/certificates
+      - ./docker/mount/nginx/setupNginx.dev.sh:/custom/setupNginx.dev.sh
+      - ./docker/mount/nginx/nginx.dev.conf:/custom/nginx.dev.conf
+      - ./docker/mount/nginx/nginx.httpredirect.conf:/custom/nginx.httpredirect.conf
+      - ./docker/mount/certificates:/etc/nginx/certificates
     env_file: .env
+
+  ############### frontend ######################
   weiss-dev:
     build:
       context: "."
+      dockerfile: docker/weiss/Dockerfile
       target: dev
       args:
-        GIT_REPO: ${GIT_REPO}
-        GIT_TAG: ${GIT_TAG}
+        GIT_REPO: ${GIT_REPO:-https://github.com/AndreFavotto/weiss.git}
+        GIT_TAG: ${GIT_TAG:-main}
     volumes:
-      - .:/app # Mount the source code for development
+      - .:/app
       - /app/node_modules # Prevent host node_modules from interfering
     image: weiss-dev:${GIT_TAG}
     container_name: weiss-dev
@@ -64,5 +74,6 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=development
-    # depends_on:
-    #   - weiss-pvapyws
+    depends_on:
+      - weiss-pvserver
+      - weiss-nginx

@@ -1,4 +1,4 @@
-FROM epicsbase as pvserver
+FROM weiss-base-env AS pvserver
 
 RUN apt-get update && apt-get install -y  \
     libldap2-dev libsasl2-dev ldap-utils tox \
