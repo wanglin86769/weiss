@@ -1,7 +1,7 @@
 import { MultiBitIndicatorComp } from "./MultiBitIndicatorComp";
 import { PROPERTY_SCHEMAS, COMMON_PROPS } from "@src/types/widgetProperties";
 import type { Widget } from "@src/types/widgets";
-import FlakyIcon from "@mui/icons-material/Flaky";
+import CustomMultiBitIcon from "@components/CustomIcons/MultiBitIcon";
 
 const { borderRadius, backgroundColor, ...FILTERED_COMMON_PROPS } = COMMON_PROPS;
 
@@ -9,7 +9,7 @@ export const MultiBitIndicator: Widget = {
   id: "__BitIndicator__",
   component: MultiBitIndicatorComp,
   widgetName: "MultiBitIndicator",
-  widgetIcon: FlakyIcon,
+  widgetIcon: CustomMultiBitIcon,
   widgetLabel: "Multi-Bit Indicator",
   category: "Monitoring",
   editableProperties: {

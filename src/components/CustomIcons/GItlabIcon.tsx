@@ -1,7 +1,8 @@
 import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
+import React from "react";
 
 // svg from https://about.gitlab.com/press/press-kit/ - cropped to fit
-export default function CustomLogoIcon(props: SvgIconProps) {
+const CustomLogoIcon: React.FC<SvgIconProps> = (props: SvgIconProps) => {
   return (
     <SvgIcon {...props} viewBox="92.97 96.52 202.05 194.95">
       <g id="LOGO">
@@ -12,4 +13,6 @@ export default function CustomLogoIcon(props: SvgIconProps) {
       </g>
     </SvgIcon>
   );
-}
+};
+
+export default CustomLogoIcon;
