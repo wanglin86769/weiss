@@ -14,7 +14,12 @@ interface ColorSelListPropertyProps {
   onChange: (propName: PropertyKey, newValue: PropertyValue) => void;
 }
 
-const ColorSelListProperty: React.FC<ColorSelListPropertyProps> = ({ propName, label, value, onChange }) => {
+const ColorSelListProperty: React.FC<ColorSelListPropertyProps> = ({
+  propName,
+  label,
+  value,
+  onChange,
+}) => {
   if (!Array.isArray(value)) {
     console.warn(`ColorSelListProperty expected string[], got`, value);
     return null;
@@ -92,7 +97,11 @@ const ColorSelListProperty: React.FC<ColorSelListPropertyProps> = ({ propName, l
                   <AddIcon />
                 </IconButton>
               )}
-              <IconButton color="error" onClick={() => handleRemove(index)} disabled={colors.length === 1}>
+              <IconButton
+                color="error"
+                onClick={() => handleRemove(index)}
+                disabled={colors.length === 1}
+              >
                 <RemoveIcon />
               </IconButton>
             </Box>

@@ -12,7 +12,10 @@ import themes from "@ReactAutomationStudio/components/UI/Themes/themes";
 
 const App: React.FC = () => {
   const { editorWidgets } = useEditorContext();
-  const gridProperties = useMemo(() => editorWidgets.find((w) => w.id === GRID_ID), [editorWidgets]);
+  const gridProperties = useMemo(
+    () => editorWidgets.find((w) => w.id === GRID_ID),
+    [editorWidgets]
+  );
   return (
     <RasAppCore themes={themes} defaultTheme={"Light"}>
       <div className="app">

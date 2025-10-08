@@ -46,7 +46,12 @@ const StrListProperty: React.FC<StrListPropertyProps> = ({ propName, label, valu
   return (
     <>
       {items.map((val, index) => (
-        <ListItem key={index} disablePadding sx={{ px: 2, py: 1, gap: 1 }} title={`${label} ${index}`}>
+        <ListItem
+          key={index}
+          disablePadding
+          sx={{ px: 2, py: 1, gap: 1 }}
+          title={`${label} ${index}`}
+        >
           <TextField
             fullWidth
             size="small"
@@ -57,7 +62,11 @@ const StrListProperty: React.FC<StrListPropertyProps> = ({ propName, label, valu
           <IconButton color="primary" onClick={() => handleAdd(index)}>
             <AddIcon />
           </IconButton>
-          <IconButton color="error" onClick={() => handleRemove(index)} disabled={items.length === 1}>
+          <IconButton
+            color="error"
+            onClick={() => handleRemove(index)}
+            disabled={items.length === 1}
+          >
             <RemoveIcon />
           </IconButton>
         </ListItem>

@@ -29,7 +29,9 @@ function deepCloneWidgetList(widgets: Widget[]): Widget[] {
 function deepCloneWidget(widget: Widget): Widget {
   return {
     ...widget,
-    editableProperties: Object.fromEntries(Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])),
+    editableProperties: Object.fromEntries(
+      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
+    ),
   };
 }
 
@@ -51,7 +53,10 @@ export function useWidgetManager() {
   const [selectedWidgetIDs, setSelectedWidgetIDs] = useState<string[]>([]);
   const clipboard = useRef<Widget[]>([]);
   const copiedGroupBounds = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const allWidgetIDs = useMemo(() => editorWidgets.map((w) => w.id).filter((id) => id !== GRID_ID), [editorWidgets]);
+  const allWidgetIDs = useMemo(
+    () => editorWidgets.map((w) => w.id).filter((id) => id !== GRID_ID),
+    [editorWidgets]
+  );
 
   const selectedWidgets = useMemo(
     () => editorWidgets.filter((w) => selectedWidgetIDs.includes(w.id)),
@@ -69,10 +74,14 @@ export function useWidgetManager() {
     const left = Math.min(...selectedWidgets.map((w) => w.editableProperties.x!.value));
     const top = Math.min(...selectedWidgets.map((w) => w.editableProperties.y!.value));
     const right = Math.max(
-      ...selectedWidgets.map((w) => w.editableProperties.x!.value + w.editableProperties.width!.value)
+      ...selectedWidgets.map(
+        (w) => w.editableProperties.x!.value + w.editableProperties.width!.value
+      )
     );
     const bottom = Math.max(
-      ...selectedWidgets.map((w) => w.editableProperties.y!.value + w.editableProperties.height!.value)
+      ...selectedWidgets.map(
+        (w) => w.editableProperties.y!.value + w.editableProperties.height!.value
+      )
     );
     return {
       x: left,
@@ -143,7 +152,10 @@ export function useWidgetManager() {
    * @param id Widget ID
    * @returns Widget object or undefined
    */
-  const getWidget = useCallback((id: string) => editorWidgets.find((w) => w.id === id), [editorWidgets]);
+  const getWidget = useCallback(
+    (id: string) => editorWidgets.find((w) => w.id === id),
+    [editorWidgets]
+  );
 
   /**
    * Add a new widget to the editor.
@@ -252,7 +264,9 @@ export function useWidgetManager() {
   const alignRight = useCallback(() => {
     if (selectedWidgets.length < 2) return;
     const rightX = Math.max(
-      ...selectedWidgets.map((w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0))
+      ...selectedWidgets.map(
+        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
+      )
     );
     const updates: MultiWidgetPropertyUpdates = {};
     selectedWidgets.forEach((w) => {
@@ -281,7 +295,9 @@ export function useWidgetManager() {
   const alignBottom = useCallback(() => {
     if (selectedWidgets.length < 2) return;
     const bottomY = Math.max(
-      ...selectedWidgets.map((w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0))
+      ...selectedWidgets.map(
+        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
+      )
     );
     const updates: MultiWidgetPropertyUpdates = {};
     selectedWidgets.forEach((w) => {
@@ -298,7 +314,9 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 2) return;
     const minX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const maxX = Math.max(
-      ...selectedWidgets.map((w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0))
+      ...selectedWidgets.map(
+        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
+      )
     );
     const centerX = (minX + maxX) / 2;
 
@@ -317,7 +335,9 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 2) return;
     const minY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const maxY = Math.max(
-      ...selectedWidgets.map((w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0))
+      ...selectedWidgets.map(
+        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
+      )
     );
     const centerY = (minY + maxY) / 2;
 
@@ -378,7 +398,10 @@ export function useWidgetManager() {
       (sorted[sorted.length - 1].editableProperties.y?.value ?? 0) +
       (sorted[sorted.length - 1].editableProperties.height?.value ?? 0);
 
-    const totalHeight = sorted.reduce((sum, w) => sum + (w.editableProperties.height?.value ?? 0), 0);
+    const totalHeight = sorted.reduce(
+      (sum, w) => sum + (w.editableProperties.height?.value ?? 0),
+      0
+    );
     const spacing = (bottomY - topY - totalHeight) / (sorted.length - 1);
 
     let currentY = topY;
@@ -454,8 +477,12 @@ export function useWidgetManager() {
       if (clipboard.current.length === 0) return;
 
       const pastingGroup = clipboard.current.length > 1;
-      const baseX = pastingGroup ? copiedGroupBounds.current.x : clipboard.current[0].editableProperties.x!.value;
-      const baseY = pastingGroup ? copiedGroupBounds.current.y : clipboard.current[0].editableProperties.y!.value;
+      const baseX = pastingGroup
+        ? copiedGroupBounds.current.x
+        : clipboard.current[0].editableProperties.x!.value;
+      const baseY = pastingGroup
+        ? copiedGroupBounds.current.y
+        : clipboard.current[0].editableProperties.y!.value;
 
       const dx = pos.x - baseX;
       const dy = pos.y - baseY;
@@ -564,7 +591,9 @@ export function useWidgetManager() {
             let baseWdg;
             if (idx == 0) {
               if (raw.id !== GRID_ID) {
-                throw new Error("Missing or invalid grid properties. Did you move the grid from first position?");
+                throw new Error(
+                  "Missing or invalid grid properties. Did you move the grid from first position?"
+                );
               }
               baseWdg = GridZone;
             } else {

@@ -26,7 +26,9 @@ const TextFieldProperty: React.FC<TextFieldPropertyProps> = (props) => {
             size="small"
             type={selType}
             value={localVal}
-            onChange={(e) => setLocalVal(selType === "number" ? Number(e.target.value) : e.target.value)}
+            onChange={(e) =>
+              setLocalVal(selType === "number" ? Number(e.target.value) : e.target.value)
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

@@ -128,7 +128,8 @@ const getGroupedProperties = (properties: WidgetProperties) => {
  * - Focus state is managed to coordinate with the editor context.
  */
 const PropertyEditor: React.FC = () => {
-  const { mode, selectedWidgetIDs, editingWidgets, batchWidgetUpdate, setPropertyEditorFocused } = useEditorContext();
+  const { mode, selectedWidgetIDs, editingWidgets, batchWidgetUpdate, setPropertyEditorFocused } =
+    useEditorContext();
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
   const singleWidget = editingWidgets.length === 1;
   const [open, setOpen] = useState(false);
@@ -175,7 +176,9 @@ const PropertyEditor: React.FC = () => {
     });
   };
 
-  const header = singleWidget ? `${editingWidgets[0].widgetLabel} properties` : "Common properties in selection";
+  const header = singleWidget
+    ? `${editingWidgets[0].widgetLabel} properties`
+    : "Common properties in selection";
   const groupedProperties = getGroupedProperties(properties);
 
   const handlePropChange = (propName: PropertyKey, newValue: PropertyValue) => {
@@ -273,7 +276,12 @@ const PropertyEditor: React.FC = () => {
                     {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
                   </IconButton>
                 </Tooltip>
-                <IconButton edge="end" onClick={toggleDrawer} size="small" sx={{ display: pinned ? "none" : "auto" }}>
+                <IconButton
+                  edge="end"
+                  onClick={toggleDrawer}
+                  size="small"
+                  sx={{ display: pinned ? "none" : "auto" }}
+                >
                   <ChevronRightIcon />
                 </IconButton>
               </>

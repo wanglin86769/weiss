@@ -32,10 +32,7 @@ const MultiBitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
       disableContextMenu={inEditMode}
     >
       {inEditMode ? (
-        <GradientBitIcon
-          onColor={p.onColor!.value}
-          offColor={p.offColor!.value}
-        />
+        <GradientBitIcon onColor={p.onColor!.value} offColor={p.offColor!.value} />
       ) : undefined}
     </BitIndicators>
   );

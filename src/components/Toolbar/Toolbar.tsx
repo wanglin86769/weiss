@@ -65,7 +65,10 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
       dragHandleClassName="dragHandle"
     >
       <Box className="toolbarBox" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-        <Box className="dragHandle" sx={{ cursor: "move", px: 1, display: "flex", alignItems: "center" }}>
+        <Box
+          className="dragHandle"
+          sx={{ cursor: "move", px: 1, display: "flex", alignItems: "center" }}
+        >
           <DragIndicator fontSize="small" />
         </Box>
 
@@ -111,7 +114,12 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
 
         <Tooltip title="Align right">
           <span>
-            <IconButton size="small" onClick={alignRight} disabled={lessThanTwoSelected} sx={iconSx}>
+            <IconButton
+              size="small"
+              onClick={alignRight}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
               <AlignHorizontalRight fontSize="small" />
             </IconButton>
           </span>
@@ -127,7 +135,12 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
 
         <Tooltip title="Align bottom">
           <span>
-            <IconButton size="small" onClick={alignBottom} disabled={lessThanTwoSelected} sx={iconSx}>
+            <IconButton
+              size="small"
+              onClick={alignBottom}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
               <AlignVerticalBottom fontSize="small" />
             </IconButton>
           </span>
@@ -135,7 +148,12 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
 
         <Tooltip title="Align vertical center">
           <span>
-            <IconButton size="small" onClick={alignVerticalCenter} disabled={lessThanTwoSelected} sx={iconSx}>
+            <IconButton
+              size="small"
+              onClick={alignVerticalCenter}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
               <AlignVerticalCenter fontSize="small" />
             </IconButton>
           </span>
@@ -143,7 +161,12 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
 
         <Tooltip title="Align horizontal center">
           <span>
-            <IconButton size="small" onClick={alignHorizontalCenter} disabled={lessThanTwoSelected} sx={iconSx}>
+            <IconButton
+              size="small"
+              onClick={alignHorizontalCenter}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
               <AlignHorizontalCenter fontSize="small" />
             </IconButton>
           </span>

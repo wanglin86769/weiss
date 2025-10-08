@@ -14,7 +14,12 @@ interface StrRecordPropertyProps {
   onChange: (propName: PropertyKey, newValue: PropertyValue) => void;
 }
 
-const StrRecordProperty: React.FC<StrRecordPropertyProps> = ({ propName, label, value, onChange }) => {
+const StrRecordProperty: React.FC<StrRecordPropertyProps> = ({
+  propName,
+  label,
+  value,
+  onChange,
+}) => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     console.warn(`StrRecordProperty expected Record<string,string>, got`, value);
     return null;
@@ -69,7 +74,12 @@ const StrRecordProperty: React.FC<StrRecordPropertyProps> = ({ propName, label, 
   return (
     <>
       {items.map(([key, val], index) => (
-        <ListItem key={index} disablePadding sx={{ px: 2, py: 1, gap: 1 }} title={`${label} ${index}`}>
+        <ListItem
+          key={index}
+          disablePadding
+          sx={{ px: 2, py: 1, gap: 1 }}
+          title={`${label} ${index}`}
+        >
           <TextField
             size="small"
             label={`${label} ${index}`}
@@ -88,7 +98,11 @@ const StrRecordProperty: React.FC<StrRecordPropertyProps> = ({ propName, label, 
           <IconButton color="primary" onClick={() => handleAdd(index)}>
             <AddIcon />
           </IconButton>
-          <IconButton color="error" onClick={() => handleRemove(index)} disabled={items.length === 1}>
+          <IconButton
+            color="error"
+            onClick={() => handleRemove(index)}
+            disabled={items.length === 1}
+          >
             <RemoveIcon />
           </IconButton>
         </ListItem>

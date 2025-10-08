@@ -66,7 +66,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     (coord: number) => {
       return snapToGrid ? Math.round(coord / gridSize) * gridSize : coord;
     },
-    [snapToGrid, gridSize]
+    [snapToGrid, gridSize],
   );
 
   const centerScreen = () => {
@@ -116,7 +116,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
 
     // Deep copy
     const editableProperties = Object.fromEntries(
-      Object.entries(droppedComp.editableProperties).map(([k, v]) => [k, { ...v }])
+      Object.entries(droppedComp.editableProperties).map(([k, v]) => [k, { ...v }]),
     );
 
     // Drop position

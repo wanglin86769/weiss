@@ -2,7 +2,13 @@ import SvgIcon, { type SvgIconProps } from "@mui/material/SvgIcon";
 
 const CustomMultiBitIcon: React.FC<SvgIconProps> = (props: SvgIconProps) => {
   return (
-    <SvgIcon {...props} width="296pt" height="297pt" viewBox="0 0 296 297" preserveAspectRatio="xMidYMid meet">
+    <SvgIcon
+      {...props}
+      width="296pt"
+      height="297pt"
+      viewBox="0 0 296 297"
+      preserveAspectRatio="xMidYMid meet"
+    >
       <g transform="translate(0,297) scale(0.1,-0.1)" fill="currentColor" stroke="none">
         <path
           d="M885 2799 c-325 -43 -590 -266 -687 -579 -20 -66 -23 -95 -23 -235 0

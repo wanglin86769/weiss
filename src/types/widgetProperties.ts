@@ -93,7 +93,16 @@ export const PROPERTY_SCHEMAS = {
 /**
  * Defines the preferred order for displaying property categories in the UI.
  */
-export const CATEGORY_DISPLAY_ORDER = ["EPICS", "Grid", "Layout", "Style", "Font", "General", "Window", "Other"];
+export const CATEGORY_DISPLAY_ORDER = [
+  "EPICS",
+  "Grid",
+  "Layout",
+  "Style",
+  "Font",
+  "General",
+  "Window",
+  "Other",
+];
 
 /**
  * Common set of widget properties shared across most widgets.

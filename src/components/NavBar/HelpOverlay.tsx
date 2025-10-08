@@ -46,7 +46,7 @@ const renderBinding = (binding: string, idx: number) => {
           </Typography>
         ) : (
           <KeyPill key={i} label={token} />
-        )
+        ),
       )}
     </Box>
   );
@@ -103,7 +103,11 @@ const HelpOverlay: React.FC = () => {
   return (
     <>
       <Tooltip title="Help / Shortcuts">
-        <IconButton onMouseEnter={handleOpen} onMouseLeave={handleCloseWithDelay} sx={{ color: "white" }}>
+        <IconButton
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleCloseWithDelay}
+          sx={{ color: "white" }}
+        >
           <HelpOutlineIcon />
         </IconButton>
       </Tooltip>
@@ -132,10 +136,13 @@ const HelpOverlay: React.FC = () => {
             Help
           </Typography>
           <Typography variant="body2" gutterBottom>
-            Select a widget from the left bar, drag and drop it on the canvas. Edit its properties using the right menu.
-            Add PV names as needed. Enter runtime mode when ready. <br />
+            Select a widget from the left bar, drag and drop it on the canvas. Edit its properties
+            using the right menu. Add PV names as needed. Enter runtime mode when ready. <br />
             <br />
-            <i>(Help is not yet very helpful 🙁, work in progress! Feel free to reach out if you need assistance)</i>
+            <i>
+              (Help is not yet very helpful 🙁, work in progress! Feel free to reach out if you need
+              assistance)
+            </i>
           </Typography>
 
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />

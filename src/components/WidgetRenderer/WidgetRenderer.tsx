@@ -26,7 +26,12 @@ interface RendererProps {
  * @param ensureGridCoordinate Function to snap items to grid (if snap activated)
  * @param setIsDragging Callback to indicate dragging state
  */
-const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, setIsDragging, isPanning }) => {
+const WidgetRenderer: React.FC<RendererProps> = ({
+  scale,
+  ensureGridCoordinate,
+  setIsDragging,
+  isPanning,
+}) => {
   const {
     mode,
     editorWidgets,
@@ -57,7 +62,11 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     setIsDragging(false);
     const newWidth = ensureGridCoordinate(parseInt(ref.style.width));
     const newHeight = ensureGridCoordinate(parseInt(ref.style.height));
-    if (w.editableProperties.width?.value == newWidth && w.editableProperties.height?.value == newHeight) return;
+    if (
+      w.editableProperties.width?.value == newWidth &&
+      w.editableProperties.height?.value == newHeight
+    )
+      return;
     const newX = ensureGridCoordinate(position.x);
     const newY = ensureGridCoordinate(position.y);
     updateWidgetProperties(w.id, { width: newWidth, height: newHeight, x: newX, y: newY });
@@ -134,7 +143,10 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
           onResize={() => setIsDragging(true)}
           onResizeStop={(_e, _direction, ref) => handleGroupResizeStop(ref)}
-          style={{ outline: `${selectedWidgetIDs.length > 1 ? "1px dashed" : "none"}`, zIndex: FRONT_UI_ZIDX - 1 }}
+          style={{
+            outline: `${selectedWidgetIDs.length > 1 ? "1px dashed" : "none"}`,
+            zIndex: FRONT_UI_ZIDX - 1,
+          }}
         >
           {selectedWidgets.map((w) => {
             return (
@@ -179,7 +191,9 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
             onDragStop={(_e, d) => handleDragStop(_e, d, w)}
             onResizeStart={() => setIsDragging(true)}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            onResizeStop={(_e, _direction, ref, _delta, position) => handleResizeStop(ref, position, w)}
+            onResizeStop={(_e, _direction, ref, _delta, position) =>
+              handleResizeStop(ref, position, w)
+            }
           >
             {isInGroupBox ? null : renderWidget(w)}
           </Rnd>

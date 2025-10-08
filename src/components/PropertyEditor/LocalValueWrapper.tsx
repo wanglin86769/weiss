@@ -9,7 +9,11 @@ interface LocalValueWrapperProps {
 /**
  * Used to keep track of local value before actually commiting it to widget
  * */
-const LocalValueWrapper: React.FC<LocalValueWrapperProps> = ({ render, initial, onBlurCallback }) => {
+const LocalValueWrapper: React.FC<LocalValueWrapperProps> = ({
+  render,
+  initial,
+  onBlurCallback,
+}) => {
   const [localVal, setLocalVal] = useState<PropertyValue>(initial);
 
   useEffect(() => {

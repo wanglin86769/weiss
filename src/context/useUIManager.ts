@@ -22,7 +22,7 @@ export default function useUIManager(
   editorWidgets: ReturnType<typeof useWidgetManager>["editorWidgets"],
   setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
   updateWidgetProperties: ReturnType<typeof useWidgetManager>["updateWidgetProperties"],
-  loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"]
+  loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],
 ) {
   const [propertyEditorFocused, setPropertyEditorFocused] = useState(false);
   const [wdgSelectorOpen, setWdgSelectorOpen] = useState(false);
@@ -59,7 +59,7 @@ export default function useUIManager(
       updateWidgetProperties(GRID_ID, { gridLineVisible: isEdit }, false);
       setMode(newMode);
     },
-    [updateWidgetProperties, setSelectedWidgetIDs]
+    [updateWidgetProperties, setSelectedWidgetIDs],
   );
 
   /**
@@ -95,9 +95,9 @@ export default function useUIManager(
               id: widget.id,
               widgetName: widget.widgetName,
               properties: Object.fromEntries(
-                Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
+                Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value]),
               ),
-            } as ExportedWidget)
+            }) as ExportedWidget,
         );
         localStorage.setItem("editorWidgets", JSON.stringify(exportable));
       } catch (err) {

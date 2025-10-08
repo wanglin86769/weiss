@@ -6,7 +6,8 @@ import useUIManager from "./useUIManager";
 /**
  * The full editor context type.
  */
-export type EditorContextType = ReturnType<typeof useWidgetManager> & ReturnType<typeof useUIManager>;
+export type EditorContextType = ReturnType<typeof useWidgetManager> &
+  ReturnType<typeof useUIManager>;
 
 /**
  * EditorProvider component.

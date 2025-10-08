@@ -25,9 +25,24 @@ export interface ContextMenuProps {
   onMouseLeave: () => void;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ pos, mousePos, visible, onClose, onMouseEnter, onMouseLeave }) => {
-  const { mode, bringToFront, sendToBack, stepForward, stepBackwards, copyWidget, pasteWidget, selectedWidgetIDs } =
-    useEditorContext();
+const ContextMenu: React.FC<ContextMenuProps> = ({
+  pos,
+  mousePos,
+  visible,
+  onClose,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
+  const {
+    mode,
+    bringToFront,
+    sendToBack,
+    stepForward,
+    stepBackwards,
+    copyWidget,
+    pasteWidget,
+    selectedWidgetIDs,
+  } = useEditorContext();
   if (!visible) return null;
   if (mode !== EDIT_MODE) return null; // TODO: create context menu for RUNTIME
   const noSelection = selectedWidgetIDs.length === 0;

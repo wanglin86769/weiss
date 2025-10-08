@@ -49,22 +49,22 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
 }));
 
-const Drawer = styled(DrawerBase, { shouldForwardProp: (prop) => prop !== "open" })<{ open: boolean }>(
-  ({ theme, open }) => ({
-    width: WIDGET_SELECTOR_WIDTH,
-    flexShrink: 0,
-    whiteSpace: "nowrap",
-    boxSizing: "border-box",
-    ...(open && {
-      ...openedMixin(theme),
-      "& .MuiDrawer-paper": openedMixin(theme),
-    }),
-    ...(!open && {
-      ...closedMixin(theme),
-      "& .MuiDrawer-paper": closedMixin(theme),
-    }),
-  })
-);
+const Drawer = styled(DrawerBase, { shouldForwardProp: (prop) => prop !== "open" })<{
+  open: boolean;
+}>(({ theme, open }) => ({
+  width: WIDGET_SELECTOR_WIDTH,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  ...(open && {
+    ...openedMixin(theme),
+    "& .MuiDrawer-paper": openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    "& .MuiDrawer-paper": closedMixin(theme),
+  }),
+}));
 
 interface DraggableItemProps {
   item: Widget;
@@ -119,8 +119,12 @@ const DraggableItem: React.FC<DraggableItemProps> = ({ item, open }) => {
 const WidgetSelector: React.FC = () => {
   const { mode, wdgSelectorOpen, setWdgSelectorOpen } = useEditorContext();
   const palette: Record<string, Widget> = React.useMemo(
-    () => Object.fromEntries(Object.values(WidgetRegistry).map((w) => [w.widgetName, w])) as Record<string, Widget>,
-    []
+    () =>
+      Object.fromEntries(Object.values(WidgetRegistry).map((w) => [w.widgetName, w])) as Record<
+        string,
+        Widget
+      >,
+    [],
   );
 
   const categories = React.useMemo(() => {
