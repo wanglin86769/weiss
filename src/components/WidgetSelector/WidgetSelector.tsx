@@ -72,8 +72,15 @@ interface DraggableItemProps {
 }
 
 const DraggableItem: React.FC<DraggableItemProps> = ({ item, open }) => {
+  const { setPickedWidget } = useEditorContext();
+
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));
+    e.dataTransfer.effectAllowed = "copy";
+    const img = new Image();
+    img.src = "";
+    e.dataTransfer.setDragImage(img, 0, 0);
+    setPickedWidget(item);
   };
 
   return (
@@ -124,7 +131,7 @@ const WidgetSelector: React.FC = () => {
         string,
         Widget
       >,
-    [],
+    []
   );
 
   const categories = React.useMemo(() => {

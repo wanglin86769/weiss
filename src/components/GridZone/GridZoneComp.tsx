@@ -41,6 +41,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     propertyEditorFocused,
     allWidgetIDs,
     updateEditorWidgetList,
+    pickedWidget,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,11 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
   const [mouseOverMenu, setMouseOverMenu] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [shouldCenterPan, setShouldCenterPan] = useState(true);
+  const [dragPreview, setDragPreview] = useState<{
+    widget: Widget;
+    x: number;
+    y: number;
+  } | null>(null);
   const disableSelecto = mouseOverMenu || isDragging || gridGrabbed.current || mode == RUNTIME_MODE;
   const gridSize = props.gridSize!.value;
   const snapToGrid = props.snapToGrid?.value;
@@ -99,6 +105,16 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    if (!pickedWidget) return setDragPreview(null);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const userX = (e.clientX - rect.left - pan.x) / zoom;
+    const userY = (e.clientY - rect.top - pan.y) / zoom;
+
+    setDragPreview({
+      widget: pickedWidget,
+      x: ensureGridCoordinate(userX),
+      y: ensureGridCoordinate(userY),
+    });
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -139,6 +155,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
       editableProperties,
     };
     addWidget(newWidget);
+    setDragPreview(null);
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -306,6 +323,21 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
         }px`,
       }}
     >
+      {dragPreview && (
+        <div
+          style={{
+            position: "absolute",
+            left: pan.x + dragPreview.x * zoom,
+            top: pan.y + dragPreview.y * zoom,
+            width: dragPreview.widget.editableProperties.width?.value ?? 100,
+            height: dragPreview.widget.editableProperties.height?.value ?? 50,
+            border: "2px dashed #00aaff",
+            pointerEvents: "none",
+            transform: `scale(${zoom})`,
+            zIndex: 1000,
+          }}
+        />
+      )}
       <div
         id="centerRef"
         className={`centerRef ${
