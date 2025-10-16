@@ -292,15 +292,12 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
         setSelectedWidgetIDs(allWidgetIDs);
         return;
       }
-      if (e.ctrlKey && e.key.toLowerCase() === "g" && !e.shiftKey) {
+      if (e.ctrlKey && e.key.toLowerCase() === "g") {
         e.preventDefault();
         groupSelected();
         return;
       }
-      if (
-        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "g") ||
-        (e.ctrlKey && e.key.toLowerCase() === "u")
-      ) {
+      if (e.ctrlKey && e.key.toLowerCase() === "u") {
         e.preventDefault();
         ungroupSelected();
         return;

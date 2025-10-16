@@ -15,6 +15,8 @@ import AlignVerticalCenter from "@mui/icons-material/AlignVerticalCenter";
 import AlignHorizontalCenter from "@mui/icons-material/AlignHorizontalCenter";
 import DragIndicator from "@mui/icons-material/DragIndicator";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CustomGroupIcon from "@components/CustomIcons/GroupIcon";
+import CustomUngroupIcon from "@components/CustomIcons/UngroupIcon";
 import { EDIT_MODE } from "@src/constants/constants";
 import { Rnd } from "react-rnd";
 import { grey } from "@mui/material/colors";
@@ -42,6 +44,8 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
     alignRight,
     alignVerticalCenter,
     deleteWidget,
+    groupSelected,
+    ungroupSelected,
   } = useEditorContext();
 
   if (mode !== EDIT_MODE) return null;
@@ -61,7 +65,7 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
   return (
     <Rnd
       className="toolBar"
-      default={{ x: 80, y: 15, width: 370, height: 40 }}
+      default={{ x: 80, y: 15, width: 440, height: 40 }}
       bounds="window"
       enableResizing={false}
       dragHandleClassName="dragHandle"
@@ -102,6 +106,31 @@ const ToolbarButtons: React.FC<ToolBarProps> = ({ onMouseEnter, onMouseLeave }) 
           <span>
             <IconButton size="small" onClick={sendToBack} disabled={noneSelected} sx={iconSx}>
               <FlipToBack fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+
+        <Tooltip title="Group widgets">
+          <span>
+            <IconButton
+              size="small"
+              onClick={groupSelected}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
+              <CustomGroupIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Ungroup widgets">
+          <span>
+            <IconButton
+              size="small"
+              onClick={ungroupSelected}
+              disabled={lessThanTwoSelected}
+              sx={iconSx}
+            >
+              <CustomUngroupIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>

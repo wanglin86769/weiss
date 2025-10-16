@@ -166,6 +166,8 @@ const HelpOverlay: React.FC = () => {
           <ShortcutRow action="Paste widget" keys="Ctrl + V" />
           <ShortcutRow action="Delete widget" keys="Delete" />
           <ShortcutRow action="Select all" keys="Ctrl + A" />
+          <ShortcutRow action="Group" keys="Ctrl + G" />
+          <ShortcutRow action="Ungroup" keys="Ctrl + U" />
           <ShortcutRow action="Export layout" keys="Ctrl + S" />
 
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
