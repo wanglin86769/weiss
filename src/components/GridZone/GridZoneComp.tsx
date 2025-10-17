@@ -30,7 +30,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
   const props = data.editableProperties;
   const {
     mode,
-    editorWidgets,
     addWidget,
     selectedWidgetIDs,
     setSelectedWidgetIDs,

@@ -26,6 +26,7 @@ interface RendererProps {
  * @param scale Current zoom level of the grid
  * @param ensureGridCoordinate Function to snap items to grid (if snap activated)
  * @param setIsDragging Callback to indicate dragging state
+ * @param isPanning Boolean to indicate if GridZone is panning
  */
 
 const WidgetRenderer: React.FC<RendererProps> = ({
@@ -43,22 +44,11 @@ const WidgetRenderer: React.FC<RendererProps> = ({
     selectedWidgets,
     selectionBounds,
     computeGroupBounds,
+    groups,
   } = useEditorContext();
 
   const inEditMode = mode === EDIT_MODE;
   const isMultipleSelect = selectedWidgetIDs.length > 1;
-  const selectedWidgetIdsSet = new Set(selectedWidgetIDs);
-
-  // Group widgets by groupId (ignoring undefined)
-  const groups = useMemo(() => {
-    const groupMap = new Map<string, Widget[]>();
-    for (const w of editorWidgets) {
-      if (!w.groupId) continue;
-      if (!groupMap.has(w.groupId)) groupMap.set(w.groupId, []);
-      groupMap.get(w.groupId)!.push(w);
-    }
-    return Array.from(groupMap.entries());
-  }, [editorWidgets]);
 
   function renderWidget(widget: Widget): ReactNode {
     const Comp = WidgetRegistry[widget.widgetName]?.component;
@@ -107,7 +97,6 @@ const WidgetRenderer: React.FC<RendererProps> = ({
     const newGroupHeight = ref.offsetHeight;
     const scaleX = newGroupWidth / bounds.width;
     const scaleY = newGroupHeight / bounds.height;
-
     const updates: MultiWidgetPropertyUpdates = {};
     widgets.forEach((w) => {
       const { width, height, x, y } = {
@@ -144,12 +133,12 @@ const WidgetRenderer: React.FC<RendererProps> = ({
     batchWidgetUpdate(updates);
   };
 
-  // Render selection box (multi-select move/resize)
   const renderSelectionBox = () =>
     isMultipleSelect &&
     selectionBounds && (
       <Rnd
         className="selectionBox"
+        id="selectionBox"
         bounds="window"
         scale={scale}
         disableDragging={!inEditMode || isPanning}
@@ -162,37 +151,37 @@ const WidgetRenderer: React.FC<RendererProps> = ({
           handleSelGroupDragStop(dx, dy);
         }}
         onResize={() => setIsDragging(true)}
+        onResizeStop={(_e, _dir, ref) =>
+          handleGroupResizeStop(ref, selectionBounds, selectedWidgets)
+        }
         style={{
           outline: "1px dashed",
           zIndex: FRONT_UI_ZIDX - 1,
         }}
       >
-        {selectedWidgets
-          .filter((w) => !w.groupId)
-          .map((w) => (
-            <div
-              key={w.id}
-              className="selectable selected"
-              style={{
-                width: w.editableProperties.width!.value,
-                height: w.editableProperties.height!.value,
-                left: w.editableProperties.x!.value - selectionBounds.x,
-                top: w.editableProperties.y!.value - selectionBounds.y,
-                pointerEvents: isPanning ? "none" : "auto",
-              }}
-            >
-              {renderWidget(w)}
-            </div>
-          ))}
+        {selectedWidgets.map((w) => (
+          <div
+            key={w.id}
+            className="selectable selected"
+            style={{
+              width: w.editableProperties.width!.value,
+              height: w.editableProperties.height!.value,
+              left: w.editableProperties.x!.value - selectionBounds.x,
+              top: w.editableProperties.y!.value - selectionBounds.y,
+              pointerEvents: isPanning ? "none" : "auto",
+            }}
+          >
+            {renderWidget(w)}
+          </div>
+        ))}
       </Rnd>
     );
 
-  // Render all groups (each as one draggable Rnd)
   const renderGroups = () =>
-    groups.map(([groupId, widgets]) => {
-      const bounds = computeGroupBounds(widgets.map((w) => w.id));
-      if (!bounds) return null;
-      const isGroupSelected = widgets.every((w) => selectedWidgetIDs.includes(w.id));
+    groups.map(([groupId, groupWidgets]) => {
+      const groupBounds = computeGroupBounds(groupWidgets.map((w) => w.id));
+      if (!groupBounds) return null;
+      const isGroupSelected = groupWidgets.every((w) => selectedWidgetIDs.includes(w.id));
       return (
         <Rnd
           key={groupId}
@@ -201,15 +190,16 @@ const WidgetRenderer: React.FC<RendererProps> = ({
           bounds="window"
           scale={scale}
           disableDragging={!inEditMode || isPanning}
-          size={{ width: bounds.width, height: bounds.height }}
-          position={{ x: bounds.x, y: bounds.y }}
+          size={{ width: groupBounds.width, height: groupBounds.height }}
+          position={{ x: groupBounds.x, y: groupBounds.y }}
+          onResize={() => setIsDragging(true)}
           onDrag={() => setIsDragging(true)}
           onDragStop={(_e, d) => {
-            const dx = d.x - bounds.x;
-            const dy = d.y - bounds.y;
-            handleGroupDragStop(dx, dy, widgets);
+            const dx = d.x - groupBounds.x;
+            const dy = d.y - groupBounds.y;
+            handleGroupDragStop(dx, dy, groupWidgets);
           }}
-          onResizeStop={(_e, _dir, ref) => handleGroupResizeStop(ref, bounds, widgets)}
+          onResizeStop={(_e, _dir, ref) => handleGroupResizeStop(ref, groupBounds, groupWidgets)}
           style={{
             outline: isGroupSelected
               ? `2px dashed ${COLORS.highlighted}`
@@ -219,16 +209,15 @@ const WidgetRenderer: React.FC<RendererProps> = ({
             boxShadow: isGroupSelected ? "2 2 2px rgba(33, 150, 243, 0.5)" : "none",
           }}
         >
-          {widgets.map((w) => (
+          {groupWidgets.map((w) => (
             <div
               key={w.id}
               className="selectable"
               style={{
-                position: "absolute",
                 width: w.editableProperties.width!.value,
                 height: w.editableProperties.height!.value,
-                left: w.editableProperties.x!.value - bounds.x,
-                top: w.editableProperties.y!.value - bounds.y,
+                left: w.editableProperties.x!.value - groupBounds.x,
+                top: w.editableProperties.y!.value - groupBounds.y,
               }}
             >
               {renderWidget(w)}

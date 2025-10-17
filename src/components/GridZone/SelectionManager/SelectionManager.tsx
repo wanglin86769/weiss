@@ -62,7 +62,6 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({
         const groupEl = (e.target as HTMLElement)?.closest(".groupBox");
         const widgetEl = (e.target as HTMLElement)?.closest(".selectable");
         if (groupEl) {
-          // Select all widgets with this groupId
           const groupId = groupEl.getAttribute("id");
           if (groupId) {
             const groupWidgetIds = editorWidgets

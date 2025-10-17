@@ -702,6 +702,19 @@ export function useWidgetManager() {
   }, [editorWidgets]);
 
   /**
+   * List of all groups formed by widgets.
+   */
+  const groups = useMemo(() => {
+    const groupMap = new Map<string, Widget[]>();
+    for (const w of editorWidgets) {
+      if (!w.groupId) continue;
+      if (!groupMap.has(w.groupId)) groupMap.set(w.groupId, []);
+      groupMap.get(w.groupId)!.push(w);
+    }
+    return Array.from(groupMap.entries());
+  }, [editorWidgets]);
+
+  /**
    * Macros to be substituted on pv names.
    */
   const macros = getWidget(GRID_ID)?.editableProperties.macros?.value;
@@ -750,6 +763,7 @@ export function useWidgetManager() {
     downloadWidgets,
     loadWidgets,
     PVList,
+    groups,
     macros,
     allWidgetIDs,
   };
