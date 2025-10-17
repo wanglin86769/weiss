@@ -59,19 +59,8 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({
 
       // --- Single click
       if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
-        const groupEl = (e.target as HTMLElement)?.closest(".groupBox");
         const widgetEl = (e.target as HTMLElement)?.closest(".selectable");
-        if (groupEl) {
-          const groupId = groupEl.getAttribute("id");
-          if (groupId) {
-            const groupWidgetIds = editorWidgets
-              .filter((w) => w.groupId === groupId)
-              .map((w) => w.id);
-            e.ctrlKey
-              ? setSelectedWidgetIDs((prev) => Array.from(new Set([...prev, ...groupWidgetIds])))
-              : setSelectedWidgetIDs(groupWidgetIds);
-          }
-        } else if (widgetEl) {
+        if (widgetEl) {
           const id = widgetEl.getAttribute("id");
           if (id) {
             e.ctrlKey ? setSelectedWidgetIDs((prev) => [...prev, id]) : setSelectedWidgetIDs([id]);
@@ -91,7 +80,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({
 
       const selectedIds = new Set<string>();
 
-      // First select all fully contained widgets
+      // select all fully contained widgets
       editorWidgets.forEach((w) => {
         if (w.id === GRID_ID) return;
         const x = w.editableProperties.x!.value;
@@ -103,14 +92,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({
           x >= selX && y >= selY && x + width <= selX + selWidth && y + height <= selY + selHeight;
 
         if (inside) {
-          if (w.groupId) {
-            // Add all widgets in the same group
-            editorWidgets
-              .filter((wg) => wg.groupId === w.groupId)
-              .forEach((wg) => selectedIds.add(wg.id));
-          } else {
-            selectedIds.add(w.id);
-          }
+          selectedIds.add(w.id);
         }
       });
 
