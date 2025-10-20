@@ -164,6 +164,7 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
         {relativeWidgets.map((w) => (
           <div
             key={w.id}
+            id={w.id}
             className="selectable selected"
             style={{
               position: "absolute",

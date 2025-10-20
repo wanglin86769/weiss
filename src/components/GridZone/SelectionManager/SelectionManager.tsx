@@ -61,12 +61,13 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
 
       // --- No active selection: interpret as click
       if (!selection.start) {
-        if (widgetEl && id) {
+        const wId = widgetEl?.getAttribute("id");
+        if (widgetEl && wId) {
           e.ctrlKey
             ? setSelectedWidgetIDs((prev) =>
-                prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+                prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId]
               )
-            : setSelectedWidgetIDs([id]);
+            : setSelectedWidgetIDs([wId]);
         } else {
           setSelectedWidgetIDs([]);
         }
