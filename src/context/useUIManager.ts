@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { EDIT_MODE, GRID_ID, type Mode } from "@src/constants/constants";
+import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
 
@@ -22,7 +22,8 @@ export default function useUIManager(
   editorWidgets: ReturnType<typeof useWidgetManager>["editorWidgets"],
   setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
   updateWidgetProperties: ReturnType<typeof useWidgetManager>["updateWidgetProperties"],
-  loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"]
+  loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],
+  formatWdgToExport: ReturnType<typeof useWidgetManager>["formatWdgToExport"]
 ) {
   const [propertyEditorFocused, setPropertyEditorFocused] = useState(false);
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
@@ -88,19 +89,9 @@ export default function useUIManager(
    * Only writes while in edit mode to avoid saving runtime PV updates.
    */
   useEffect(() => {
-    if (mode === EDIT_MODE) {
+    if (inEditMode) {
       try {
-        const exportable = editorWidgets.map(
-          (widget) =>
-            ({
-              id: widget.id,
-              children: widget.children,
-              widgetName: widget.widgetName,
-              properties: Object.fromEntries(
-                Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
-              ),
-            } as ExportedWidget)
-        );
+        const exportable = editorWidgets.map(formatWdgToExport);
         localStorage.setItem("editorWidgets", JSON.stringify(exportable));
       } catch (err) {
         console.error("Failed to save widgets:", err);

@@ -11,5 +11,6 @@
 
 .groupBox {
   box-sizing: border-box;
+  overflow: visible; /* allow selection margin to be seen */
   outline: 1px dashed rgba(80, 80, 80, 0.199);
 }

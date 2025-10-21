@@ -13,11 +13,11 @@ const CLICK_THRESHOLD = 3;
 
 const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan }) => {
   const { editorWidgets, setSelectedWidgetIDs, isDragging } = useEditorContext();
-  const [selection, setSelection] = useState<{
+  const [selectionArea, setSelectionArea] = useState<{
     start?: { x: number; y: number };
     end?: { x: number; y: number };
   }>({});
-  const isSelecting = !!selection.start;
+  const isSelecting = !!selectionArea.start;
 
   const areaRef = useRef<HTMLDivElement>(null);
 
@@ -33,15 +33,15 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       const x = (e.clientX - rect.left - pan.x) / zoom;
       const y = (e.clientY - rect.top - pan.y) / zoom;
 
-      setSelection({ start: { x, y }, end: { x, y } });
+      setSelectionArea({ start: { x, y }, end: { x, y } });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!selection.start) return;
+      if (!selectionArea.start) return;
       const rect = grid.getBoundingClientRect();
       const x = (e.clientX - rect.left - pan.x) / zoom;
       const y = (e.clientY - rect.top - pan.y) / zoom;
-      setSelection((prev) => (prev.start ? { ...prev, end: { x, y } } : prev));
+      setSelectionArea((prev) => (prev.start ? { ...prev, end: { x, y } } : prev));
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -51,7 +51,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       if (id !== GRID_ID && !widgetEl) return;
       // --- Ignore mouse up if dragging widgets
       if (isDragging) {
-        setSelection({});
+        setSelectionArea({});
         return;
       }
 
@@ -60,9 +60,9 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       const yEnd = (e.clientY - rect.top - pan.y) / zoom;
 
       // --- No active selection: interpret as click
-      if (!selection.start) {
+      if (!selectionArea.start) {
         const wId = widgetEl?.getAttribute("id");
-        if (widgetEl && wId) {
+        if (wId) {
           e.ctrlKey
             ? setSelectedWidgetIDs((prev) =>
                 prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId]
@@ -75,13 +75,13 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       }
 
       // --- Finish area selection
-      const { start } = selection;
+      const { start } = selectionArea;
       const dx = Math.abs(xEnd - start.x);
       const dy = Math.abs(yEnd - start.y);
 
       // just a click (too small)
       if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
-        setSelection({});
+        setSelectionArea({});
         setSelectedWidgetIDs([]);
         return;
       }
@@ -104,7 +104,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
         })
         .map((w) => w.id);
       setSelectedWidgetIDs(selectedIds);
-      setSelection({});
+      setSelectionArea({});
     };
 
     grid.addEventListener("mousedown", handleMouseDown);
@@ -116,13 +116,13 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [zoom, pan, gridRef, editorWidgets, setSelectedWidgetIDs, selection, isDragging]);
+  }, [zoom, pan, gridRef, editorWidgets, setSelectedWidgetIDs, selectionArea, isDragging]);
 
-  if (!isSelecting || !selection.end) return null;
-  const x = Math.min(selection.start!.x, selection.end.x) * zoom + pan.x;
-  const y = Math.min(selection.start!.y, selection.end.y) * zoom + pan.y;
-  const w = Math.abs(selection.end.x - selection.start!.x) * zoom;
-  const h = Math.abs(selection.end.y - selection.start!.y) * zoom;
+  if (!isSelecting || !selectionArea.end) return null;
+  const x = Math.min(selectionArea.start!.x, selectionArea.end.x) * zoom + pan.x;
+  const y = Math.min(selectionArea.start!.y, selectionArea.end.y) * zoom + pan.y;
+  const w = Math.abs(selectionArea.end.x - selectionArea.start!.x) * zoom;
+  const h = Math.abs(selectionArea.end.y - selectionArea.start!.y) * zoom;
 
   return (
     <div

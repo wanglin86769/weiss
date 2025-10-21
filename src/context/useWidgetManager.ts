@@ -19,6 +19,24 @@ export interface DOMRectLike {
   width: number;
   height: number;
 }
+
+/**
+ * Deep clone a single widget including its editable properties and children recursively.
+ * @param widget Widget to clone
+ * @returns Cloned widget
+ */
+function deepCloneWidget(widget: Widget): Widget {
+  return {
+    ...widget,
+    // clone editableProperties deeply
+    editableProperties: Object.fromEntries(
+      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
+    ),
+    // recursively clone children if any
+    children: widget.children?.map((child) => deepCloneWidget(child)),
+  };
+}
+
 /**
  * Deep clone a list of widgets.
  * @param widgets Array of widgets to clone
@@ -30,7 +48,6 @@ function deepCloneWidgetList(widgets: Widget[]): Widget[] {
 
 function updateNestedWidgets(widgets: Widget[], updates: MultiWidgetPropertyUpdates): Widget[] {
   const updateOne = (w: Widget): Widget => {
-    // Clone so we never mutate directly
     let newWidget = w;
 
     // Apply update if it exists for this widget ID
@@ -63,28 +80,47 @@ function updateNestedWidgets(widgets: Widget[], updates: MultiWidgetPropertyUpda
   return widgets.map(updateOne);
 }
 
-function findWidgetRecursive(widgets: Widget[], id: string): Widget | undefined {
+function getWidgetNested(widgets: Widget[], id: string): Widget | undefined {
   for (const w of widgets) {
     if (w.id === id) return w;
     if (w.children) {
-      const found = findWidgetRecursive(w.children, id);
+      const found = getWidgetNested(w.children, id);
       if (found) return found;
     }
   }
   return undefined;
 }
 
+const getSelectedNested = (widgets: Widget[], selectedIds: string[]): Widget[] => {
+  const result: Widget[] = [];
+  for (const w of widgets) {
+    if (selectedIds.includes(w.id)) result.push(w);
+    if (w.children?.length) result.push(...getSelectedNested(w.children, selectedIds));
+  }
+  return result;
+};
+
 /**
- * Deep clone a single widget including its editable properties.
- * @param widget Widget to clone
- * @returns Cloned widget
+ * Create a new group widget instance with optional children and bounds.
  */
-function deepCloneWidget(widget: Widget): Widget {
+function createGroupWidget(
+  id: string,
+  children: Widget[] = [],
+  bounds?: { x?: number; y?: number; width?: number; height?: number }
+): Widget {
   return {
-    ...widget,
-    editableProperties: Object.fromEntries(
-      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
-    ),
+    id,
+    widgetLabel: "Group",
+    widgetName: "Group",
+    category: "internal",
+    component: () => null, // groups don’t render anything directly
+    children,
+    editableProperties: {
+      x: { ...PROPERTY_SCHEMAS.x, value: bounds?.x ?? 0 },
+      y: { ...PROPERTY_SCHEMAS.y, value: bounds?.y ?? 0 },
+      width: { ...PROPERTY_SCHEMAS.width, value: bounds?.width ?? 0 },
+      height: { ...PROPERTY_SCHEMAS.height, value: bounds?.height ?? 0 },
+    },
   };
 }
 
@@ -110,13 +146,14 @@ export function useWidgetManager() {
   >({});
   const clipboard = useRef<Widget[]>([]);
   const copiedSelectionBounds = useRef({ x: 0, y: 0, width: 0, height: 0 });
+
   const allWidgetIDs = useMemo(
     () => editorWidgets.map((w) => w.id).filter((id) => id !== GRID_ID),
     [editorWidgets]
   );
 
-  const selectedWidgets = useMemo(
-    () => editorWidgets.filter((w) => selectedWidgetIDs.includes(w.id)),
+  const selectedWidgets: Widget[] = useMemo(
+    () => getSelectedNested(editorWidgets, selectedWidgetIDs),
     [editorWidgets, selectedWidgetIDs]
   );
 
@@ -187,7 +224,7 @@ export function useWidgetManager() {
    * @returns Widget object or undefined
    */
   const getWidget = useCallback(
-    (id: string) => findWidgetRecursive(editorWidgets, id),
+    (id: string) => getWidgetNested(editorWidgets, id),
     [editorWidgets]
   );
 
@@ -209,23 +246,9 @@ export function useWidgetManager() {
 
   function groupSelected() {
     if (selectedWidgetIDs.length < 2 || !selectionBounds) return;
-    const selectedWidgets = editorWidgets.filter((w) => selectedWidgetIDs.includes(w.id));
     const groupID = uuidv4();
     // Create the new group widget and attach selected widgets as children
-    const groupWidget: Widget = {
-      id: groupID,
-      widgetLabel: "Group",
-      widgetName: "Group",
-      category: "internal",
-      component: () => null,
-      children: selectedWidgets,
-      editableProperties: {
-        x: { ...PROPERTY_SCHEMAS.x, value: selectionBounds.x },
-        y: { ...PROPERTY_SCHEMAS.y, value: selectionBounds.y },
-        width: { ...PROPERTY_SCHEMAS.width, value: selectionBounds.width },
-        height: { ...PROPERTY_SCHEMAS.height, value: selectionBounds.height },
-      },
-    };
+    const groupWidget = createGroupWidget(groupID, selectedWidgets, selectionBounds);
 
     setEditorWidgets((prev) => {
       // Remove selected widgets from top-level array
@@ -334,16 +357,39 @@ export function useWidgetManager() {
     reorderWidgets("back");
   }, [reorderWidgets]);
 
+  function getNestedMoveUpdates(
+    widget: Widget,
+    dx: number,
+    dy: number,
+    updates: MultiWidgetPropertyUpdates
+  ) {
+    const xProp = widget.editableProperties.x?.value ?? 0;
+    const yProp = widget.editableProperties.y?.value ?? 0;
+
+    updates[widget.id] = {
+      x: xProp + dx,
+      y: yProp + dy,
+    };
+
+    if (widget.children?.length) {
+      widget.children.forEach((child) => getNestedMoveUpdates(child, dx, dy, updates));
+    }
+  }
   /**
    * Align selected widgets by the left margin.
    */
   const alignLeft = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const leftX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      updates[w.id] = { x: leftX };
+      const oldX = w.editableProperties.x?.value ?? 0;
+      const dx = leftX - oldX;
+      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -352,16 +398,23 @@ export function useWidgetManager() {
    */
   const alignRight = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const rightX = Math.max(
       ...selectedWidgets.map(
         (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
       )
     );
+
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      if (!w.editableProperties.x || !w.editableProperties.width) return;
-      updates[w.id] = { x: rightX - w.editableProperties.width.value };
+      const width = w.editableProperties.width?.value ?? 0;
+      const oldX = w.editableProperties.x?.value ?? 0;
+      const newX = rightX - width;
+      const dx = newX - oldX;
+      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -370,11 +423,16 @@ export function useWidgetManager() {
    */
   const alignTop = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const topY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      updates[w.id] = { y: topY };
+      const oldY = w.editableProperties.y?.value ?? 0;
+      const dy = topY - oldY;
+      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -383,16 +441,23 @@ export function useWidgetManager() {
    */
   const alignBottom = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const bottomY = Math.max(
       ...selectedWidgets.map(
         (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
       )
     );
+
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      if (!w.editableProperties.y || !w.editableProperties.height) return;
-      updates[w.id] = { y: bottomY - w.editableProperties.height.value };
+      const height = w.editableProperties.height?.value ?? 0;
+      const oldY = w.editableProperties.y?.value ?? 0;
+      const newY = bottomY - height;
+      const dy = newY - oldY;
+      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -401,6 +466,7 @@ export function useWidgetManager() {
    */
   const alignHorizontalCenter = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const minX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const maxX = Math.max(
       ...selectedWidgets.map(
@@ -410,10 +476,15 @@ export function useWidgetManager() {
     const centerX = (minX + maxX) / 2;
 
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      if (!w.editableProperties.x || !w.editableProperties.width) return;
-      updates[w.id] = { x: centerX - w.editableProperties.width.value / 2 };
+      const width = w.editableProperties.width?.value ?? 0;
+      const oldX = w.editableProperties.x?.value ?? 0;
+      const newX = centerX - width / 2;
+      const dx = newX - oldX;
+      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -422,6 +493,7 @@ export function useWidgetManager() {
    */
   const alignVerticalCenter = useCallback(() => {
     if (selectedWidgets.length < 2) return;
+
     const minY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const maxY = Math.max(
       ...selectedWidgets.map(
@@ -431,10 +503,15 @@ export function useWidgetManager() {
     const centerY = (minY + maxY) / 2;
 
     const updates: MultiWidgetPropertyUpdates = {};
+
     selectedWidgets.forEach((w) => {
-      if (!w.editableProperties.y || !w.editableProperties.height) return;
-      updates[w.id] = { y: centerY - w.editableProperties.height.value / 2 };
+      const height = w.editableProperties.height?.value ?? 0;
+      const oldY = w.editableProperties.y?.value ?? 0;
+      const newY = centerY - height / 2;
+      const dy = newY - oldY;
+      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
     });
+
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -600,22 +677,24 @@ export function useWidgetManager() {
     [updateEditorWidgetList, copiedSelectionBounds]
   );
 
+  const formatWdgToExport = (widget: Widget): ExportedWidget => {
+    return {
+      id: widget.id,
+      widgetName: widget.widgetName,
+      properties: Object.fromEntries(
+        Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
+      ),
+      children: widget.children?.map((child) => formatWdgToExport(child)) ?? [],
+    };
+  };
+
   /**
    * Export current widgets to JSON file.
    */
   const downloadWidgets = useCallback(async () => {
     const defaultName = "weiss-opi.json";
-    const simplified = editorWidgets.map(
-      (widget) =>
-        ({
-          id: widget.id,
-          parentId: widget.children,
-          widgetName: widget.widgetName,
-          properties: Object.fromEntries(
-            Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
-          ),
-        } as ExportedWidget)
-    );
+
+    const simplified = editorWidgets.map(formatWdgToExport);
 
     const dataStr = JSON.stringify(simplified, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -661,7 +740,6 @@ export function useWidgetManager() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [editorWidgets]);
-
   /**
    * Load widgets from JSON or ExportedWidget array.
    * @param widgetsData JSON string or array of ExportedWidget
@@ -669,47 +747,51 @@ export function useWidgetManager() {
   const loadWidgets = useCallback(
     (widgetsData: string | ExportedWidget[]) => {
       try {
-        let parsed: ExportedWidget[];
-        if (typeof widgetsData === "string") {
-          parsed = JSON.parse(widgetsData);
-        } else {
-          parsed = widgetsData;
-        }
+        const parsed: ExportedWidget[] =
+          typeof widgetsData === "string" ? JSON.parse(widgetsData) : widgetsData;
 
-        const imported = parsed
-          .map((raw, idx) => {
-            let baseWdg;
-            if (idx == 0) {
-              if (raw.id !== GRID_ID) {
-                throw new Error(
-                  "Missing or invalid grid properties. Did you move the grid from first position?"
-                );
-              }
-              baseWdg = GridZone;
-            } else {
-              baseWdg = WidgetRegistry[raw.widgetName];
-            }
-            if (!baseWdg && raw.widgetName != "Group") {
-              //TODO: actually handle group loading properly
+        const restoreWidget = (raw: ExportedWidget, idx?: number): Widget | null => {
+          let instance: Widget | null;
+
+          const isGroup = raw.widgetName === "Group";
+
+          if (idx === 0 && raw.id === GRID_ID) {
+            instance = GridZone;
+          } else if (isGroup) {
+            instance = createGroupWidget(raw.id);
+          } else {
+            const baseWdg = WidgetRegistry[raw.widgetName];
+            if (!baseWdg) {
               console.warn(`Unknown widget type: ${raw.widgetName}`);
               return null;
             }
-
-            const instance = deepCloneWidget(baseWdg);
+            instance = deepCloneWidget(baseWdg);
             instance.id = raw.id;
-            instance.children = raw.children;
+          }
 
-            // overlay values from the file
-            for (const [key, val] of Object.entries(raw.properties ?? {})) {
-              const propName = key as PropertyKey;
-              if (instance.editableProperties[propName]) {
-                instance.editableProperties[propName].value = val;
-              }
+          // Recursively restore children
+          if (raw.children && raw.children.length > 0) {
+            instance.children = raw.children
+              .map((child) => restoreWidget(child))
+              .filter((c): c is Widget => c !== null);
+          } else {
+            instance.children = [];
+          }
+
+          // Overlay properties
+          for (const [key, val] of Object.entries(raw.properties ?? {})) {
+            const propName = key as PropertyKey;
+            if (instance.editableProperties[propName]) {
+              instance.editableProperties[propName].value = val;
             }
+          }
+          return instance;
+        };
 
-            return instance;
-          })
-          .filter(Boolean) as Widget[];
+        const imported = parsed
+          .map((raw, idx) => restoreWidget(raw, idx))
+          .filter((w): w is Widget => w !== null);
+
         updateEditorWidgetList(imported);
         setSelectedWidgetIDs([]);
       } catch (err) {
@@ -787,5 +869,6 @@ export function useWidgetManager() {
     allWidgetIDs,
     isDragging,
     setIsDragging,
+    formatWdgToExport,
   };
 }

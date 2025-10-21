@@ -115,7 +115,7 @@ export interface Widget {
  */
 export interface ExportedWidget {
   id: string;
-  children?: Widget[];
+  children?: ExportedWidget[];
   widgetName: string;
   properties: Partial<Record<PropertyKey, PropertyValue>>;
 }
