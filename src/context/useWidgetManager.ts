@@ -13,6 +13,7 @@ import { GRID_ID, MAX_HISTORY } from "@src/constants/constants";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
 import { v4 as uuidv4 } from "uuid";
 import { PROPERTY_SCHEMAS } from "@src/types/widgetProperties";
+
 export interface DOMRectLike {
   x: number;
   y: number;
@@ -653,23 +654,28 @@ export function useWidgetManager() {
       const dx = pos.x - baseX;
       const dy = pos.y - baseY;
 
-      const newWidgets = clipboard.current.map((w) => {
-        const clone = deepCloneWidget(w);
-        const id = `${w.widgetName}-${uuidv4()}`;
+      const cloneWidgetWithNewIds = (widget: Widget, dxOffset = 0, dyOffset = 0): Widget => {
+        const newId = `${widget.widgetName}-${uuidv4()}`;
+        const newEditableProps: Widget["editableProperties"] = Object.fromEntries(
+          Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
+        );
+
+        if (newEditableProps.x) newEditableProps.x.value += dxOffset;
+        if (newEditableProps.y) newEditableProps.y.value += dyOffset;
+
+        const newChildren = widget.children?.map((child) =>
+          cloneWidgetWithNewIds(child, dxOffset, dyOffset)
+        );
+
         return {
-          ...clone,
-          id,
-          editableProperties: {
-            ...w.editableProperties,
-            x: w.editableProperties.x
-              ? { ...w.editableProperties.x, value: w.editableProperties.x.value + dx }
-              : undefined,
-            y: w.editableProperties.y
-              ? { ...w.editableProperties.y, value: w.editableProperties.y.value + dy }
-              : undefined,
-          },
+          ...widget,
+          id: newId,
+          editableProperties: newEditableProps,
+          children: newChildren,
         };
-      });
+      };
+
+      const newWidgets = clipboard.current.map((w) => cloneWidgetWithNewIds(w, dx, dy));
 
       updateEditorWidgetList((prev) => [...prev, ...newWidgets]);
       setSelectedWidgetIDs(newWidgets.map((w) => w.id));
