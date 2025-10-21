@@ -6,7 +6,6 @@ import { Rnd, type DraggableData, type RndDragEvent } from "react-rnd";
 import { GRID_ID, FRONT_UI_ZIDX } from "@src/constants/constants";
 import "./WidgetRenderer.css";
 
-// add delay to set isDragging flag - needed because onDragStop fires before onMouseUp
 const DRAG_END_DELAY = 80; //ms
 
 interface RendererProps {
@@ -26,13 +25,27 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     setIsDragging,
   } = useEditorContext();
 
-  /** --- Core widget rendering --- */
+  /** Core widget rendering */
   const renderWidgetContent = (w: Widget): ReactNode => {
     const Comp = WidgetRegistry[w.widgetName]?.component;
     return Comp ? <Comp data={w} /> : null;
   };
 
-  /** --- Handle dragging for individual widgets --- */
+  /** Recursive helper to move widget and children by delta */
+  const applyDelta = (
+    widget: Widget,
+    dx: number,
+    dy: number,
+    updates: MultiWidgetPropertyUpdates
+  ) => {
+    updates[widget.id] = {
+      x: ensureGridCoordinate(widget.editableProperties.x!.value + dx),
+      y: ensureGridCoordinate(widget.editableProperties.y!.value + dy),
+    };
+    widget.children?.forEach((child) => applyDelta(child, dx, dy, updates));
+  };
+
+  /** Handle dragging for individual widgets */
   const handleDragStop = (_e: RndDragEvent, d: DraggableData, w: Widget) => {
     const oldX = w.editableProperties.x!.value;
     const oldY = w.editableProperties.y!.value;
@@ -40,30 +53,12 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
 
     setTimeout(() => setIsDragging(false), DRAG_END_DELAY);
 
-    const deltaX = d.x - oldX;
-    const deltaY = d.y - oldY;
-
     const updates: MultiWidgetPropertyUpdates = {};
-
-    const collectUpdates = (widget: Widget, dx: number, dy: number) => {
-      const xProp = widget.editableProperties.x?.value ?? 0;
-      const yProp = widget.editableProperties.y?.value ?? 0;
-
-      updates[widget.id] = {
-        x: ensureGridCoordinate(xProp + dx),
-        y: ensureGridCoordinate(yProp + dy),
-      };
-
-      if (widget.children?.length) {
-        widget.children.forEach((child) => collectUpdates(child, dx, dy));
-      }
-    };
-
-    collectUpdates(w, deltaX, deltaY);
+    applyDelta(w, d.x - oldX, d.y - oldY, updates);
     batchWidgetUpdate(updates);
   };
 
-  /** --- Handle resize logic --- */
+  /** Handle resize */
   const handleResizeStop = (ref: HTMLElement, position: GridPosition, w: Widget) => {
     setTimeout(() => setIsDragging(false), DRAG_END_DELAY);
     updateWidgetProperties(w.id, {
@@ -74,12 +69,12 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     });
   };
 
-  /** --- Recursive renderer for nested widgets --- */
+  /** Recursive renderer for canvas and selection group */
   const renderRecursive = (w: Widget, parentX = 0, parentY = 0, isChild = false): ReactNode => {
     if (w.id === GRID_ID) return null;
-    // --- hide selected widgets if selection group is active ---
     const isSelected = selectedWidgetIDs.includes(w.id);
     if (isSelected && selectedWidgetIDs.length > 1) return null;
+
     const x = w.editableProperties.x!.value - parentX;
     const y = w.editableProperties.y!.value - parentY;
     const width = w.editableProperties.width!.value;
@@ -87,7 +82,7 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
 
     const canDrag = inEditMode && !isPanning && !isChild;
     const canResize = inEditMode && !isPanning && !isChild;
-    const isGroup = w.children && w.children.length > 0;
+    const isGroup = w.children?.length;
 
     return (
       <Rnd
@@ -115,20 +110,36 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     );
   };
 
-  /** --- Render top-level widgets --- */
-  const topLevelWidgets = editorWidgets.filter((w) => w.id !== GRID_ID);
-
-  /** --- Virtual selection group (for multi-select drag) --- */
+  /** Render selection group for multi-select drag */
   const renderSelectionGroup = () => {
     if (!selectionBounds || selectedWidgetIDs.length <= 1) return null;
 
-    // Compute selected widgets and their positions relative to selection box
     const selectedWidgets = editorWidgets.filter((w) => selectedWidgetIDs.includes(w.id));
-    const relativeWidgets = selectedWidgets.map((w) => {
-      const relX = w.editableProperties.x!.value - selectionBounds.x;
-      const relY = w.editableProperties.y!.value - selectionBounds.y;
-      return { ...w, relX, relY };
-    });
+
+    const renderRecursiveForSelection = (w: Widget, parentX = 0, parentY = 0): ReactNode => {
+      const x = w.editableProperties.x!.value - parentX;
+      const y = w.editableProperties.y!.value - parentY;
+      const width = w.editableProperties.width!.value;
+      const height = w.editableProperties.height!.value;
+      const isGroup = w.children?.length;
+
+      return (
+        <div
+          key={w.id}
+          className={`selectable ${isGroup ? "groupBox" : ""}`}
+          style={{ position: "absolute", left: x, top: y, width, height }}
+        >
+          {renderWidgetContent(w)}
+          {w.children?.map((child) =>
+            renderRecursiveForSelection(
+              child,
+              w.editableProperties.x!.value,
+              w.editableProperties.y!.value
+            )
+          )}
+        </div>
+      );
+    };
 
     return (
       <Rnd
@@ -140,14 +151,10 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
         disableDragging={!inEditMode || isPanning}
         onDrag={() => setIsDragging(true)}
         onDragStop={(_e, d) => {
-          // Commit final positions of all selected widgets
+          const dx = d.x - selectionBounds.x;
+          const dy = d.y - selectionBounds.y;
           const updates: MultiWidgetPropertyUpdates = {};
-          relativeWidgets.forEach((w) => {
-            updates[w.id] = {
-              x: ensureGridCoordinate(d.x + w.relX),
-              y: ensureGridCoordinate(d.y + w.relY),
-            };
-          });
+          selectedWidgets.forEach((w) => applyDelta(w, dx, dy, updates));
           batchWidgetUpdate(updates);
           setTimeout(() => setIsDragging(false), DRAG_END_DELAY);
         }}
@@ -160,26 +167,14 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
           boxSizing: "border-box",
         }}
       >
-        {/* Render widgets relative to group container */}
-        {relativeWidgets.map((w) => (
-          <div
-            key={w.id}
-            id={w.id}
-            className="selectable selected"
-            style={{
-              position: "absolute",
-              left: w.relX,
-              top: w.relY,
-              width: w.editableProperties.width!.value,
-              height: w.editableProperties.height!.value,
-            }}
-          >
-            {renderWidgetContent(w)}
-          </div>
-        ))}
+        {selectedWidgets.map((w) =>
+          renderRecursiveForSelection(w, selectionBounds.x, selectionBounds.y)
+        )}
       </Rnd>
     );
   };
+
+  const topLevelWidgets = editorWidgets.filter((w) => w.id !== GRID_ID);
 
   return (
     <>
