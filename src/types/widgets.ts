@@ -129,3 +129,15 @@ export interface GridPosition {
   x: number;
   y: number;
 }
+
+/**
+ * Represents the position and dimensions of a Rectangle on the grid.
+ * @property x X coordinate on the grid
+ * @property y Y coordinate on the grid
+ * @property width width of the rectangle
+ * @property height height of the rectangle
+ */
+export interface DOMRectLike extends GridPosition {
+  width: number;
+  height: number;
+}

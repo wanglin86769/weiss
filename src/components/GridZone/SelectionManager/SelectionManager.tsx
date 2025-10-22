@@ -26,7 +26,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
     if (!grid) return;
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || e.altKey || isDragging) return;
       const id = (e.target as HTMLElement).getAttribute("id");
       if (id !== GRID_ID) return;
 
@@ -63,14 +63,16 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
       // --- No active selection: interpret as click
       if (!selectionArea.start) {
         const wId = widgetEl?.getAttribute("id");
-        if (wId) {
-          e.ctrlKey
-            ? setSelectedWidgetIDs((prev) =>
-                prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId]
-              )
-            : setSelectedWidgetIDs([wId]);
-        } else {
+        if (!wId) {
           setSelectedWidgetIDs([]);
+          return;
+        }
+        if (e.ctrlKey) {
+          setSelectedWidgetIDs((prev) =>
+            prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId]
+          );
+        } else {
+          setSelectedWidgetIDs([wId]);
         }
         return;
       }

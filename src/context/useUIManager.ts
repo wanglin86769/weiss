@@ -16,6 +16,7 @@ import type { ExportedWidget, Widget } from "@src/types/widgets";
  * @param setSelectedWidgetIDs Function to update currently selected widgets.
  * @param updateWidgetProperties Function to update widget properties.
  * @param loadWidgets Function to load widgets into the editor (used for localStorage).
+ * @param formatWdgToExport Function to format (reduce) widgets to exporting format.
  * @returns An object containing UI state, setters, and mode updater.
  */
 export default function useUIManager(
@@ -29,6 +30,8 @@ export default function useUIManager(
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
   const [pickedWidget, setPickedWidget] = useState<Widget | null>(null);
   const [mode, setMode] = useState<Mode>(EDIT_MODE);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
   const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
 
@@ -42,9 +45,7 @@ export default function useUIManager(
    * Runtime mode:
    * - Clears widget selection.
    * - Closes widget selector.
-   * - Starts a new PV session.
-   *
-   * Also updates the visibility of grid lines in the editor.
+   * - Starts WebSocket connection.
    *
    * @param newMode The mode to switch to ("edit" | "runtime").
    */
@@ -55,13 +56,12 @@ export default function useUIManager(
         // connection to pv server is managed by RAS widgets directly
         // add actions on mode transition?
       } else {
-        // connection to pv server is managed by RAS widgets directly
         setSelectedWidgetIDs([]);
         setWdgPickerOpen(false);
       }
       setMode(newMode);
     },
-    [updateWidgetProperties, setSelectedWidgetIDs]
+    [setSelectedWidgetIDs]
   );
 
   /**
@@ -97,7 +97,7 @@ export default function useUIManager(
         console.error("Failed to save widgets:", err);
       }
     }
-  }, [editorWidgets, mode]);
+  }, [editorWidgets, inEditMode, formatWdgToExport]);
 
   return {
     propertyEditorFocused,
@@ -109,5 +109,9 @@ export default function useUIManager(
     pickedWidget,
     setPickedWidget,
     inEditMode,
+    isDragging,
+    setIsDragging,
+    isPanning,
+    setIsPanning,
   };
 }

@@ -44,6 +44,8 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     pickedWidget,
     groupSelected,
     ungroupSelected,
+    isPanning,
+    setIsPanning,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<GridPosition>({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<GridPosition>({ x: 0, y: 0 });
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [shouldCenterPan, setShouldCenterPan] = useState(true);
@@ -252,7 +253,9 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
       // shortcuts for edit mode only
       if (e.ctrlKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        downloadWidgets();
+        downloadWidgets().catch((err) => {
+          console.error("Failed to download widgets:", err);
+        });
         return;
       }
       if (e.key.toLowerCase() === "delete" && selectedWidgetIDs.length > 0) {
@@ -302,15 +305,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    handleUndo,
-    handleRedo,
-    copyWidget,
-    pasteWidget,
-    downloadWidgets,
-    mousePosRef,
-    propertyEditorFocused,
-  ]);
+  });
 
   return (
     <div
@@ -362,11 +357,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}
       >
-        <WidgetRenderer
-          scale={zoom}
-          ensureGridCoordinate={ensureGridCoordinate}
-          isPanning={isPanning}
-        />
+        <WidgetRenderer scale={zoom} ensureGridCoordinate={ensureGridCoordinate} />
       </div>
       <SelectionManager gridRef={gridRef} zoom={zoom} pan={pan} />
       <ToolbarButtons />

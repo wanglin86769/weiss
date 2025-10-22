@@ -1,129 +1,26 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import type {
   Widget,
-  WidgetProperties,
   PropertyKey,
   PropertyUpdates,
   MultiWidgetPropertyUpdates,
   GridPosition,
   ExportedWidget,
+  DOMRectLike,
 } from "@src/types/widgets";
 import { GridZone } from "@components/GridZone";
 import { GRID_ID, MAX_HISTORY } from "@src/constants/constants";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
 import { v4 as uuidv4 } from "uuid";
-import { PROPERTY_SCHEMAS } from "@src/types/widgetProperties";
-
-export interface DOMRectLike {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/**
- * Deep clone a single widget including its editable properties and children recursively.
- * @param widget Widget to clone
- * @returns Cloned widget
- */
-function deepCloneWidget(widget: Widget): Widget {
-  return {
-    ...widget,
-    // clone editableProperties deeply
-    editableProperties: Object.fromEntries(
-      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
-    ),
-    // recursively clone children if any
-    children: widget.children?.map((child) => deepCloneWidget(child)),
-  };
-}
-
-/**
- * Deep clone a list of widgets.
- * @param widgets Array of widgets to clone
- * @returns A deep-cloned array of widgets
- */
-function deepCloneWidgetList(widgets: Widget[]): Widget[] {
-  return widgets.map(deepCloneWidget);
-}
-
-function updateNestedWidgets(widgets: Widget[], updates: MultiWidgetPropertyUpdates): Widget[] {
-  const updateOne = (w: Widget): Widget => {
-    let newWidget = w;
-
-    // Apply update if it exists for this widget ID
-    const changes = updates[w.id];
-    if (changes) {
-      const updatedProps: WidgetProperties = { ...w.editableProperties };
-      for (const [k, v] of Object.entries(changes)) {
-        const propName = k as PropertyKey;
-        if (!updatedProps[propName]) {
-          console.warn(`Tried updating inexistent property ${propName} on ${w.id}`);
-          continue;
-        }
-        updatedProps[propName].value = v;
-      }
-      newWidget = { ...newWidget, editableProperties: updatedProps };
-    }
-
-    // If there are children, search them too (recursively, but update only once)
-    if (w.children?.length) {
-      const updatedChildren = w.children.map(updateOne);
-      // Only recreate if children changed
-      if (updatedChildren.some((c, i) => c !== w.children![i])) {
-        newWidget = { ...newWidget, children: updatedChildren };
-      }
-    }
-
-    return newWidget;
-  };
-
-  return widgets.map(updateOne);
-}
-
-function getWidgetNested(widgets: Widget[], id: string): Widget | undefined {
-  for (const w of widgets) {
-    if (w.id === id) return w;
-    if (w.children) {
-      const found = getWidgetNested(w.children, id);
-      if (found) return found;
-    }
-  }
-  return undefined;
-}
-
-const getSelectedNested = (widgets: Widget[], selectedIds: string[]): Widget[] => {
-  const result: Widget[] = [];
-  for (const w of widgets) {
-    if (selectedIds.includes(w.id)) result.push(w);
-    if (w.children?.length) result.push(...getSelectedNested(w.children, selectedIds));
-  }
-  return result;
-};
-
-/**
- * Create a new group widget instance with optional children and bounds.
- */
-function createGroupWidget(
-  id: string,
-  children: Widget[] = [],
-  bounds?: { x?: number; y?: number; width?: number; height?: number }
-): Widget {
-  return {
-    id,
-    widgetLabel: "Group",
-    widgetName: "Group",
-    category: "internal",
-    component: () => null, // groups don’t render anything directly
-    children,
-    editableProperties: {
-      x: { ...PROPERTY_SCHEMAS.x, value: bounds?.x ?? 0 },
-      y: { ...PROPERTY_SCHEMAS.y, value: bounds?.y ?? 0 },
-      width: { ...PROPERTY_SCHEMAS.width, value: bounds?.width ?? 0 },
-      height: { ...PROPERTY_SCHEMAS.height, value: bounds?.height ?? 0 },
-    },
-  };
-}
+import {
+  createGroupWidget,
+  deepCloneWidget,
+  deepCloneWidgetList,
+  getNestedMoveUpdates,
+  getSelectedWidgets,
+  getWidgetNested,
+  updateWidgets,
+} from "./widgetHelpers";
 
 /**
  * Hook to manage the editor's widgets and their state.
@@ -140,11 +37,7 @@ export function useWidgetManager() {
   const [undoStack, setUndoStack] = useState<Widget[][]>([]);
   const [redoStack, setRedoStack] = useState<Widget[][]>([]);
   const [editorWidgets, setEditorWidgets] = useState<Widget[]>([GridZone]);
-  const [isDragging, setIsDragging] = useState(false);
   const [selectedWidgetIDs, setSelectedWidgetIDs] = useState<string[]>([]);
-  const [widgetGroups, setWidgetGroups] = useState<
-    Record<string, { id: string; widgetIds: string[] }>
-  >({});
   const clipboard = useRef<Widget[]>([]);
   const copiedSelectionBounds = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -154,34 +47,38 @@ export function useWidgetManager() {
   );
 
   const selectedWidgets: Widget[] = useMemo(
-    () => getSelectedNested(editorWidgets, selectedWidgetIDs),
+    () => getSelectedWidgets(editorWidgets, selectedWidgetIDs),
     [editorWidgets, selectedWidgetIDs]
   );
 
+  /* Widgets being edited (shown at the property editor) */
   const editingWidgets = useMemo(() => {
     return selectedWidgets.length > 0
       ? selectedWidgets
       : [editorWidgets.find((w) => w.id === GRID_ID) ?? editorWidgets[0]];
   }, [selectedWidgets, editorWidgets]);
 
-  function computeGroupBounds(widgetIds: string[]): DOMRectLike | null {
-    const widgets = editorWidgets.filter((w) => widgetIds.includes(w.id));
-    if (!widgets.length) return null;
+  const computeGroupBounds = useCallback(
+    (widgetIds: string[]): DOMRectLike | null => {
+      const widgets = editorWidgets.filter((w) => widgetIds.includes(w.id));
+      if (!widgets.length) return null;
 
-    const xs = widgets.map((w) => w.editableProperties.x!.value);
-    const ys = widgets.map((w) => w.editableProperties.y!.value);
-    const ws = widgets.map((w) => w.editableProperties.width!.value);
-    const hs = widgets.map((w) => w.editableProperties.height!.value);
-    const minX = Math.min(...xs);
-    const minY = Math.min(...ys);
-    const maxX = Math.max(...xs.map((x, i) => x + ws[i]));
-    const maxY = Math.max(...ys.map((y, i) => y + hs[i]));
-    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-  }
+      const xs = widgets.map((w) => w.editableProperties.x!.value);
+      const ys = widgets.map((w) => w.editableProperties.y!.value);
+      const ws = widgets.map((w) => w.editableProperties.width!.value);
+      const hs = widgets.map((w) => w.editableProperties.height!.value);
+      const minX = Math.min(...xs);
+      const minY = Math.min(...ys);
+      const maxX = Math.max(...xs.map((x, i) => x + ws[i]));
+      const maxY = Math.max(...ys.map((y, i) => y + hs[i]));
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    },
+    [editorWidgets]
+  );
 
   const selectionBounds = useMemo(
     () => computeGroupBounds(selectedWidgetIDs),
-    [selectedWidgetIDs, editorWidgets]
+    [selectedWidgetIDs, computeGroupBounds]
   );
 
   /**
@@ -214,7 +111,7 @@ export function useWidgetManager() {
    */
   const batchWidgetUpdate = useCallback(
     (updates: MultiWidgetPropertyUpdates, keepHistory = true) => {
-      updateEditorWidgetList((prev) => updateNestedWidgets(prev, updates), keepHistory);
+      updateEditorWidgetList((prev) => updateWidgets(prev, updates), keepHistory);
     },
     [updateEditorWidgetList]
   );
@@ -243,7 +140,7 @@ export function useWidgetManager() {
   const deleteWidget = useCallback(() => {
     updateEditorWidgetList((prev) => prev.filter((w) => !selectedWidgetIDs.includes(w.id)));
     setSelectedWidgetIDs([]);
-  }, [selectedWidgetIDs]);
+  }, [selectedWidgetIDs, updateEditorWidgetList]);
 
   function groupSelected() {
     if (selectedWidgetIDs.length < 2 || !selectionBounds) return;
@@ -358,24 +255,6 @@ export function useWidgetManager() {
     reorderWidgets("back");
   }, [reorderWidgets]);
 
-  function getNestedMoveUpdates(
-    widget: Widget,
-    dx: number,
-    dy: number,
-    updates: MultiWidgetPropertyUpdates
-  ) {
-    const xProp = widget.editableProperties.x?.value ?? 0;
-    const yProp = widget.editableProperties.y?.value ?? 0;
-
-    updates[widget.id] = {
-      x: xProp + dx,
-      y: yProp + dy,
-    };
-
-    if (widget.children?.length) {
-      widget.children.forEach((child) => getNestedMoveUpdates(child, dx, dy, updates));
-    }
-  }
   /**
    * Align selected widgets by the left margin.
    */
@@ -683,16 +562,16 @@ export function useWidgetManager() {
     [updateEditorWidgetList, copiedSelectionBounds]
   );
 
-  const formatWdgToExport = (widget: Widget): ExportedWidget => {
+  const formatWdgToExport = useCallback((widget: Widget): ExportedWidget => {
     return {
       id: widget.id,
       widgetName: widget.widgetName,
       properties: Object.fromEntries(
         Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
       ),
-      children: widget.children?.map((child) => formatWdgToExport(child)) ?? [],
+      children: widget.children?.map((child) => formatWdgToExport(child)),
     };
-  };
+  }, []);
 
   /**
    * Export current widgets to JSON file.
@@ -745,7 +624,7 @@ export function useWidgetManager() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [editorWidgets]);
+  }, [editorWidgets, formatWdgToExport]);
   /**
    * Load widgets from JSON or ExportedWidget array.
    * @param widgetsData JSON string or array of ExportedWidget
@@ -846,8 +725,6 @@ export function useWidgetManager() {
     getWidget,
     addWidget,
     deleteWidget,
-    widgetGroups,
-    setWidgetGroups,
     computeGroupBounds,
     groupSelected,
     ungroupSelected,
@@ -873,8 +750,6 @@ export function useWidgetManager() {
     PVList,
     macros,
     allWidgetIDs,
-    isDragging,
-    setIsDragging,
     formatWdgToExport,
   };
 }

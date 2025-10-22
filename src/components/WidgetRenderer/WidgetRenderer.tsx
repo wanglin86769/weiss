@@ -3,7 +3,7 @@ import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
 import { useEditorContext } from "@src/context/useEditorContext";
 import type { Widget, GridPosition, MultiWidgetPropertyUpdates } from "@src/types/widgets";
 import { Rnd, type DraggableData, type RndDragEvent } from "react-rnd";
-import { GRID_ID, FRONT_UI_ZIDX } from "@src/constants/constants";
+import { GRID_ID } from "@src/constants/constants";
 import "./WidgetRenderer.css";
 
 const DRAG_END_DELAY = 80; //ms
@@ -11,10 +11,9 @@ const DRAG_END_DELAY = 80; //ms
 interface RendererProps {
   scale: number;
   ensureGridCoordinate: (coord: number) => number;
-  isPanning: boolean;
 }
 
-const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, isPanning }) => {
+const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }) => {
   const {
     inEditMode,
     editorWidgets,
@@ -22,6 +21,7 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     batchWidgetUpdate,
     selectionBounds,
     setIsDragging,
+    isPanning,
   } = useEditorContext();
 
   /** Core widget content renderer */
@@ -91,7 +91,6 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     );
   };
 
-  /** Handle drag stop */
   const handleDragStop = (_e: RndDragEvent, d: DraggableData, w: Widget) => {
     const dx = d.x - w.editableProperties.x!.value;
     const dy = d.y - w.editableProperties.y!.value;
@@ -104,7 +103,6 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     batchWidgetUpdate(updates);
   };
 
-  /** Handle resize stop for both individual widgets and groups */
   const handleResizeStop = (ref: HTMLElement, position: GridPosition, w: Widget) => {
     setTimeout(() => setIsDragging(false), DRAG_END_DELAY);
 
@@ -123,7 +121,6 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     batchWidgetUpdate(updates);
   };
 
-  /** Recursive render */
   const renderRecursive = (w: Widget, parentX = 0, parentY = 0, isChild = false): ReactNode => {
     if (w.id === GRID_ID) return null;
     const isSelected = selectedWidgetIDs.includes(w.id);
@@ -169,6 +166,8 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     if (!selectionBounds || selectedWidgetIDs.length <= 1) return null;
 
     const selectedWidgets = editorWidgets.filter((w) => selectedWidgetIDs.includes(w.id));
+    const canDrag = inEditMode && !isPanning;
+    const canResize = inEditMode && !isPanning;
 
     const renderRecursiveForSelection = (w: Widget, parentX = 0, parentY = 0): ReactNode => {
       const x = w.editableProperties.x!.value - parentX;
@@ -198,11 +197,12 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
     return (
       <Rnd
         bounds="window"
+        className="selectionGroup"
         scale={scale}
         size={{ width: selectionBounds.width, height: selectionBounds.height }}
         position={{ x: selectionBounds.x, y: selectionBounds.y }}
-        enableResizing={true}
-        disableDragging={!inEditMode || isPanning}
+        enableResizing={canResize}
+        disableDragging={!canDrag}
         onDrag={() => setIsDragging(true)}
         onDragStop={(_e, d) => {
           const dx = d.x - selectionBounds.x;
@@ -233,14 +233,6 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate, 
           );
           batchWidgetUpdate(updates);
           setTimeout(() => setIsDragging(false), DRAG_END_DELAY);
-        }}
-        style={{
-          position: "absolute",
-          outline: "2px dashed rgba(0, 128, 255, 0.8)",
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
-          zIndex: FRONT_UI_ZIDX,
-          pointerEvents: "auto",
-          boxSizing: "border-box",
         }}
       >
         {selectedWidgets.map((w) =>
