@@ -111,6 +111,28 @@ export function useWidgetManager() {
    */
   const batchWidgetUpdate = useCallback(
     (updates: MultiWidgetPropertyUpdates, keepHistory = true) => {
+      const parentIds = Object.keys(updates);
+      // propagate size/position changes for children widgets
+      for (const id of parentIds) {
+        const w = getWidget(id);
+        if (!w?.children?.length) continue;
+        const update = updates[id];
+        const hasPosChange =
+          "x" in update || "y" in update || "height" in update || "width" in update;
+        if (!hasPosChange) continue;
+        const oldX = w.editableProperties.x!.value;
+        const oldY = w.editableProperties.y!.value;
+        const oldWidth = w.editableProperties.width!.value;
+        const oldHeight = w.editableProperties.height!.value;
+        const newX = (update.x ?? oldX) as number;
+        const newY = (update.y ?? oldY) as number;
+        const newWidth = (update.width ?? oldWidth) as number;
+        const newHeight = (update.height ?? oldHeight) as number;
+        const scaleX = oldWidth ? newWidth / oldWidth : 1;
+        const scaleY = oldHeight ? newHeight / oldHeight : 1;
+        getNestedMoveUpdates(w, newX - oldX, newY - oldY, scaleX, scaleY, updates);
+      }
+
       updateEditorWidgetList((prev) => updateWidgets(prev, updates), keepHistory);
     },
     [updateEditorWidgetList]
@@ -260,16 +282,11 @@ export function useWidgetManager() {
    */
   const alignLeft = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const leftX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const oldX = w.editableProperties.x?.value ?? 0;
-      const dx = leftX - oldX;
-      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
+      updates[w.id] = { x: leftX };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -278,23 +295,16 @@ export function useWidgetManager() {
    */
   const alignRight = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const rightX = Math.max(
       ...selectedWidgets.map(
         (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
       )
     );
-
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const width = w.editableProperties.width?.value ?? 0;
-      const oldX = w.editableProperties.x?.value ?? 0;
-      const newX = rightX - width;
-      const dx = newX - oldX;
-      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
+      if (!w.editableProperties.x || !w.editableProperties.width) return;
+      updates[w.id] = { x: rightX - w.editableProperties.width.value };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -303,16 +313,11 @@ export function useWidgetManager() {
    */
   const alignTop = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const topY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const oldY = w.editableProperties.y?.value ?? 0;
-      const dy = topY - oldY;
-      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
+      updates[w.id] = { y: topY };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -321,23 +326,16 @@ export function useWidgetManager() {
    */
   const alignBottom = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const bottomY = Math.max(
       ...selectedWidgets.map(
         (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
       )
     );
-
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const height = w.editableProperties.height?.value ?? 0;
-      const oldY = w.editableProperties.y?.value ?? 0;
-      const newY = bottomY - height;
-      const dy = newY - oldY;
-      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
+      if (!w.editableProperties.y || !w.editableProperties.height) return;
+      updates[w.id] = { y: bottomY - w.editableProperties.height.value };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -346,7 +344,6 @@ export function useWidgetManager() {
    */
   const alignHorizontalCenter = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const minX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const maxX = Math.max(
       ...selectedWidgets.map(
@@ -356,15 +353,10 @@ export function useWidgetManager() {
     const centerX = (minX + maxX) / 2;
 
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const width = w.editableProperties.width?.value ?? 0;
-      const oldX = w.editableProperties.x?.value ?? 0;
-      const newX = centerX - width / 2;
-      const dx = newX - oldX;
-      if (dx !== 0) getNestedMoveUpdates(w, dx, 0, updates);
+      if (!w.editableProperties.x || !w.editableProperties.width) return;
+      updates[w.id] = { x: centerX - w.editableProperties.width.value / 2 };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
@@ -373,7 +365,6 @@ export function useWidgetManager() {
    */
   const alignVerticalCenter = useCallback(() => {
     if (selectedWidgets.length < 2) return;
-
     const minY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const maxY = Math.max(
       ...selectedWidgets.map(
@@ -383,15 +374,10 @@ export function useWidgetManager() {
     const centerY = (minY + maxY) / 2;
 
     const updates: MultiWidgetPropertyUpdates = {};
-
     selectedWidgets.forEach((w) => {
-      const height = w.editableProperties.height?.value ?? 0;
-      const oldY = w.editableProperties.y?.value ?? 0;
-      const newY = centerY - height / 2;
-      const dy = newY - oldY;
-      if (dy !== 0) getNestedMoveUpdates(w, 0, dy, updates);
+      if (!w.editableProperties.y || !w.editableProperties.height) return;
+      updates[w.id] = { y: centerY - w.editableProperties.height.value / 2 };
     });
-
     batchWidgetUpdate(updates);
   }, [selectedWidgets, batchWidgetUpdate]);
 
