@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
+import usePvaPyWS from "./usePvaPyWS";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -19,6 +20,9 @@ import type { ExportedWidget, Widget } from "@src/types/widgets";
  * @returns An object containing UI state, setters, and mode updater.
  */
 export default function useUIManager(
+  ws: ReturnType<typeof usePvaPyWS>["ws"],
+  startNewSession: ReturnType<typeof usePvaPyWS>["startNewSession"],
+  clearPVData: ReturnType<typeof useWidgetManager>["clearPVData"],
   editorWidgets: ReturnType<typeof useWidgetManager>["editorWidgets"],
   setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
   loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],
@@ -43,7 +47,9 @@ export default function useUIManager(
    * Runtime mode:
    * - Clears widget selection.
    * - Closes widget selector.
-   * - Starts WebSocket connection.
+   * - Starts a new PV session.
+   *
+   * Also updates the visibility of grid lines in the editor.
    *
    * @param newMode The mode to switch to ("edit" | "runtime").
    */
@@ -51,15 +57,17 @@ export default function useUIManager(
     (newMode: Mode) => {
       const isEdit = newMode == EDIT_MODE;
       if (isEdit) {
-        // connection to pv server is managed by RAS widgets directly
-        // add actions on mode transition?
+        ws.current?.close();
+        ws.current = null;
+        clearPVData();
       } else {
         setSelectedWidgetIDs([]);
         setWdgPickerOpen(false);
+        startNewSession();
       }
       setMode(newMode);
     },
-    [setSelectedWidgetIDs]
+    [clearPVData, setSelectedWidgetIDs, startNewSession, ws]
   );
 
   /**
