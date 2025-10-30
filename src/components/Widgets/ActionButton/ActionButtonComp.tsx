@@ -12,7 +12,7 @@ const ActionButtonComp: React.FC<WidgetUpdate> = ({ data }) => {
 
   const handleClick = (_e: React.MouseEvent) => {
     if (mode === RUNTIME_MODE) {
-      if (p.pvName?.value && p.actionValue?.value) {
+      if (p.pvName?.value && p.actionValue?.value !== undefined) {
         writePVValue(p.pvName.value, p.actionValue.value);
       }
     }
