@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { WSClient } from "../WSClient/WSClient";
 import type { PVData, WSMessage } from "../types/pvaPyWS";
 import type { useWidgetManager } from "./useWidgetManager";
@@ -7,15 +7,15 @@ import { WS_URL } from "../constants/constants";
 /**
  * Hook that manages a WebSocket session to the PV WebSocket.
  *
- * - Handles subscribing/unsubscribing PVs
- * - Caches metadata that is sent only once
- * - Forwards processed PVData updates back to the widget manager
+ * - Handles subscribing/unsubscribing PVs (using substituted names)
+ * - Caches metadata
+ * - Forwards updates mapped back to original PVs
  *
- * @param PVList List of PVs to subscribe to
+ * @param PVMap Map of original PVs to macro-substituted PVs
  * @param updatePVData Callback to update PV data in the widget manager
  */
 export default function usePvaPyWS(
-  PVList: ReturnType<typeof useWidgetManager>["PVList"],
+  PVMap: ReturnType<typeof useWidgetManager>["PVMap"],
   updatePVData: ReturnType<typeof useWidgetManager>["updatePVData"]
 ) {
   /** WebSocket client instance */
@@ -23,24 +23,35 @@ export default function usePvaPyWS(
   const [isWSConnected, setWSConnected] = useState(false);
   const pvCache = useRef<Record<string, PVData>>({});
 
+  /** Precompute reverse map for fast lookup (substituted: original) */
+  const reversePVMap = useMemo(() => {
+    const map = new Map<string, string>();
+    PVMap.forEach((original, substituted) => {
+      map.set(original, substituted);
+    });
+    return map;
+  }, [PVMap]);
+
+  /** All substituted PVs for subscription */
+  const substitutedList = Array.from(PVMap.values());
+
   /**
    * Handles incoming WebSocket messages.
    * - Filters unsolicited PVs
-   * - Merges new values with cached metadata
+   * - Maps substituted PVs back to original names
    * - Forwards updates to widget manager
-   *
-   * @param msg Message received from the PV WebSocket
    */
   const onMessage = useCallback(
     (msg: WSMessage) => {
-      if (!PVList.includes(msg.pv)) {
+      const originalPV = reversePVMap.get(msg.pv);
+      if (!originalPV) {
         console.warn(`received message from unsolicited PV: ${msg.pv}`);
         return;
       }
 
       const prev = pvCache.current[msg.pv] ?? {};
       const pvData: PVData = {
-        pv: msg.pv,
+        pv: originalPV,
         value: msg.value ?? prev.value,
         alarm: msg.alarm ?? prev.alarm,
         timeStamp: msg.timeStamp ?? prev.timeStamp,
@@ -51,64 +62,65 @@ export default function usePvaPyWS(
       pvCache.current[msg.pv] = pvData;
       updatePVData(pvData);
     },
-    [PVList, updatePVData]
+    [updatePVData, reversePVMap]
   );
 
   /**
    * Handles connection state changes.
-   * Subscribes to PV list when connected.
-   *
-   * @param connected Whether the WS connection is active
+   * Subscribes to substituted PVs when connected.
    */
   const handleConnect = useCallback(
     (connected: boolean) => {
       setWSConnected(connected);
       if (connected) {
-        ws.current?.subscribe(PVList);
+        ws.current?.subscribe(substitutedList);
       }
     },
-    [setWSConnected, PVList]
+    [setWSConnected, substitutedList]
   );
 
   /**
    * Starts a new WebSocket session.
-   * Closes an existing session if one is active.
    */
   const startNewSession = useCallback(() => {
     if (ws.current) {
-      ws.current.unsubscribe(PVList);
+      ws.current.unsubscribe(substitutedList);
       ws.current.close();
       ws.current = null;
     }
     ws.current = new WSClient(WS_URL, handleConnect, onMessage);
     ws.current.open();
-  }, [PVList, handleConnect, onMessage]);
+  }, [substitutedList, handleConnect, onMessage]);
 
   /**
    * Writes a new value to a PV.
-   *
-   * @param pv Name of the PV
-   * @param newValue Value to write
+   * Input is the original PV name (from widgets).
    */
-  const writePVValue = useCallback((pv: string, newValue: number | string) => {
-    ws.current?.write(pv, newValue);
-  }, []);
+  const writePVValue = useCallback(
+    (pv: string, newValue: number | string) => {
+      const substituted = PVMap.get(pv);
+      if (substituted) {
+        ws.current?.write(substituted, newValue);
+      } else {
+        console.warn(`writePVValue: unknown PV ${pv}`);
+      }
+    },
+    [PVMap]
+  );
 
   /**
    * Stops the current WebSocket session.
-   * Unsubscribes PVs, closes the connection, clears state.
    */
   const stopSession = useCallback(() => {
     if (!ws.current) return;
-    ws.current.unsubscribe(PVList);
+    ws.current.unsubscribe(substitutedList);
     ws.current.close();
     ws.current = null;
     setWSConnected(false);
-  }, [setWSConnected, PVList]);
+  }, [setWSConnected, substitutedList]);
 
   return {
     ws,
-    PVList,
     isWSConnected,
     startNewSession,
     stopSession,

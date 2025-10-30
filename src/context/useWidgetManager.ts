@@ -740,28 +740,52 @@ export function useWidgetManager() {
   }, [updateEditorWidgetList]);
 
   /**
-   * List of all PVs held by widgets.
-   */
-  const PVList = useMemo(() => {
-    const set = new Set<string>();
-    for (const w of editorWidgets) {
-      if (w.editableProperties?.pvName?.value) {
-        set.add(w.editableProperties.pvName.value);
-      }
-      const multiPV = w.editableProperties?.pvNames?.value;
-      if (multiPV) {
-        Object.values(multiPV).forEach((pv) => {
-          if (pv) set.add(pv);
-        });
-      }
-    }
-    return Array.from(set);
-  }, [editorWidgets]);
-
-  /**
    * Macros to be substituted on pv names.
    */
   const macros = getWidget(GRID_ID)?.editableProperties.macros?.value;
+
+  /**
+   * Helper to substitute macros of the form $(NAME) in a PV string.
+   * If a macro key is not found in macros, the original macro text is kept.
+   */
+  const substituteMacros = useCallback(
+    (pv: string): string => {
+      return pv.replace(/\$\(([^)]+)\)/g, (macro) => {
+        if (!macros) return macro;
+        const replacement = macros[macro];
+        return replacement ?? macro;
+      });
+    },
+    [macros]
+  );
+
+  /**
+   * Map of all PVs held by widgets: { widget PV: macros-substituted PV }
+   */
+  const PVMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    for (const w of editorWidgets) {
+      const single = w.editableProperties?.pvName?.value;
+      if (single) {
+        const substitutedSingle = substituteMacros(single);
+        if (substitutedSingle) {
+          map.set(single, substitutedSingle);
+        }
+      }
+
+      const multiPV = w.editableProperties?.pvNames?.value;
+      if (multiPV) {
+        Object.values(multiPV).forEach((pv) => {
+          const substituted = substituteMacros(pv);
+          if (substituted) {
+            map.set(pv, substituted);
+          }
+        });
+      }
+    }
+    return map;
+  }, [editorWidgets, substituteMacros]);
 
   return {
     editorWidgets,
@@ -802,7 +826,7 @@ export function useWidgetManager() {
     loadWidgets,
     updatePVData,
     clearPVData,
-    PVList,
+    PVMap,
     macros,
     allWidgetIDs,
     formatWdgToExport,
