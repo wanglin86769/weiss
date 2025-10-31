@@ -22,6 +22,7 @@ services:
     image: weiss-dev:${APP_VERSION}
     container_name: weiss-dev
     network_mode: host
+    restart: always
     environment:
       - NODE_ENV=development
     depends_on:
