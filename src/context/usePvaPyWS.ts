@@ -51,6 +51,7 @@ export default function usePvaPyWS(PVMap: ReturnType<typeof useWidgetManager>["P
       const pvData: PVData = {
         pv: originalPV,
         value: msg.value ?? prev.value,
+        valueText: msg.valueText ?? prev.valueText,
         alarm: msg.alarm ?? prev.alarm,
         timeStamp: msg.timeStamp ?? prev.timeStamp,
         display: prev.display ?? msg.display,
