@@ -25,11 +25,8 @@ async def send_update(pv_name: str, pv_obj):
     "valueText": pv_data.valueText,
     "alarm": pv_data.alarm.__dict__ if pv_data.alarm else None,
     "timeStamp": pv_data.timeStamp.__dict__ if pv_data.timeStamp else None,
-    "b64dbl": pv_data.b64dbl,
-    "b64flt": pv_data.b64flt,
-    "b64int": pv_data.b64int,
-    "b64srt": pv_data.b64srt,
-    "b64byt": pv_data.b64byt,
+    "b64arr": pv_data.b64arr,
+    "b64dtype": pv_data.b64dtype,
   }
 
   # send to all subscribed clients

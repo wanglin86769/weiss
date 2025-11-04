@@ -63,12 +63,8 @@ class PVData:
   control: Optional[Control] = None
   valueAlarm: Optional[ValueAlarm] = None
   raw: Optional[dict] = None
-  b64dbl: Optional[str] = None
-  b64flt: Optional[str] = None
-  b64int: Optional[str] = None
-  b64srt: Optional[str] = None
-  b64byt: Optional[str] = None
-
+  b64arr: Optional[str] = None
+  b64dtype: Optional[str] = None
 
 def encode_base64_array(array, dtype):
   arr = np.asarray(array, dtype=dtype)
@@ -78,7 +74,7 @@ def encode_base64_array(array, dtype):
 
 
 def parse_pv(pv_obj: PvObject) -> PVData:
-  b64dbl = b64flt = b64int = b64srt = b64byt = value = valueText = None
+  b64arr = b64dtype = value = valueText = None
   pv_dict = pv_obj.get()
   
   # Value
@@ -98,14 +94,18 @@ def parse_pv(pv_obj: PvObject) -> PVData:
   elif isinstance(valueField, (list, np.ndarray)):
     arr = np.asarray(valueField)
     if np.issubdtype(arr.dtype, np.floating):
-      b64dbl = encode_base64_array(arr, np.float64)
+      b64arr = encode_base64_array(arr, np.float64)
+      b64dtype = "float64"
     elif np.issubdtype(arr.dtype, np.integer):
       if arr.min() >= -128 and arr.max() <= 255:
-        b64byt = encode_base64_array(arr, np.uint8)
+        b64arr = encode_base64_array(arr, np.int8)
+        b64dtype = "int8"
       elif arr.min() >= -32768 and arr.max() <= 32767:
-        b64srt = encode_base64_array(arr, np.int16)
+        b64arr = encode_base64_array(arr, np.int16)
+        b64dtype = "int16"
       else:
-        b64int = encode_base64_array(arr, np.int32)
+        b64arr = encode_base64_array(arr, np.int32)
+        b64dtype = "int32"
 
   # Alarm
   alarm = None
@@ -169,10 +169,7 @@ def parse_pv(pv_obj: PvObject) -> PVData:
     display=display,
     control=control,
     valueAlarm=value_alarm,
+    b64arr=b64arr,
+    b64dtype=b64dtype,
     raw=pv_dict,
-    b64dbl=b64dbl,
-    b64flt=b64flt,
-    b64int=b64int,
-    b64srt=b64srt,
-    b64byt=b64byt,
   )

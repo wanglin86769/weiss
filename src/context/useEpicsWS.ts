@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { WSClient } from "../WSClient/WSClient";
-import type { PVData, WSMessage } from "../types/pvaPyWS";
+import type { PVData, WSMessage } from "../types/epicsWS";
 import type { useWidgetManager } from "./useWidgetManager";
 import { WS_URL } from "../constants/constants";
 
@@ -14,7 +14,7 @@ import { WS_URL } from "../constants/constants";
  * @param PVMap Map of original PVs to macro-substituted PVs
  * @param updatePVData Callback to update PV data in the widget manager
  */
-export default function usePvaPyWS(PVMap: ReturnType<typeof useWidgetManager>["PVMap"]) {
+export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["PVMap"]) {
   /** WebSocket client instance */
   const ws = useRef<WSClient | null>(null);
   const [isWSConnected, setWSConnected] = useState(false);

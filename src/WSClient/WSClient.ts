@@ -1,4 +1,4 @@
-import type { WSMessage } from "../types/pvaPyWS";
+import type { WSMessage } from "../types/epicsWS";
 
 type ConnectHandler = (connected: boolean) => void;
 type MessageHandler = (message: WSMessage) => void;
@@ -100,24 +100,28 @@ export class WSClient {
 
     const msg = uncheckedMessage;
 
-    if (msg.type === "update") {
-      // decode base64 arrays into JS arrays
-      if (msg.b64dbl !== undefined) {
-        msg.value = Array.from(new Float64Array(base64ToArrayBuffer(msg.b64dbl)));
-        delete msg.b64dbl;
-      } else if (msg.b64flt !== undefined) {
-        msg.value = Array.from(new Float32Array(base64ToArrayBuffer(msg.b64flt)));
-        delete msg.b64flt;
-      } else if (msg.b64srt !== undefined) {
-        msg.value = Array.from(new Int16Array(base64ToArrayBuffer(msg.b64srt)));
-        delete msg.b64srt;
-      } else if (msg.b64int !== undefined) {
-        msg.value = Array.from(new Int32Array(base64ToArrayBuffer(msg.b64int)));
-        delete msg.b64int;
-      } else if (msg.b64byt !== undefined) {
-        msg.value = Array.from(new Uint8Array(base64ToArrayBuffer(msg.b64byt)));
-        delete msg.b64byt;
+    if (msg.type === "update" && msg.b64arr && msg.b64dtype) {
+      const buffer = base64ToArrayBuffer(msg.b64arr);
+      switch (msg.b64dtype) {
+        case "float64":
+          msg.value = Array.from(new Float64Array(buffer));
+          break;
+        case "int8":
+          msg.value = Array.from(new Int8Array(buffer));
+          break;
+        case "int16":
+          msg.value = Array.from(new Int16Array(buffer));
+          break;
+        case "int32":
+          msg.value = Array.from(new Int32Array(buffer));
+          break;
+        default:
+          console.error("Unsupported b64dtype:", msg.b64dtype);
+          msg.value = [];
       }
+
+      delete msg.b64arr;
+      delete msg.b64dtype;
     }
     this.message_handler(msg);
   }

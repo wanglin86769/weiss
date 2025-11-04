@@ -98,11 +98,8 @@ export interface ValueAlarm {
  * @property control - Optional EPICS NT control structure
  * @property valueAlarm - Optional EPICS NT valueAlarm structure
  * @property raw - Optional raw server message data
- * @property b64dbl - Optional base64-encoded double array
- * @property b64flt - Optional base64-encoded float array
- * @property b64int - Optional base64-encoded int32 array
- * @property b64srt - Optional base64-encoded int16 array
- * @property b64byt - Optional base64-encoded byte array
+ * @property b64arr - Optional base64-encoded array data
+ * @property b64dtype - Optional data type of the base64-encoded array
  */
 export interface WSMessage {
   pv: string;
@@ -115,11 +112,8 @@ export interface WSMessage {
   control?: Control;
   valueAlarm?: ValueAlarm;
   raw?: [Record<string, unknown>];
-  b64dbl?: string;
-  b64flt?: string;
-  b64int?: string;
-  b64srt?: string;
-  b64byt?: string;
+  b64arr?: string;
+  b64dtype?: string;
 }
 
 /**

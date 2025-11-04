@@ -1,14 +1,14 @@
 import React from "react";
 import { EditorContext } from "./useEditorContext";
 import { useWidgetManager } from "./useWidgetManager";
-import usePvaPyWS from "./usePvaPyWS";
+import useEpicsWS from "./useEpicsWS";
 import useUIManager from "./useUIManager";
 
 /**
  * The full editor context type.
  */
 export type EditorContextType = ReturnType<typeof useWidgetManager> &
-  ReturnType<typeof usePvaPyWS> &
+  ReturnType<typeof useEpicsWS> &
   ReturnType<typeof useUIManager>;
 
 /**
@@ -25,7 +25,7 @@ export type EditorContextType = ReturnType<typeof useWidgetManager> &
  */
 export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const widgetManager = useWidgetManager();
-  const ws = usePvaPyWS(widgetManager.PVMap);
+  const ws = useEpicsWS(widgetManager.PVMap);
   const ui = useUIManager(
     ws.ws,
     ws.startNewSession,

@@ -7,7 +7,7 @@ import {
 } from "../../../types/widgetProperties";
 import type { Widget } from "../../../types/widgets";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import type { MultiPvData } from "../../../types/pvaPyWS";
+import type { MultiPvData } from "../../../types/epicsWS";
 
 export const YAxisPVLabel = "Y Axis PV";
 export const XAxisPVLabel = "X Axis PV (optional)";

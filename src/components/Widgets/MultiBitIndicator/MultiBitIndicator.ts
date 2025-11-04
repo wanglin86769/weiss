@@ -1,7 +1,7 @@
 import { MultiBitIndicatorComp } from "./MultiBitIndicatorComp";
 import { PROPERTY_SCHEMAS, COMMON_PROPS, TEXT_PROPS } from "../../../types/widgetProperties";
 import type { Widget } from "../../../types/widgets";
-import type { PVData } from "../../../types/pvaPyWS";
+import type { PVData } from "../../../types/epicsWS";
 import CustomMultiBitIcon from "@src/components/CustomIcons/MultiBitIcon";
 
 const { borderRadius, backgroundColor, ...FILTERED_COMMON_PROPS } = COMMON_PROPS;

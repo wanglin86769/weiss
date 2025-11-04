@@ -2,7 +2,7 @@ import { BitIndicatorComp } from "./BitIndicatorComp";
 import { PROPERTY_SCHEMAS, COMMON_PROPS, TEXT_PROPS } from "../../../types/widgetProperties";
 import type { Widget } from "../../../types/widgets";
 import FlakyIcon from "@mui/icons-material/Flaky";
-import type { PVData } from "../../../types/pvaPyWS";
+import type { PVData } from "../../../types/epicsWS";
 
 const { borderRadius, backgroundColor, ...FILTERED_COMMON_PROPS } = COMMON_PROPS;
 

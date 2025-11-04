@@ -14,4 +14,4 @@ ENV EPICS_PVA_ADDR_LIST=localhost
 
 EXPOSE 8080
 
-CMD ["python", "pvaPyWS.py"]
+CMD ["python", "epicsWS.py"]

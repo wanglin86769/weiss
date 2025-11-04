@@ -1,6 +1,6 @@
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { PROPERTY_SCHEMAS } from "./widgetProperties";
-import type { MultiPvData, PVData } from "./pvaPyWS";
+import type { MultiPvData, PVData } from "./epicsWS";
 
 /**
  * Selector types for widget properties.

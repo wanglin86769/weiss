@@ -1,6 +1,6 @@
 import React from "react";
 import type { ReactNode, CSSProperties } from "react";
-import type { Alarm } from "../../types/pvaPyWS";
+import type { Alarm } from "../../types/epicsWS";
 import { COLORS } from "../../constants/constants";
 import { useEditorContext } from "../../context/useEditorContext";
 

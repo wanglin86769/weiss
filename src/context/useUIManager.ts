@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
-import usePvaPyWS from "./usePvaPyWS";
+import useEpicsWS from "./useEpicsWS";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -20,8 +20,8 @@ import usePvaPyWS from "./usePvaPyWS";
  * @returns An object containing UI state, setters, and mode updater.
  */
 export default function useUIManager(
-  ws: ReturnType<typeof usePvaPyWS>["ws"],
-  startNewSession: ReturnType<typeof usePvaPyWS>["startNewSession"],
+  ws: ReturnType<typeof useEpicsWS>["ws"],
+  startNewSession: ReturnType<typeof useEpicsWS>["startNewSession"],
   editorWidgets: ReturnType<typeof useWidgetManager>["editorWidgets"],
   setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
   loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],

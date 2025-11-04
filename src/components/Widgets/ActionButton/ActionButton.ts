@@ -3,7 +3,7 @@ import { COMMON_PROPS, PROPERTY_SCHEMAS, TEXT_PROPS } from "../../../types/widge
 import type { Widget } from "../../../types/widgets";
 import SendIcon from "@mui/icons-material/Send";
 import { COLORS } from "../../../constants/constants";
-import type { PVData } from "../../../types/pvaPyWS";
+import type { PVData } from "../../../types/epicsWS";
 
 export const ActionButton: Widget = {
   id: "__ActionButton__",

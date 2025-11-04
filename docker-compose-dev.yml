@@ -26,14 +26,14 @@ services:
     environment:
       - NODE_ENV=development
     depends_on:
-      - weiss-pvapyws
-  weiss-pvapyws:
+      - weiss-epicsws
+  weiss-epicsws:
     build:
-      context: ./pvaPyWS
+      context: ./epicsWS
     volumes:
-      - ./pvaPyWS:/app
-    image: weiss-pvapyws:${APP_VERSION}
-    container_name: weiss-pvapyws
+      - ./epicsWS:/app
+    image: weiss-epicsws:${APP_VERSION}
+    container_name: weiss-epicsws
     ports:
       - "8080:8080"
     restart: always

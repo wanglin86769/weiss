@@ -3,7 +3,7 @@ import { COLORS } from "../../../constants/constants";
 import type { Widget } from "../../../types/widgets";
 import InputIcon from "@mui/icons-material/Input";
 import { PROPERTY_SCHEMAS, COMMON_PROPS, TEXT_PROPS } from "../../../types/widgetProperties";
-import type { PVData } from "../../../types/pvaPyWS";
+import type { PVData } from "../../../types/epicsWS";
 
 export const InputField: Widget = {
   id: "__InputField__",

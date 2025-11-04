@@ -3,7 +3,7 @@ import type { WidgetUpdate } from "../../../types/widgets";
 import Plot from "react-plotly.js";
 import { useEditorContext } from "../../../context/useEditorContext";
 import { COLORS } from "../../../constants/constants";
-import type { TimeStamp } from "@src/types/pvaPyWS";
+import type { TimeStamp } from "@src/types/epicsWS";
 
 const GraphYComp: React.FC<WidgetUpdate> = ({ data }) => {
   const { inEditMode } = useEditorContext();

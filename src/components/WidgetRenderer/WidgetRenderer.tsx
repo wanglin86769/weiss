@@ -5,7 +5,7 @@ import type { Widget, MultiWidgetPropertyUpdates, DOMRectLike } from "@src/types
 import { Rnd, type DraggableData, type Position, type RndDragEvent } from "react-rnd";
 import { GRID_ID } from "@src/constants/constants";
 import "./WidgetRenderer.css";
-import type { PVData } from "@src/types/pvaPyWS";
+import type { PVData } from "@src/types/epicsWS";
 
 const DRAG_END_DELAY = 80; //ms
 
