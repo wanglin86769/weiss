@@ -71,7 +71,6 @@ export const PROPERTY_SCHEMAS = {
   useStringVal:    defineProp({ selType: "boolean", label: "Use string value", value: true as boolean, category: "Layout" }),
   offLabel:        defineProp({ selType: "text", label: "Off Label", value: "" as string, category: "Layout" }),
   onLabel:         defineProp({ selType: "text", label: "On Label", value: "" as string, category: "Layout" }),
-
   // Graph
   lineColors:      defineProp({ selType: "colorSelList", label: "Line Color", value: [COLORS.graphLineColor] as string[], category: "Style" }),
   plotTitle:       defineProp({ selType: "text", label: "Title", value: "Title" as string, category: "Layout" }),
@@ -82,6 +81,8 @@ export const PROPERTY_SCHEMAS = {
   useTimestamp:    defineProp({ selType: "boolean", label: "Use timestamp", value: false as boolean, category: "Layout" }),
   plotBufferSize:  defineProp({ selType: "number", label: "Buffer size (if scalar PVs)", value: 80 as number, limits: { min: 1 }, category: "Layout" }),
   plotLineStyle:   defineProp({ selType: "select", label: "Line style", value: "lines" as "lines+markers"|"lines"|"markers", options: ["lines+markers", "lines", "markers"], category: "Style" }),
+  // Selector
+  enumChoices:     defineProp({ selType: "strList", label: "Enum Choices", value: [""] as string[], category: "Other" }),
   //Other
   valuePlcmnt:     defineProp({ selType: "select", label: "Value placement", value: "top" as string, options: ["top", "bottom", "end", "start", "middle"], category: "Layout" }),
   labelPlcmnt:     defineProp({ selType: "select", label: "Label placement", value: "end" as string, options: ["top", "bottom", "end", "start", "middle"], category: "Layout" }),
