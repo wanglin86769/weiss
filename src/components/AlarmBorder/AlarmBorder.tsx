@@ -21,11 +21,11 @@ interface AlarmBorderProps {
  */
 const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }) => {
   const { inEditMode } = useEditorContext();
-  const getBorderColor = (): string | null => {
+  const getBorderColor = (): string | undefined => {
     if (!alarmData) return COLORS.disconnected;
     switch (alarmData.severity) {
       case 0: // NO_ALARM
-        return null;
+        return undefined;
       case 1: // MINOR
         return COLORS.minor;
       case 2: // MAJOR
@@ -42,9 +42,9 @@ const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }
   const style: CSSProperties = {
     width: "100%",
     height: "100%",
-    border: borderColor
-      ? `3px ${borderColor === COLORS.disconnected ? "dashed" : "solid"} ${borderColor}`
-      : undefined,
+    borderColor: borderColor,
+    borderWidth: borderColor ? "3px" : 0,
+    borderStyle: borderColor === COLORS.disconnected ? "dashed" : "solid",
     borderRadius: "2px",
     boxSizing: "border-box",
   };
