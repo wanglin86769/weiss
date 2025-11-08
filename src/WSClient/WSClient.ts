@@ -51,7 +51,7 @@ export class WSClient {
   private socket!: WebSocket;
   private values: Record<string, WSMessage> = {};
 
-  reconnect_ms = 5000;
+  reconnect_ms = 3000;
 
   /**
    * Creates a new WSClient instance.
@@ -148,7 +148,11 @@ export class WSClient {
       message += `, ${event.reason}`;
     }
     message += ")";
-    console.log(message);
+    if (event.code !== 1000) {
+      console.log(message);
+      console.log(`Reconnecting in ${this.reconnect_ms} ms...`);
+      setTimeout(() => this.open(), this.reconnect_ms);
+    }
   }
 
   /**
@@ -168,7 +172,6 @@ export class WSClient {
     if (!Array.isArray(pvs)) {
       pvs = [pvs];
     }
-    console.log("subscribing", { type: "subscribe", pvs });
     this.socket.send(JSON.stringify({ type: "subscribe", pvs }));
   }
 
@@ -203,6 +206,6 @@ export class WSClient {
    */
   close(): void {
     if (!this.connected) return;
-    this.socket.close();
+    this.socket.close(1000, "Client closing connection normally");
   }
 }
