@@ -18,17 +18,17 @@ const BitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
 
   const useStr = p.useStringVal?.value;
   const enumOption = validValue && pvData?.enumChoices ? pvData?.enumChoices[value] : "";
-  const runtimeText = useStr ? enumOption ?? "" : (value as string) ?? "";
+  const pvText = useStr ? enumOption ?? "" : (value as string) ?? "";
 
   const labelFromPV = p.labelFromPV?.value;
   const offLabel = p.offLabel?.value ?? "";
   const onLabel = p.onLabel?.value ?? "";
 
-  let text = "";
+  let renderedText = "";
   if (inEditMode) {
-    text = labelFromPV ? `PV ${useStr ? "Label" : "Value"}` : offLabel;
+    renderedText = labelFromPV ? `PV ${useStr ? "Label" : "Value"}` : offLabel;
   } else {
-    text = labelFromPV ? runtimeText : bitOn ? onLabel : offLabel;
+    renderedText = labelFromPV ? pvText : bitOn ? onLabel : offLabel;
   }
 
   const background = inEditMode
@@ -71,7 +71,9 @@ const BitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
   return (
     <AlarmBorder alarmData={pvData?.alarm} enable={p.alarmBorder?.value}>
       <div style={containerStyle} title={p.tooltip?.value ?? ""}>
-        <div style={circleStyle}>{<span style={{ whiteSpace: "nowrap" }}>{text}</span>}</div>
+        <div style={circleStyle}>
+          {<span style={{ whiteSpace: "nowrap" }}>{renderedText}</span>}
+        </div>
       </div>
     </AlarmBorder>
   );

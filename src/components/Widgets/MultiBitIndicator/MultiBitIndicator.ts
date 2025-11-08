@@ -11,7 +11,7 @@ export const MultiBitIndicator: Widget = {
   component: MultiBitIndicatorComp,
   widgetName: "MultiBitIndicator",
   widgetIcon: CustomMultiBitIcon,
-  widgetLabel: "Bit Indicator",
+  widgetLabel: "Multi-Bit Indicator",
   category: "Monitoring",
   pvData: {} as PVData,
   editableProperties: {
