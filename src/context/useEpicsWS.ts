@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { WSClient } from "../WSClient/WSClient";
-import type { PVData, PVValue, WSMessage } from "../types/epicsWS";
+import { WSClient } from "@src/WSClient/WSClient";
+import type { PVData, PVValue, WSMessage } from "@src/types/epicsWS";
 import type { useWidgetManager } from "./useWidgetManager";
-import { WS_URL } from "../constants/constants";
+import { WS_URL } from "@src/constants/constants";
 
 /**
  * Hook that manages a WebSocket session to the PV WebSocket.

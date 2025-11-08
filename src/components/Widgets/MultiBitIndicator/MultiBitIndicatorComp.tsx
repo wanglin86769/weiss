@@ -1,7 +1,7 @@
 import React from "react";
-import type { WidgetUpdate } from "../../../types/widgets";
-import { useEditorContext } from "../../../context/useEditorContext";
-import AlarmBorder from "../../AlarmBorder/AlarmBorder";
+import type { WidgetUpdate } from "@src/types/widgets";
+import { useEditorContext } from "@src/context/useEditorContext";
+import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
 
 const MultiBitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
   const p = data.editableProperties;

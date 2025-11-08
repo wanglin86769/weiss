@@ -1,8 +1,8 @@
 import React from "react";
 import type { ReactNode, CSSProperties } from "react";
-import type { Alarm } from "../../types/epicsWS";
-import { COLORS } from "../../constants/constants";
-import { useEditorContext } from "../../context/useEditorContext";
+import type { Alarm } from "@src/types/epicsWS";
+import { COLORS } from "@src/constants/constants";
+import { useEditorContext } from "@src/context/useEditorContext";
 
 interface AlarmBorderProps {
   alarmData?: Alarm;

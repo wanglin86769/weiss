@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import type { WidgetUpdate } from "../../../types/widgets";
+import type { WidgetUpdate } from "@src/types/widgets";
 import Plot from "react-plotly.js";
-import { useEditorContext } from "../../../context/useEditorContext";
-import { COLORS } from "../../../constants/constants";
+import { useEditorContext } from "@src/context/useEditorContext";
+import { COLORS } from "@src/constants/constants";
 import type { TimeStamp } from "@src/types/epicsWS";
 
 const GraphYComp: React.FC<WidgetUpdate> = ({ data }) => {

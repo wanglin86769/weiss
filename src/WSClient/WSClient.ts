@@ -1,4 +1,4 @@
-import type { PVValue, WSMessage } from "../types/epicsWS";
+import type { PVValue, WSMessage } from "@src/types/epicsWS";
 
 type ConnectHandler = (connected: boolean) => void;
 type MessageHandler = (message: WSMessage) => void;

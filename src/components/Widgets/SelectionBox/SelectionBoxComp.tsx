@@ -1,9 +1,9 @@
 import React from "react";
 import { FormControl, InputLabel, MenuItem, Select, type SelectChangeEvent } from "@mui/material";
-import { useEditorContext } from "../../../context/useEditorContext";
-import type { WidgetUpdate } from "../../../types/widgets";
-import { FLEX_ALIGN_MAP } from "../../../constants/constants";
-import AlarmBorder from "../../AlarmBorder/AlarmBorder";
+import { useEditorContext } from "@src/context/useEditorContext";
+import type { WidgetUpdate } from "@src/types/widgets";
+import { FLEX_ALIGN_MAP } from "@src/constants/constants";
+import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
 
 const SelectionBoxComp: React.FC<WidgetUpdate> = ({ data }) => {
   const { inEditMode, writePVValue } = useEditorContext();

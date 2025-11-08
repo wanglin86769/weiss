@@ -1,8 +1,8 @@
 import { SelectionBoxComp } from "./SelectionBoxComp";
-import { COMMON_PROPS, PROPERTY_SCHEMAS, TEXT_PROPS } from "../../../types/widgetProperties";
-import type { Widget } from "../../../types/widgets";
+import { COMMON_PROPS, PROPERTY_SCHEMAS, TEXT_PROPS } from "@src/types/widgetProperties";
+import type { Widget } from "@src/types/widgets";
 import CustomDropdownIcon from "@src/components/CustomIcons/DropDownIcon";
-import type { PVData } from "../../../types/epicsWS";
+import type { PVData } from "@src/types/epicsWS";
 
 export const SelectionBox: Widget = {
   id: "__SelectionBox__",

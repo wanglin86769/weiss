@@ -1,8 +1,8 @@
 import React from "react";
-import type { WidgetUpdate } from "../../../types/widgets";
-import { FLEX_ALIGN_MAP } from "../../../constants/constants";
-import { useEditorContext } from "../../../context/useEditorContext";
-import AlarmBorder from "../../AlarmBorder/AlarmBorder";
+import type { WidgetUpdate } from "@src/types/widgets";
+import { FLEX_ALIGN_MAP } from "@src/constants/constants";
+import { useEditorContext } from "@src/context/useEditorContext";
+import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
 
 const TextUpdateComp: React.FC<WidgetUpdate> = ({ data }) => {
   const p = data.editableProperties;
