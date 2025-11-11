@@ -13,7 +13,13 @@ const ActionButtonComp: React.FC<WidgetUpdate> = ({ data }) => {
   const handleClick = (_e: React.MouseEvent) => {
     if (!inEditMode) {
       if (p.pvName?.value && p.actionValue?.value !== undefined) {
-        writePVValue(p.pvName.value, p.actionValue.value);
+        const actionValue = p.actionValue.value;
+        // convert to number if is number as string
+        const value =
+          typeof actionValue === "string" && !isNaN(Number(actionValue))
+            ? Number(actionValue)
+            : actionValue;
+        writePVValue(p.pvName.value, value);
       }
     }
   };
