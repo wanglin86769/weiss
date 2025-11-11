@@ -101,6 +101,11 @@ def encode_array(arr: Any) -> tuple[Optional[str], Optional[str]]:
     return None, None
 
 
+def safe_get_nan(obj, k: str):
+    v = obj.get(k)
+    return None if isinstance(v, float) and math.isnan(v) else v
+
+
 class PVParser:
     @staticmethod
     def from_p4p(pv_obj, pv_name: Optional[str] = None) -> PVData:
@@ -154,16 +159,12 @@ class PVParser:
 
         va = pv_obj.get("valueAlarm", {})
 
-        def safe_get(k: str):
-            v = va.get(k)
-            return None if isinstance(v, float) and math.isnan(v) else v
-
         value_alarm = ValueAlarm(
             active=va.get("active"),
-            lowAlarmLimit=safe_get("lowAlarmLimit"),
-            lowWarningLimit=safe_get("lowWarningLimit"),
-            highWarningLimit=safe_get("highWarningLimit"),
-            highAlarmLimit=safe_get("highAlarmLimit"),
+            lowAlarmLimit=safe_get_nan(va, "lowAlarmLimit"),
+            lowWarningLimit=safe_get_nan(va, "lowWarningLimit"),
+            highWarningLimit=safe_get_nan(va, "highWarningLimit"),
+            highAlarmLimit=safe_get_nan(va, "highAlarmLimit"),
             lowAlarmSeverity=va.get("lowAlarmSeverity"),
             lowWarningSeverity=va.get("lowWarningSeverity"),
             highWarningSeverity=va.get("highWarningSeverity"),
@@ -227,11 +228,11 @@ class PVParser:
         )
 
         value_alarm = ValueAlarm(
-            lowAlarmLimit=normalize_value(pv_obj.get("lower_alarm_limit")),
-            highAlarmLimit=normalize_value(pv_obj.get("upper_alarm_limit")),
-            lowWarningLimit=normalize_value(pv_obj.get("lower_warning_limit")),
-            highWarningLimit=normalize_value(pv_obj.get("upper_warning_limit")),
-            hysteresis=normalize_value(pv_obj.get("hyst")),
+            lowAlarmLimit=normalize_value(safe_get_nan(pv_obj, "lower_alarm_limit")),
+            highAlarmLimit=normalize_value(safe_get_nan(pv_obj, "upper_alarm_limit")),
+            lowWarningLimit=normalize_value(safe_get_nan(pv_obj, "lower_warning_limit")),
+            highWarningLimit=normalize_value(safe_get_nan(pv_obj, "upper_warning_limit")),
+            hysteresis=normalize_value(safe_get_nan(pv_obj, "hyst")),
         )
 
         return PVData(

@@ -36,7 +36,8 @@ class CaprotoClient:
 
         if first_sub:
             try:
-                pv = epics.get_pv(pv_name, form="ctrl")
+                pv = epics.get_pv(pv_name)
+                pv.get_ctrlvars()
                 pv.add_callback(self._callback)
                 self._pvs[pv_name] = pv
             except Exception as e:

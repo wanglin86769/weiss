@@ -51,7 +51,6 @@ async def send_update(pv_name: str, pv_obj, provider: str):
         "type": "update",
         "pv": pv_name_with_provider,
         "value": pv_data.value,
-        "enumChoices": pv_data.enumChoices,
         "alarm": pv_data.alarm.__dict__ if pv_data.alarm else None,
         "timeStamp": pv_data.timeStamp.__dict__ if pv_data.timeStamp else None,
         "b64arr": pv_data.b64arr,
@@ -64,6 +63,7 @@ async def send_update(pv_name: str, pv_obj, provider: str):
         if not sent_metadata.get(key):
             message.update(
                 {
+                    "enumChoices": pv_data.enumChoices,
                     "display": pv_data.display.__dict__ if pv_data.display else None,
                     "control": pv_data.control.__dict__ if pv_data.control else None,
                     "valueAlarm": pv_data.valueAlarm.__dict__ if pv_data.valueAlarm else None,
