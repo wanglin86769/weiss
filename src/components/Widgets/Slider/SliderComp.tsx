@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { Slider } from "@mui/material";
 import { useEditorContext } from "@src/context/useEditorContext";
 import type { WidgetUpdate } from "@src/types/widgets";
@@ -8,46 +8,23 @@ const SliderComp: React.FC<WidgetUpdate> = ({ data }) => {
   const { inEditMode, writePVValue } = useEditorContext();
   const p = data.editableProperties;
   const pvData = data.pvData;
-  const min =
-    (!inEditMode && p.limitsFromPV?.value ? pvData?.display?.limitLow : p.min?.value) ?? 0;
-  const max =
-    (!inEditMode && p.limitsFromPV?.value ? pvData?.display?.limitHigh : p.max?.value) ?? 100;
+  if (!p.visible?.value) return null;
+
+  const runtimeMin = (p.limitsFromPV?.value ? pvData?.display?.limitLow : p.min?.value) ?? 0;
+  const runtimeMax = (p.limitsFromPV?.value ? pvData?.display?.limitHigh : p.max?.value) ?? 1;
+  const min = inEditMode ? 0 : runtimeMin;
+  const max = inEditMode ? 1 : runtimeMax;
+  const runtimeVal = typeof pvData?.value === "number" ? pvData.value : min;
   const step = p.stepSize?.value && p.stepSize?.value > max - min ? p.stepSize?.value : undefined;
+  const value = inEditMode ? 0 : runtimeVal;
   const isHorizontal = p.horizontal?.value ?? true;
   const orientation = isHorizontal ? "horizontal" : "vertical";
 
-  const pvValue = typeof pvData?.value === "number" ? pvData.value : min;
-  const [localValue, setLocalValue] = useState<number>(pvValue);
-
-  const throttleDelay = 10; // ms
-  const lastSent = useRef<number>(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Keep local slider synced with PV updates (unless the user is moving it)
-  useEffect(() => {
-    if (!inEditMode) setLocalValue(pvValue);
-  }, [pvValue, inEditMode]);
-
-  const handleChange = (_: Event | React.SyntheticEvent, newValue: number | number[]) => {
-    if (typeof newValue !== "number") return;
-    setLocalValue(newValue);
-    const pv = p.pvName?.value;
-    if (inEditMode || !pv) return;
-
-    const now = Date.now();
-    if (now - lastSent.current > throttleDelay) {
-      lastSent.current = now;
-      writePVValue(pv, newValue);
-    } else {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        lastSent.current = Date.now();
-        writePVValue(pv, newValue);
-      }, throttleDelay);
+  const handleChange = (_: Event | React.SyntheticEvent<Element, Event>, newValue: number) => {
+    if (!inEditMode && p.pvName?.value && typeof newValue === "number") {
+      writePVValue(p.pvName.value, newValue);
     }
   };
-
-  if (!p.visible?.value) return null;
 
   return (
     <AlarmBorder alarmData={pvData?.alarm} enable={p.alarmBorder?.value}>
@@ -63,9 +40,9 @@ const SliderComp: React.FC<WidgetUpdate> = ({ data }) => {
       >
         <Slider
           orientation={orientation}
-          value={localValue}
           min={min}
           max={max}
+          value={value}
           step={step}
           marks={step !== undefined}
           disabled={p.disabled?.value}
@@ -82,5 +59,4 @@ const SliderComp: React.FC<WidgetUpdate> = ({ data }) => {
     </AlarmBorder>
   );
 };
-
 export { SliderComp };

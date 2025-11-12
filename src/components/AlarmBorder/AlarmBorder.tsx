@@ -49,13 +49,7 @@ const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }
     boxSizing: "border-box",
   };
 
-  return enable && !inEditMode ? (
-    <div style={style} title={alarmData?.message}>
-      {children}
-    </div>
-  ) : (
-    children
-  );
+  return enable && !inEditMode ? <div style={style}>{children}</div> : children;
 };
 
 export default AlarmBorder;
