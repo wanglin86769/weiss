@@ -17,7 +17,7 @@ import { WS_URL } from "@src/constants/constants";
 export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["PVMap"]) {
   /** WebSocket client instance */
   const ws = useRef<WSClient | null>(null);
-  const [isWSConnected, setWSConnected] = useState(false);
+  const [wsConnected, setWSConnected] = useState(false);
   const pvCache = useRef<Record<string, PVData>>({});
   const [pvState, setPVState] = useState<Record<string, PVData>>({});
 
@@ -123,7 +123,7 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
 
   return {
     ws,
-    isWSConnected,
+    wsConnected,
     startNewSession,
     stopSession,
     writePVValue,
