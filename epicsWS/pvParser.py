@@ -146,7 +146,7 @@ class PVParser:
             description=d.get("description"),
             units=d.get("units"),
             precision=d.get("precision"),
-            form=(d.get("form")).get("index"),
+            form=(d.get("form")).get("index") if d.get("form") else None,
             choices=d.get("choices"),
         )
 
