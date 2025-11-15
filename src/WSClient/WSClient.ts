@@ -128,7 +128,7 @@ export class WSClient {
    * @param event The error event.
    */
   private handleError(event: Event): void {
-    console.error(`WebSocket error: ${event}`);
+    console.error("WebSocket error:", event);
     this.close();
   }
 
