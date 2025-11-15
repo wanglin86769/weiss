@@ -5,25 +5,23 @@ import { COLORS } from "@src/constants/constants";
 import { useEditorContext } from "@src/context/useEditorContext";
 
 interface AlarmBorderProps {
-  alarmData?: Alarm;
+  alarmData?: Alarm | Alarm[];
   children: ReactNode;
   enable: boolean | undefined;
 }
 
-/**
- * AlarmBorder wraps any widget and applies a border color based on PV alarm severity.
- * - Defaults to COLORS.disconnected if PV hasn't been read yet.
- * - Severity → Color mapping:
- *   - NO_ALARM → no border
- *   - MINOR → COLORS.minor
- *   - MAJOR → COLORS.major
- *   - INVALID → COLORS.invalid
- */
 const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }) => {
   const { inEditMode } = useEditorContext();
-  const getBorderColor = (): string | undefined => {
-    if (!alarmData) return COLORS.disconnected;
-    switch (alarmData.severity) {
+
+  const getWorstSeverity = (a: Alarm | Alarm[] | undefined): number | undefined => {
+    if (!a) return undefined;
+    return Array.isArray(a) ? Math.max(...a.map((x) => x?.severity ?? 0)) : a.severity;
+  };
+
+  const getBorderColor = (severity: number | undefined): string | undefined => {
+    if (severity === undefined) return COLORS.disconnected;
+
+    switch (severity) {
       case 0: // NO_ALARM
         return undefined;
       case 1: // MINOR
@@ -37,7 +35,8 @@ const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }
     }
   };
 
-  const borderColor = getBorderColor();
+  const severity = getWorstSeverity(alarmData);
+  const borderColor = getBorderColor(severity);
 
   const style: CSSProperties = {
     width: "100%",

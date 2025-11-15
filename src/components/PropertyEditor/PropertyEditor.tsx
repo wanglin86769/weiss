@@ -21,7 +21,7 @@ import type {
   WidgetProperty,
   MultiWidgetPropertyUpdates,
 } from "@src/types/widgets";
-import { PROPERTY_EDITOR_WIDTH, EDIT_MODE, FRONT_UI_ZIDX } from "@src/constants/constants";
+import { PROPERTY_EDITOR_WIDTH, FRONT_UI_ZIDX } from "@src/constants/constants";
 import TextFieldProperty from "./TextFieldProperty";
 import BooleanProperty from "./BooleanProperty";
 import ColorProperty from "./ColorProperty";
@@ -141,8 +141,13 @@ const getGroupedProperties = (properties: WidgetProperties) => {
  * - Focus state is managed to coordinate with the editor context.
  */
 const PropertyEditor: React.FC = () => {
-  const { mode, selectedWidgetIDs, editingWidgets, batchWidgetUpdate, setPropertyEditorFocused } =
-    useEditorContext();
+  const {
+    inEditMode,
+    selectedWidgetIDs,
+    editingWidgets,
+    batchWidgetUpdate,
+    setPropertyEditorFocused,
+  } = useEditorContext();
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
   const singleWidget = editingWidgets.length === 1;
   const [open, setOpen] = useState(true);
@@ -276,7 +281,7 @@ const PropertyEditor: React.FC = () => {
         </React.Fragment>
       );
     });
-  if (mode !== EDIT_MODE) return null;
+  if (!inEditMode) return null;
   return (
     <>
       {!open && (

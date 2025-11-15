@@ -153,6 +153,7 @@ export const PLOT_PROPS: WidgetProperties = {
   yAxisTitle: PROPERTY_SCHEMAS.yAxisTitle,
   logscaleY: PROPERTY_SCHEMAS.logscaleY,
   plotBufferSize: PROPERTY_SCHEMAS.plotBufferSize,
+  plotLineStyle: PROPERTY_SCHEMAS.plotLineStyle,
   showLegend: PROPERTY_SCHEMAS.showLegend,
-  useTimestamp: PROPERTY_SCHEMAS.useTimestamp,
+  // useTimestamp: PROPERTY_SCHEMAS.useTimestamp, // TODO: will be used in GraphXY
 };

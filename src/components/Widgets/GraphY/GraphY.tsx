@@ -23,5 +23,6 @@ export const GraphY: Widget = {
     height: { ...PROPERTY_SCHEMAS.height, value: 260 },
     ...PLOT_PROPS,
     ...TEXT_PROPS,
+    textVAlign: { ...PROPERTY_SCHEMAS.textVAlign, value: "top" },
   },
 } as const;
