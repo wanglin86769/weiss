@@ -18,7 +18,7 @@ const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }
     return Array.isArray(a) ? Math.max(...a.map((x) => x?.severity ?? 0)) : a.severity;
   };
 
-  const getBorderColor = (severity: number | undefined): string | undefined => {
+  const getOutlineColor = (severity: number | undefined): string | undefined => {
     if (severity === undefined) return COLORS.disconnected;
 
     switch (severity) {
@@ -36,14 +36,14 @@ const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }
   };
 
   const severity = getWorstSeverity(alarmData);
-  const borderColor = getBorderColor(severity);
+  const outlineColor = getOutlineColor(severity);
 
   const style: CSSProperties = {
     width: "100%",
     height: "100%",
-    borderColor: borderColor,
-    borderWidth: borderColor ? "3px" : 0,
-    borderStyle: borderColor === COLORS.disconnected ? "dashed" : "solid",
+    outlineColor: outlineColor,
+    outlineWidth: outlineColor ? "3px" : 0,
+    outlineStyle: outlineColor === COLORS.disconnected ? "dashed" : "solid",
     borderRadius: "2px",
     boxSizing: "border-box",
   };
