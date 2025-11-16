@@ -19,7 +19,7 @@ const InputFieldComp: React.FC<WidgetUpdate> = ({ data }) => {
   if (!p.visible?.value) return null;
 
   const handleWrite = (value: number | string) => {
-    if (!inEditMode) return;
+    if (inEditMode) return;
     if (p.pvName?.value) {
       writePVValue(p.pvName.value, value);
     }

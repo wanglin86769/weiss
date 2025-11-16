@@ -16,12 +16,12 @@ export const InputField: Widget = {
   category: "Controls",
   pvData: {} as PVData,
   editableProperties: {
-    backgroundColor: { ...PROPERTY_SCHEMAS.backgroundColor, value: COLORS.inputColor },
     pvName: PROPERTY_SCHEMAS.pvName,
     unitsFromPV: PROPERTY_SCHEMAS.unitsFromPV,
     units: PROPERTY_SCHEMAS.units,
     disabled: PROPERTY_SCHEMAS.disabled,
     ...COMMON_PROPS,
+    backgroundColor: { ...PROPERTY_SCHEMAS.backgroundColor, value: COLORS.inputColor },
     ...FILTERED_TEXT_PROPS,
   },
 } as const;

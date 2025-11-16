@@ -117,6 +117,9 @@ export function createGroupWidget(
   };
 }
 
+/**
+ * Recursively get changes in position for when widget has children.
+ */
 export function getNestedMoveUpdates(
   widget: Widget,
   dx: number,
@@ -138,11 +141,9 @@ export function getNestedMoveUpdates(
   let newY: number;
 
   if (parentOldX === undefined || parentOldY === undefined) {
-    // Root widget — move directly
     newX = oldX + dx;
     newY = oldY + dy;
   } else {
-    // Child widget — compute relative to parent’s ORIGINAL frame, then place in parent’s NEW frame
     const relX = oldX - parentOldX;
     const relY = oldY - parentOldY;
     newX = (parentNewX ?? parentOldX) + relX * scaleX;

@@ -15,8 +15,8 @@ export const TextUpdate: Widget = {
   pvData: {} as PVData,
   editableProperties: {
     label: { ...PROPERTY_SCHEMAS.label, value: "Text Update" },
-    backgroundColor: { ...PROPERTY_SCHEMAS.backgroundColor, value: COLORS.readColor },
     ...COMMON_PROPS,
+    backgroundColor: { ...PROPERTY_SCHEMAS.backgroundColor, value: COLORS.readColor },
     ...TEXT_PROPS,
     pvName: PROPERTY_SCHEMAS.pvName,
     alarmBorder: PROPERTY_SCHEMAS.alarmBorder,

@@ -37,7 +37,8 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
    * Handles incoming WebSocket messages.
    * - Filters unsolicited PVs
    * - Maps substituted PVs back to original names
-   * - Forwards updates to widget manager
+   * - Populates metadata (received only once) with previous message content.
+   * - Updates PVState object
    */
   const onMessage = useCallback(
     (msg: WSMessage) => {
@@ -95,7 +96,8 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
 
   /**
    * Writes a new value to a PV.
-   * Input is the original PV name (from widgets).
+   * @param pv The pv to be written to (with macros if applicable)
+   * @param newValue New value [@type PVValue]
    */
   const writePVValue = useCallback(
     (pv: string, newValue: PVValue) => {

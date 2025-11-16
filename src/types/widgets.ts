@@ -8,7 +8,8 @@ import type { MultiPvData, PVData } from "./epicsWS";
  * - "text": text input
  * - "number": numeric input
  * - "boolean": checkbox
- * - "colorSelector": color picker
+ * - "colorSel": color picker
+ * - "colorSelList": list of color pickers
  * - "select": dropdown selection
  * - "strList": list of string entries
  * - "strRecord": string-string record (key-value pairs)
@@ -25,9 +26,10 @@ export type PropertySelectorType =
   | "strRecord"
   | "none";
 
-/** Allowed values for a widget property: string, number, boolean, or string dictionary */
+/** Allowed values for a widget property */
 export type PropertyValue = string | number | boolean | string[] | Record<string, string>;
 
+/** Format of numerical limits for a property */
 export interface PropertyLimits {
   min?: number;
   max?: number;
@@ -41,6 +43,7 @@ export interface PropertyLimits {
  * @property value Current or default value of the property
  * @property category Category of the property for grouping in the editor
  * @property options Optional list of string options (used for dropdown/select)
+ * @property limits Optional min and max numerical limits
  */
 export interface WidgetProperty<T extends PropertyValue = PropertyValue> {
   selType: PropertySelectorType;

@@ -30,7 +30,8 @@ import {
  * - Undo/redo history
  * - Copy/paste of widgets
  * - Alignment and distribution
- * - Updating widget properties and PV data
+ * - Grouping/Ungrouping
+ * - Updating widget properties in batch or individually
  * - Import/export of widget configurations
  */
 export function useWidgetManager() {
@@ -113,6 +114,7 @@ export function useWidgetManager() {
     (id: string) => getWidgetNested(editorWidgets, id),
     [editorWidgets]
   );
+
   /**
    * Apply multiple property updates to widgets.
    * @param updates Object mapping widget IDs to property updates
@@ -163,14 +165,15 @@ export function useWidgetManager() {
     setSelectedWidgetIDs([]);
   }, [selectedWidgetIDs, updateEditorWidgetList]);
 
+  /**
+   * Create group with selected widgets.
+   */
   function groupSelected() {
     if (selectedWidgetIDs.length < 2 || !selectionBounds) return;
     const groupID = uuidv4();
-    // Create the new group widget and attach selected widgets as children
     const groupWidget = createGroupWidget(groupID, selectedWidgets, selectionBounds);
 
     setEditorWidgets((prev) => {
-      // Remove selected widgets from top-level array
       const remainingWidgets = prev.filter((w) => !selectedWidgetIDs.includes(w.id));
       return [...remainingWidgets, groupWidget];
     });
@@ -178,6 +181,9 @@ export function useWidgetManager() {
     setSelectedWidgetIDs([groupID]);
   }
 
+  /**
+   * Ungroup selected widgets.
+   */
   function ungroupSelected() {
     setEditorWidgets((prev) => {
       const newWidgets: Widget[] = [];
@@ -210,14 +216,12 @@ export function useWidgetManager() {
     [batchWidgetUpdate]
   );
 
-  type ReorderDirection = "forward" | "backward" | "front" | "back";
-
   /**
    * Move selected widgets one step in the selected diretion on the z-axis.
    *  @param direction "forward" | "backward" | "front" | "back"
    */
   const reorderWidgets = useCallback(
-    (direction: ReorderDirection) => {
+    (direction: "forward" | "backward" | "front" | "back") => {
       if (selectedWidgetIDs.length === 0) return;
 
       updateEditorWidgetList((prev) => {
@@ -384,7 +388,6 @@ export function useWidgetManager() {
    * Distribute selected widgets (3 or more) horizontally.
    * @warning Functionality not tested yet!
    */
-
   const distributeHorizontal = useCallback(() => {
     if (selectedWidgets.length < 3) return;
 
@@ -630,6 +633,7 @@ export function useWidgetManager() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [editorWidgets, formatWdgToExport]);
+
   /**
    * Load widgets from JSON or ExportedWidget array.
    * @param widgetsData JSON string or array of ExportedWidget
@@ -735,7 +739,6 @@ export function useWidgetManager() {
           });
         }
 
-        // Recurse into children if present
         if (w.children && w.children.length > 0) {
           collectPVs(w.children);
         }

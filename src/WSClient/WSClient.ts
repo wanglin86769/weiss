@@ -39,7 +39,7 @@ function isWSMessage(obj: unknown): obj is WSMessage {
 }
 
 /**
- * WebSocket client for connecting to the pvaPy WebSocket server.
+ * WebSocket client for connecting to the WebSocket server.
  * Handles subscribing, unsubscribing, writing, and receiving PV updates.
  */
 export class WSClient {

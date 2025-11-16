@@ -24,5 +24,6 @@ export const GraphY: Widget = {
     ...PLOT_PROPS,
     ...TEXT_PROPS,
     textVAlign: { ...PROPERTY_SCHEMAS.textVAlign, value: "top" },
+    textHAlign: { ...PROPERTY_SCHEMAS.textHAlign, value: "center" },
   },
 } as const;

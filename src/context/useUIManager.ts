@@ -13,11 +13,11 @@ import useEpicsWS from "./useEpicsWS";
  * - Coordinates session lifecycle when switching modes.
  * - Handles localStorage persistence for widgets (load on startup, save in edit mode).
  *
+ * @param ws The WebSocket instance to be controlled.
  * @param editorWidgets Current list of widgets from the widget manager.
  * @param setSelectedWidgetIDs Function to update currently selected widgets.
  * @param loadWidgets Function to load widgets into the editor (used for localStorage).
  * @param formatWdgToExport Function to format (reduce) widgets to exporting format.
- * @returns An object containing UI state, setters, and mode updater.
  */
 export default function useUIManager(
   ws: ReturnType<typeof useEpicsWS>,
@@ -45,9 +45,7 @@ export default function useUIManager(
    * Runtime mode:
    * - Clears widget selection.
    * - Closes widget selector.
-   * - Starts a new PV session.
-   *
-   * Also updates the visibility of grid lines in the editor.
+   * - Starts a new WS session.
    *
    * @param newMode The mode to switch to ("edit" | "runtime").
    */
@@ -65,8 +63,9 @@ export default function useUIManager(
     },
     [setSelectedWidgetIDs, ws]
   );
+
   /**
-   * Handle reconnection when needed
+   * Handles WS reconnection when needed
    */
   useEffect(() => {
     if (inEditMode || ws.wsConnected) return;

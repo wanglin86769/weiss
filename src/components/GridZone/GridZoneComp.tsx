@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { GridPosition, Widget, WidgetUpdate } from "@src/types/widgets";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
 import { useEditorContext } from "@src/context/useEditorContext.tsx";
-import { GRID_ID, MAX_ZOOM, MIN_ZOOM } from "@src/constants/constants";
+import { FRONT_UI_ZIDX, GRID_ID, MAX_ZOOM, MIN_ZOOM } from "@src/constants/constants";
 import ContextMenu from "@components/ContextMenu/ContextMenu";
 import "./GridZone.css";
 import WidgetRenderer from "@components/WidgetRenderer/WidgetRenderer.tsx";
@@ -354,21 +354,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
         }px`,
       }}
     >
-      {dragPreview && (
-        <div
-          style={{
-            position: "absolute",
-            left: pan.x + dragPreview.x * zoom,
-            top: pan.y + dragPreview.y * zoom,
-            width: dragPreview.widget.editableProperties.width?.value ?? 100,
-            height: dragPreview.widget.editableProperties.height?.value ?? 50,
-            border: "2px dashed #00aaff",
-            pointerEvents: "none",
-            transform: `scale(${zoom})`,
-            zIndex: 1000,
-          }}
-        />
-      )}
       <div
         id="centerRef"
         className={`centerRef ${inEditMode && props.centerVisible?.value ? "centerMark" : ""}`}
@@ -376,6 +361,20 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}
       >
+        {dragPreview && (
+          <div
+            style={{
+              position: "absolute",
+              left: dragPreview.x,
+              top: dragPreview.y,
+              width: dragPreview.widget.editableProperties.width?.value ?? 100,
+              height: dragPreview.widget.editableProperties.height?.value ?? 50,
+              border: "2px dashed #00aaff",
+              pointerEvents: "none",
+              zIndex: FRONT_UI_ZIDX,
+            }}
+          />
+        )}
         <WidgetRenderer scale={zoom} ensureGridCoordinate={ensureGridCoordinate} />
       </div>
       {inEditMode && <SelectionManager gridRef={gridRef} zoom={zoom} pan={pan} />}

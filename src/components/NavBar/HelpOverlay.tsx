@@ -161,7 +161,7 @@ const HelpOverlay: React.FC = () => {
             Shortcuts
           </Typography>
           <ShortcutRow action="Undo" keys="Ctrl + Z" />
-          <ShortcutRow action="Redo" keys={["Ctrl + Shift + Z", "Ctrl + Y"]} />
+          <ShortcutRow action="Redo" keys="Ctrl + Y" />
           <ShortcutRow action="Copy widget" keys="Ctrl + C" />
           <ShortcutRow action="Paste widget" keys="Ctrl + V" />
           <ShortcutRow action="Delete widget" keys="Delete" />
