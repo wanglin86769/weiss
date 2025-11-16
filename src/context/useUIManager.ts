@@ -35,6 +35,7 @@ export default function useUIManager(
   const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
+  const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
 
   /**
    * Switch between edit and runtime modes.
@@ -137,5 +138,6 @@ export default function useUIManager(
     setIsDragging,
     isPanning,
     setIsPanning,
+    isDemo,
   };
 }
