@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import type { WidgetUpdate } from "@src/types/widgets";
 import { useEditorContext } from "@src/context/useEditorContext";
-import { FLEX_ALIGN_MAP, INPUT_TEXT_ALIGN_MAP } from "@src/constants/constants";
+import { FLEX_ALIGN_MAP } from "@src/constants/constants";
+import type { CSSProperties } from "@mui/material";
 
 const TextLabelComp: React.FC<WidgetUpdate> = ({ data }) => {
   const { inEditMode, updateWidgetProperties } = useEditorContext();
@@ -50,7 +51,7 @@ const TextLabelComp: React.FC<WidgetUpdate> = ({ data }) => {
         onBlur={() => setEditing(false)}
         onChange={(e) => updateWidgetProperties(data.id, { label: e.target.value })}
         style={{
-          textAlign: INPUT_TEXT_ALIGN_MAP[p.textHAlign?.value ?? "left"],
+          textAlign: (p.textHAlign?.value ?? "left") as CSSProperties["textAlign"],
           pointerEvents: inEditMode ? "auto" : "none",
           fontSize: p.fontSize?.value,
           fontFamily: p.fontFamily?.value,

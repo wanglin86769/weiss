@@ -96,12 +96,3 @@ export const FLEX_ALIGN_MAP: Record<string, CSSProperties["justifyContent"]> = {
   middle: "center",
   bottom: "flex-end",
 };
-
-/**
- * Mapping of widget alignment keywords to CSS `textAlign` values.
- */
-export const INPUT_TEXT_ALIGN_MAP: Record<string, CSSProperties["textAlign"]> = {
-  left: "left",
-  center: "center",
-  right: "right",
-};

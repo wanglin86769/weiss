@@ -13,12 +13,10 @@ function defineProp<T extends PropertyValue>(prop: WidgetProperty<T>): WidgetPro
 
 /**
  * Master schema of all widget properties.
- * Each key defines a property, its type, default value, category, and optional options for select-type properties.
- * Used to standardize widget property definitions across the app.
+ * Standardizes widget property definitions across the app.
  */
 /* prettier-ignore */
 export const PROPERTY_SCHEMAS = {
-  // Shared Properties
   disabled:        defineProp({ selType: "boolean", label: "Disabled", value: false as boolean, category: "EPICS" }),
   macros:          defineProp({ selType: "strRecord", label: "Macro", value: {} as Record<string, string>, category: "EPICS" }),
   // Layout
@@ -60,7 +58,6 @@ export const PROPERTY_SCHEMAS = {
   alarmBorder:     defineProp({ selType: "boolean", label: "Alarm border", value: true as boolean, category: "EPICS" }),
   labelFromPV:     defineProp({ selType: "boolean", label: "Label(s) from PV", value: true as boolean, category: "EPICS" }),
   actionValue:     defineProp({ selType: "text", label: "Action Value", value: 1 as number | string, category: "EPICS" }),
-  // Specific Properties
   // BitIndicators
   horizontal:      defineProp({ selType: "boolean", label: "Horizontal", value: false, category: "Layout" }),
   nBits:           defineProp({ selType: "number", label: "Number of bits", value: 8 as number, limits: { min: 1 }, category: "Layout" }),
@@ -72,7 +69,7 @@ export const PROPERTY_SCHEMAS = {
   useStringVal:    defineProp({ selType: "boolean", label: "Use string value", value: true as boolean, category: "EPICS" }),
   offLabel:        defineProp({ selType: "text", label: "Off label", value: "" as string, category: "Text" }),
   onLabel:         defineProp({ selType: "text", label: "On label", value: "" as string, category: "Text" }),
-  // Graph
+  // Plots
   lineColors:      defineProp({ selType: "colorSelList", label: "Line Color", value: [COLORS.graphLineColor] as string[], category: "Style" }),
   plotTitle:       defineProp({ selType: "text", label: "Title", value: "Title" as string, category: "Text" }),
   xAxisTitle:      defineProp({ selType: "text", label: "X axis title", value: "X axis" as string, category: "Text" }),
@@ -86,12 +83,12 @@ export const PROPERTY_SCHEMAS = {
   enumChoices:     defineProp({ selType: "strList", label: "Option label", value: [""] as string[], category: "EPICS" }),
   // Slider
   stepSize:        defineProp({ selType: "number", label: "Step Size", value: 0 as number, limits: { min: 1 }, category: "Layout" }),
+  min:             defineProp({ selType: "number", label: "Minimum value", value: 0 as number, category: "EPICS" }),
+  max:             defineProp({ selType: "number", label: "Maximum value", value: 0 as number, category: "EPICS" }),
   //Other
   valuePlcmnt:     defineProp({ selType: "select", label: "Value placement", value: "top" as string, options: ["top", "bottom", "end", "start", "middle"], category: "Layout" }),
   labelPlcmnt:     defineProp({ selType: "select", label: "Label placement", value: "end" as string, options: ["top", "bottom", "end", "start", "middle"], category: "Layout" }),
   limitsFromPV:    defineProp({ selType: "boolean", label: "Limits From PV", value: true as boolean, category: "EPICS" }),
-  min:             defineProp({ selType: "number", label: "Minimum value", value: 0 as number, category: "EPICS" }),
-  max:             defineProp({ selType: "number", label: "Maximum value", value: 0 as number, category: "EPICS" }),
 
 };
 
@@ -105,7 +102,6 @@ export const CATEGORY_DISPLAY_ORDER = [
   "Text",
   "Style",
   "General",
-  "Window",
   "Other",
 ];
 
