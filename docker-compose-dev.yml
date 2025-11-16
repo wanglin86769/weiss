@@ -25,6 +25,7 @@ services:
     restart: always
     environment:
       - NODE_ENV=development
+      - VITE_DEMO_MODE=true # this flag makes the "reset" button to appear
     depends_on:
       - weiss-epicsws
   weiss-epicsws:

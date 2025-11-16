@@ -22,6 +22,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import HelpOverlay from "./HelpOverlay.tsx";
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import GitLabIcon from "@components/CustomIcons/GitlabIcon.tsx";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -91,8 +92,15 @@ const StyledAppBar = styled(MuiAppBar, {
 }));
 
 export default function NavBar() {
-  const { inEditMode, updateMode, wdgPickerOpen, setWdgPickerOpen, downloadWidgets, loadWidgets } =
-    useEditorContext();
+  const {
+    inEditMode,
+    updateMode,
+    wdgPickerOpen,
+    setWdgPickerOpen,
+    downloadWidgets,
+    loadWidgets,
+    isDemo,
+  } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -136,6 +144,24 @@ export default function NavBar() {
     handleMenuClose();
     console.log("TODO: trigger GitLab OAuth + file browser workflow");
     window.alert("Not implemented. Coming soon!");
+  };
+
+  const handleResetDemo = async () => {
+    try {
+      const url =
+        "https://raw.githubusercontent.com/weiss-core/weiss/main/examples/example-opi.json";
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error("Failed to fetch example-opi.json");
+        return;
+      }
+
+      const text = await res.text();
+      loadWidgets(text);
+    } catch (err) {
+      console.error("Reset demo failed:", err);
+    }
   };
 
   return (
@@ -184,6 +210,31 @@ export default function NavBar() {
             label="Runtime"
             sx={{ color: "white", ml: 3 }}
           />
+          {isDemo && inEditMode && (
+            <Tooltip title="Reset demo content">
+              <Button
+                onClick={() => {
+                  void handleResetDemo();
+                }}
+                startIcon={<RefreshIcon />}
+                variant="contained"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 500,
+                  borderRadius: 1.5,
+                  px: 2,
+                  py: 0.5,
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.22)",
+                  },
+                }}
+              >
+                Reset
+              </Button>
+            </Tooltip>
+          )}
           <Box sx={{ flexGrow: 1 }} />
           {/* Right-side actions */}
           <Box className="rightButtons" sx={{ display: "flex", alignItems: "center", gap: 2 }}>
