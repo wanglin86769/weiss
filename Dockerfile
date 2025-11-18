@@ -15,6 +15,8 @@ CMD pnpm run dev --host
 # Production environment
 FROM node:20-alpine AS build
 WORKDIR /app
+ARG VITE_DEMO_MODE
+ENV VITE_DEMO_MODE=${VITE_DEMO_MODE}
 COPY --from=source_fetch /app ./
 RUN npm install --global corepack@latest && corepack enable pnpm
 RUN pnpm install && pnpm run build

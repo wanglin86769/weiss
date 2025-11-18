@@ -6,6 +6,7 @@ services:
       args:
         GIT_REPO: ${GIT_REPO}
         APP_VERSION: ${APP_VERSION}
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE}
     image: weiss:${APP_VERSION}
     container_name: weiss
     network_mode: host
