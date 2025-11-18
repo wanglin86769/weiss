@@ -57,9 +57,17 @@ export const APP_SRC_URL = "https://github.com/weiss-controls/weiss.git";
 
 /** WebSocket server URL for PV communication */
 export const WS_URL = (() => {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const isHttps = window.location.protocol === "https:";
+  const protocol = isHttps ? "wss:" : "ws:";
   const hostname = window.location.hostname;
-  return `${protocol}//${hostname}:8080`;
+
+  if (isHttps) {
+    // use NGINX proxy with /ws suffix
+    return `${protocol}//${hostname}/ws/`;
+  } else {
+    // connect directly to backend port, no proxy needed
+    return `${protocol}//${hostname}:8080`;
+  }
 })();
 
 /** Editor mode string (design time) */

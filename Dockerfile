@@ -11,8 +11,8 @@ RUN npm install --global corepack@latest && corepack enable pnpm
 RUN pnpm install
 
 CMD pnpm run dev --host
-# --------------------------------------------
-# Production environment
+
+# Production build
 FROM node:20-alpine AS build
 WORKDIR /app
 ARG VITE_DEMO_MODE
@@ -21,14 +21,14 @@ COPY --from=source_fetch /app ./
 RUN npm install --global corepack@latest && corepack enable pnpm
 RUN pnpm install && pnpm run build
 
+# Production image
 FROM nginx:1.25-alpine AS prod
-ARG PROD_PORT
-ENV PROD_PORT=${PROD_PORT:-80}
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY ./nginx/default.conf.template /etc/nginx/conf.d/default.conf.template
+
+COPY ./nginx/default.http.template  /etc/nginx/conf.d/default.http.template
+COPY ./nginx/default.https.template /etc/nginx/conf.d/default.https.template
+
 COPY ./nginx/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-
-EXPOSE ${PROD_PORT}
