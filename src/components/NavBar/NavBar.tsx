@@ -146,10 +146,10 @@ export default function NavBar() {
     window.alert("Not implemented. Coming soon!");
   };
 
-  const handleResetDemo = async () => {
+  const handleLoadDemo = async () => {
     try {
       const url =
-        "https://raw.githubusercontent.com/weiss-core/weiss/main/examples/example-opi.json";
+        "https://raw.githubusercontent.com/weiss-controls/weiss/main/examples/example-opi.json";
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -160,7 +160,7 @@ export default function NavBar() {
       const text = await res.text();
       loadWidgets(text);
     } catch (err) {
-      console.error("Reset demo failed:", err);
+      console.error("Load demo failed:", err);
     }
   };
 
@@ -211,10 +211,10 @@ export default function NavBar() {
             sx={{ color: "white", ml: 3 }}
           />
           {isDemo && inEditMode && (
-            <Tooltip title="Reset demo content">
+            <Tooltip title="Load demo OPI">
               <Button
                 onClick={() => {
-                  void handleResetDemo();
+                  void handleLoadDemo();
                 }}
                 startIcon={<RefreshIcon />}
                 variant="contained"
@@ -231,7 +231,7 @@ export default function NavBar() {
                   },
                 }}
               >
-                Reset
+                Load demo
               </Button>
             </Tooltip>
           )}

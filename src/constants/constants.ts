@@ -53,10 +53,14 @@ export const FRONT_UI_ZIDX = parseInt(
 );
 
 /** URL of the project source repository */
-export const APP_SRC_URL = "https://github.com/weiss-core/weiss.git";
+export const APP_SRC_URL = "https://github.com/weiss-controls/weiss.git";
 
 /** WebSocket server URL for PV communication */
-export const WS_URL = "ws://localhost:8080";
+export const WS_URL = (() => {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const hostname = window.location.hostname;
+  return `${protocol}//${hostname}:8080`;
+})();
 
 /** Editor mode string (design time) */
 export const EDIT_MODE = "edit";
