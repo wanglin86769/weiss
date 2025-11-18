@@ -149,7 +149,7 @@ export default function NavBar() {
   const handleLoadDemo = async () => {
     try {
       const url =
-        "https://raw.githubusercontent.com/weiss-core/weiss/main/examples/example-opi.json";
+        "https://raw.githubusercontent.com/weiss-controls/weiss/main/examples/example-opi.json";
 
       const res = await fetch(url);
       if (!res.ok) {

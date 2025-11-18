@@ -39,7 +39,7 @@ usage of control panels. _TLDR_: [Getting Started](#getting-started).
 
 A set of new features is planned to be implemented, mostly on the access control and OPI management
 context. Follow the app development and mapped improvements on
-[WEISS Project Dashboard](https://github.com/orgs/weiss-core/projects/1/)
+[WEISS Project Dashboard](https://github.com/orgs/weiss-controls/projects/1/)
 
 ## Getting started
 
@@ -50,7 +50,7 @@ context. Follow the app development and mapped improvements on
 2. Clone this repo:
 
 ```sh
-git clone https://github.com/weiss-core/weiss.git
+git clone https://github.com/weiss-controls/weiss.git
 ```
 
 3. Create your `.env` file: Since we don't yet use secrets or certificates, you can just copy
