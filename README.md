@@ -7,6 +7,8 @@ provides a responsive editor, live PV communication, and a lightweight deploymen
 
 Try it out: https://demo.weiss-controls.org.
 
+![Example image](./public/example.png)
+
 The demo connects to a real IOC. For the demo, all edits stay in your browser only. Use **Load
 Demo** anytime to restore.
 
@@ -118,8 +120,6 @@ This can be done manually:
 1. Upload via the navbar "Upload File" button
 2. Edit as desired
 3. Click Preview to start EPICS communication
-
-![Example image](./public/example.png)
 
 Or automatically by setting `VITE_DEMO_MODE` in your `.env` file:
 
