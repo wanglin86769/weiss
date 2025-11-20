@@ -1,24 +1,37 @@
 import { useState, useEffect } from "react";
 
-export const MIN_SIZE = 768;
+/**
+ * WEISS restricts operation on screens below a minimum size. Small displays reduce the operator's
+ * ability to interpret process values, increase the likelihood of accidental interaction, and may
+ * compromise layout consistency. Based on that, layouts smaller than 768×600 are intentionally
+ * blocked.
+ */
+
+export const MIN_WIDTH = 768;
+export const MIN_HEIGHT = 600;
 
 export function ScreenGuard() {
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${MIN_SIZE}px)`);
+    const mqW = window.matchMedia(`(max-width: ${MIN_WIDTH}px)`);
+    const mqH = window.matchMedia(`(max-height: ${MIN_HEIGHT}px)`);
 
     const evaluate = () => {
-      setBlocked(mq.matches);
+      setBlocked(mqW.matches || mqH.matches);
     };
 
     evaluate();
-    mq.addEventListener("change", evaluate);
-    return () => mq.removeEventListener("change", evaluate);
+    mqW.addEventListener("change", evaluate);
+    mqH.addEventListener("change", evaluate);
+
+    return () => {
+      mqW.removeEventListener("change", evaluate);
+      mqH.removeEventListener("change", evaluate);
+    };
   }, []);
 
   if (!blocked) return null;
-
   return (
     <div
       style={{
@@ -33,12 +46,16 @@ export function ScreenGuard() {
         alignItems: "center",
         justifyContent: "center",
         fontSize: "1.2rem",
-        padding: "0 24px",
+        padding: "32px",
         textAlign: "center",
+        boxSizing: "border-box",
       }}
     >
-      It is not yet recommended to use this application on mobile devices. Please, switch to a
-      desktop web browser.
+      <div style={{ maxWidth: "600px", lineHeight: 1.4 }}>
+        Limited space reduces clarity and increases the chance of mistakes when dealing with control
+        systems. To keep interactions reliable, the minimum viewport allowed is {MIN_WIDTH}×
+        {MIN_HEIGHT}. Please, switch to a desktop browser.
+      </div>
     </div>
   );
 }
