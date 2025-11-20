@@ -17,13 +17,16 @@ class CaprotoClient:
         self._pvs: Dict[str, Any] = {}
         self._subscribers: Dict[str, Set[str]] = {}
         self._lock = Lock()
+        self._latest_value: Dict[str, Any] = {}
 
     def _callback(self, value, **kwargs):
         """Generic callback for all PVs — passes raw data upstream."""
         pvname = kwargs.get("pvname")
         if not pvname:
             return
-        self._handle_update(pvname, {"value": value, **kwargs})
+        val = {"value": value, **kwargs}
+        self._latest_value[pvname] = val
+        self._handle_update(pvname, val)
 
     def subscribe(self, client_id: str, pv_name: str):
         """
@@ -33,6 +36,8 @@ class CaprotoClient:
         with self._lock:
             first_sub = pv_name not in self._pvs
             self._subscribers.setdefault(pv_name, set()).add(client_id)
+            if not first_sub and pv_name in self._latest_value:
+                self._handle_update(pv_name, self._latest_value[pv_name])
 
         if first_sub:
             try:
@@ -54,6 +59,7 @@ class CaprotoClient:
             if not clients:
                 pv = self._pvs.pop(pv_name, None)
                 self._subscribers.pop(pv_name, None)
+                self._latest_value.pop(pv_name, None)
                 if pv:
                     try:
                         pv.clear_callbacks()
@@ -95,4 +101,5 @@ class CaprotoClient:
                     print(f"[caproto]: Failed to clear callbacks for {pv_name}: {e}")
             self._pvs.clear()
             self._subscribers.clear()
+            self._latest_value.clear()
         print("[caproto]: Closed all subscriptions.")

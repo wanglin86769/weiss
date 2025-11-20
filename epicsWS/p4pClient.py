@@ -18,11 +18,13 @@ class P4PClient:
         self._handle_update = handle_update
         self._ctxt = Context("pva", nt=False)  # nt=False to get unpacked data
         self._lock = threading.Lock()
+        self._latest_value: Dict[str, Any] = {}  # pv_name -> last value
 
     def _on_update(self, pv_name: str) -> Callable[[Any], None]:
         """Return a callback for monitor updates."""
 
         def callback(value: Any):
+            self._latest_value[pv_name] = value
             self._handle_update(pv_name, value)
 
         return callback
@@ -34,6 +36,10 @@ class P4PClient:
                 mon = self._ctxt.monitor(pv_name, self._on_update(pv_name))
                 self._channels[pv_name] = mon
                 self._subscribers[pv_name] = set()
+            # Send last value if monitor already existed (late subscriber)
+            else:
+                if pv_name in self._latest_value:
+                    self._handle_update(pv_name, self._latest_value[pv_name])
             self._subscribers[pv_name].add(client_id)
 
     def unsubscribe(self, client_id: str, pv_name: str):
@@ -45,6 +51,7 @@ class P4PClient:
 
             if not self._subscribers[pv_name]:
                 mon = self._channels.pop(pv_name, None)
+                self._latest_value.pop(pv_name, None)
                 if mon:
                     mon.close()
                 del self._subscribers[pv_name]
@@ -60,6 +67,7 @@ class P4PClient:
 
             for pv in empty_pvs:
                 mon = self._channels.pop(pv, None)
+                self._latest_value.pop(pv, None)
                 if mon:
                     mon.close()
                 del self._subscribers[pv]
@@ -83,4 +91,5 @@ class P4PClient:
                 mon.close()
             self._channels.clear()
             self._subscribers.clear()
+            self._latest_value.clear()
             self._ctxt.close()
