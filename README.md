@@ -64,7 +64,7 @@ cp .env.example .env
 ```
 
 Adjust EPICS variables as needed (`DEFAULT_PROTOCOL`, `EPICS_XXX_ADDR_LIST`, etc.). Other options
-can remain at default values.
+can remain at default values if desired.
 
 ## Running WEISS
 
@@ -74,8 +74,7 @@ The production setup is configured entirely through .env. HTTP and HTTPS are bot
 If using HTTPS, set:
 
 ```ini
-ENABLE_HTTPS=false
-SERVER_NAME="<your-server-name>" # prefer to use domain name
+ENABLE_HTTPS=true
 SSL_CERT_FILE=/path/to/fullchain.pem
 SSL_KEY_FILE=/path/to/privkey.pem
 ```
