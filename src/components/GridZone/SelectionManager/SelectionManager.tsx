@@ -20,6 +20,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
   const isSelecting = !!selectionArea.start;
 
   const areaRef = useRef<HTMLDivElement>(null);
+  const downTargetRef = useRef<EventTarget | null>(null);
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -35,7 +36,9 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
 
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button !== 0 || e.altKey || isDragging) return;
-      const id = (e.target as HTMLElement).getAttribute("id");
+      const target = e.target as HTMLElement;
+      const id = target.getAttribute("id");
+      downTargetRef.current = target;
       if (id !== GRID_ID) return;
       disableTxtSelection();
       const rect = grid.getBoundingClientRect();
@@ -71,6 +74,8 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
 
       // No active selection: interpret as click
       if (!selectionArea.start) {
+        // ignore if click started elsewhere
+        if (target !== downTargetRef.current) return;
         const wId = widgetEl?.getAttribute("id");
         if (!wId) {
           setSelectedWidgetIDs([]);
