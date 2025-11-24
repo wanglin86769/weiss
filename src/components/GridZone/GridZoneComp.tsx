@@ -246,7 +246,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (propertyEditorFocused) return;
       // shortcuts for all modes
-      if (e.shiftKey && e.key.toLowerCase() === "c") {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
         centerScreen();
         return;
