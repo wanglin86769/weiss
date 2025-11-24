@@ -4,7 +4,7 @@ from p4p.client.thread import Subscription
 import threading
 
 
-class P4PClient:
+class PVAClient:
     """
     Manages PV subscriptions per client_id using p4p.
     """
@@ -76,13 +76,13 @@ class P4PClient:
         """Write a value to a PV (async)."""
         mon = self._channels.get(pv)
         if not mon:
-            print(f"[p4p]: Trying to write to not subscribed PV {pv}. Ignoring.")
+            print(f"[PVAClient]: Trying to write to not subscribed PV {pv}. Ignoring.")
             return
 
         try:
             self._ctxt.put(pv, value)
         except Exception as e:
-            print(f"[p4p]: Write to PV {pv} failed: {e}")
+            print(f"[PVAClient]: Write to PV {pv} failed: {e}")
 
     def close(self):
         """Close all subscriptions and context."""

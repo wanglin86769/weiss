@@ -6,8 +6,8 @@ from websockets.legacy.server import WebSocketServerProtocol
 from typing import Dict, Set, Tuple
 
 from pvParser import PVParser, PVData
-from p4pClient import P4PClient
-from caprotoClient import CaprotoClient
+from PVAClient import PVAClient
+from CAClient import CAClient
 
 CA_PROVIDER_KEY = "ca"
 PVA_PROVIDER_KEY = "pva"
@@ -37,9 +37,9 @@ def parse_protocol(pv_name: str) -> str:
 
 async def send_update(pv_name: str, pv_obj, provider: str):
     pv_data: PVData = (
-        PVParser.from_p4p(pv_obj, pv_name)
+        PVParser.from_pva(pv_obj, pv_name)
         if provider == PVA_PROVIDER_KEY
-        else PVParser.from_caproto(pv_obj, pv_name)
+        else PVParser.from_ca(pv_obj, pv_name)
     )
 
     if provider != DEFAULT_PROTOCOL:
@@ -93,11 +93,11 @@ async def message_handler(ws: WebSocketServerProtocol):
     def get_client(protocol: str):
         if protocol == PVA_PROVIDER_KEY:
             if clients[PVA_PROVIDER_KEY] is None:
-                clients[PVA_PROVIDER_KEY] = P4PClient(pva_callback)
+                clients[PVA_PROVIDER_KEY] = PVAClient(pva_callback)
             return clients[PVA_PROVIDER_KEY]
         elif protocol == CA_PROVIDER_KEY:
             if clients[CA_PROVIDER_KEY] is None:
-                clients[CA_PROVIDER_KEY] = CaprotoClient(ca_callback)
+                clients[CA_PROVIDER_KEY] = CAClient(ca_callback)
             return clients[CA_PROVIDER_KEY]
         raise ValueError(f"[epicsWS]: Unsupported protocol: {protocol}")
 

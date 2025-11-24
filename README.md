@@ -30,8 +30,8 @@ Demo** anytime to restore.
 
 - **Drag-and-drop editor** with grid snapping, alignment, grouping, layering, keyboard shortcuts.
 - **Live EPICS PV communication**: supports both Channel Access (CA) and PV Access (PVA) protocols
-  via modern implementations [p4p](https://github.com/epics-base/p4p/) and
-  [caproto](https://github.com/caproto/caproto).
+  via community-validated implementations [p4p](https://github.com/epics-base/p4p/) and
+  [PyEpics](https://pyepics.github.io/pyepics/).
 - **Runtime vs edit mode**: instantly start and stop communication with a switch button.
 - **Extensible widget library**: ready-to-use components for common controls and displays, others
   can be easily created.

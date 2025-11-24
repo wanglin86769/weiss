@@ -1,11 +1,11 @@
 from typing import Callable, Dict, Set, Any
 from threading import Lock
-import caproto.threading.pyepics_compat as epics
+import epics
 
 
-class CaprotoClient:
+class CAClient:
     """
-    Simplified client using caproto.threading.pyepics_compat (PyEpics-compatible).
+    PyEpics based CA Client.
     Handles per-client subscriptions and forwards raw callback data to the upper layer.
     """
 
@@ -43,10 +43,11 @@ class CaprotoClient:
             try:
                 pv = epics.get_pv(pv_name)
                 pv.get_ctrlvars()
-                pv.add_callback(self._callback)
+                cb = pv.add_callback(self._callback, with_ctrlvars=True)
+                pv.run_callback(cb)
                 self._pvs[pv_name] = pv
             except Exception as e:
-                print(f"[caproto]: Failed to subscribe to {pv_name}: {e}")
+                print(f"[CAClient]: Failed to subscribe to {pv_name}: {e}")
 
     def unsubscribe(self, client_id: str, pv_name: str):
         """Unsubscribe a client from a PV."""
@@ -64,7 +65,7 @@ class CaprotoClient:
                     try:
                         pv.clear_callbacks()
                     except Exception as e:
-                        print(f"[caproto]: Failed to clear callbacks for {pv_name}: {e}")
+                        print(f"[CAClient]: Failed to clear callbacks for {pv_name}: {e}")
 
     def unsubscribe_all(self, client_id: str):
         """Remove a client from all subscriptions."""
@@ -83,13 +84,13 @@ class CaprotoClient:
         with self._lock:
             pv = self._pvs.get(pv_name)
         if not pv:
-            print(f"[caproto]: Cannot write: PV {pv_name} not subscribed.")
+            print(f"[CAClient]: Cannot write: PV {pv_name} not subscribed.")
             return
 
         try:
             pv.put(value)
         except Exception as e:
-            print(f"[caproto]: Write to {pv_name} failed: {e}")
+            print(f"[CAClient]: Write to {pv_name} failed: {e}")
 
     def close(self):
         """Stop all subscriptions and clear resources."""
@@ -98,8 +99,8 @@ class CaprotoClient:
                 try:
                     pv.clear_callbacks()
                 except Exception as e:
-                    print(f"[caproto]: Failed to clear callbacks for {pv_name}: {e}")
+                    print(f"[CAClient]: Failed to clear callbacks for {pv_name}: {e}")
             self._pvs.clear()
             self._subscribers.clear()
             self._latest_value.clear()
-        print("[caproto]: Closed all subscriptions.")
+        print("[CAClient]: Closed all subscriptions.")
