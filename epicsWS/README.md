@@ -3,9 +3,9 @@
 This folder provides the source code for the EPICS Web Socket, used as bridge between PVA/CA and the
 web application.
 
-- The PVA library used is [p4p](https://github.com/epics-base/p4p/), see [p4pClient](./p4pClient).
-- The CA library used is [caproto](https://github.com/caproto/caproto), see
-  [caprotoClient](./caprotoClient.py).
+- The PVA library used is [p4p](https://github.com/epics-base/p4p/), see [PVAClient](./PVAClient).
+- The CA library used is [PyEpics](https://pyepics.github.io/pyepics/), see
+  [CAClient](./CAClient.py).
 
 The web socket application and connection manager can be seen in [epicsWS](./epicsWS.py). The
 concept was based on [ORNL PV Web Socket (PVWS)](https://github.com/ornl-epics/pvws).

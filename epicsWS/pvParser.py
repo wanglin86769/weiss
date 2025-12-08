@@ -108,7 +108,7 @@ def safe_get_nan(obj, k: str):
 
 class PVParser:
     @staticmethod
-    def from_p4p(pv_obj, pv_name: Optional[str] = None) -> PVData:
+    def from_pva(pv_obj, pv_name: Optional[str] = None) -> PVData:
         """Converts a p4p NTValue to PVData."""
         enumChoices = value = b64arr = b64dtype = None
 
@@ -186,7 +186,7 @@ class PVParser:
         )
 
     @staticmethod
-    def from_caproto(pv_obj: dict, pv_name: str) -> PVData:
+    def from_ca(pv_obj: dict, pv_name: str) -> PVData:
         """Converts a dict-based CA response to PVData, ensuring JSON-serializable values."""
 
         def normalize_value(v):

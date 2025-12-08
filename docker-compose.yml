@@ -13,7 +13,6 @@ services:
     restart: always
     environment:
       NODE_ENV: production
-      SERVER_NAME: ${SERVER_NAME:-localhost}
       ENABLE_HTTPS: ${ENABLE_HTTPS:-false}
       SSL_CERT_FILE: ${SSL_CERT_FILE:-./nginx/certs/example-fullchain.pem}
       SSL_KEY_FILE: ${SSL_KEY_FILE:-./nginx/certs/example-privkey.pem}

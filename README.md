@@ -30,8 +30,8 @@ Demo** anytime to restore.
 
 - **Drag-and-drop editor** with grid snapping, alignment, grouping, layering, keyboard shortcuts.
 - **Live EPICS PV communication**: supports both Channel Access (CA) and PV Access (PVA) protocols
-  via modern implementations [p4p](https://github.com/epics-base/p4p/) and
-  [caproto](https://github.com/caproto/caproto).
+  via community-validated implementations [p4p](https://github.com/epics-base/p4p/) and
+  [PyEpics](https://pyepics.github.io/pyepics/).
 - **Runtime vs edit mode**: instantly start and stop communication with a switch button.
 - **Extensible widget library**: ready-to-use components for common controls and displays, others
   can be easily created.
@@ -64,7 +64,7 @@ cp .env.example .env
 ```
 
 Adjust EPICS variables as needed (`DEFAULT_PROTOCOL`, `EPICS_XXX_ADDR_LIST`, etc.). Other options
-can remain at default values.
+can remain at default values if desired.
 
 ## Running WEISS
 
@@ -74,8 +74,7 @@ The production setup is configured entirely through .env. HTTP and HTTPS are bot
 If using HTTPS, set:
 
 ```ini
-ENABLE_HTTPS=false
-SERVER_NAME="<your-server-name>" # prefer to use domain name
+ENABLE_HTTPS=true
 SSL_CERT_FILE=/path/to/fullchain.pem
 SSL_KEY_FILE=/path/to/privkey.pem
 ```

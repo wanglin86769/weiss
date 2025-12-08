@@ -188,7 +188,7 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }
         <div
           key={w.id}
           id={w.id}
-          className={`selectable ${isGroup ? "groupBox" : ""}`}
+          className={`selectable selected ${isGroup ? "groupBox" : ""}`}
           style={{ position: "absolute", left: x, top: y, width, height }}
         >
           {renderWidgetContent(w)}

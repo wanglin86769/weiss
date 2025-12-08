@@ -175,7 +175,7 @@ const HelpOverlay: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Mouse
           </Typography>
-          <ShortcutRow action="Center screen" keys={["Middle Mouse", "Shift + C"]} />
+          <ShortcutRow action="Center screen" keys={["Middle Mouse", "Ctrl + Shift + C"]} />
           <ShortcutRow action="Zoom" keys="Scroll Wheel" />
           <ShortcutRow action="Pan screen" keys={["Middle Mouse", "Alt + Drag"]} />
         </Box>
