@@ -24,9 +24,7 @@ services:
 
   weiss-epicsws:
     build:
-      context: ./epicsWS
-    volumes:
-      - ./epicsWS:/app
+      context: ./backend/epicsWS
     image: weiss-epicsws:${APP_VERSION}
     container_name: weiss-epicsws
     ports:
