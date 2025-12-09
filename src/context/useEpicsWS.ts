@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { WSClient } from "@src/WSClient/WSClient";
+import { WSClient } from "@src/services/WSClient/WSClient";
 import type { PVData, PVValue, WSMessage } from "@src/types/epicsWS";
 import type { useWidgetManager } from "./useWidgetManager";
 import { WS_URL } from "@src/constants/constants";

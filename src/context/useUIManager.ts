@@ -3,6 +3,7 @@ import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
+import { authService, type OAuthProvider, type User } from "@src/services/authService/authService";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -124,6 +125,36 @@ export default function useUIManager(
     }
   }, [editorWidgets, inEditMode, formatWdgToExport]);
 
+  const useAuth = () => {
+    const [user, setUser] = useState(authService.getUser());
+    const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
+
+    const login = async (provider: OAuthProvider) => {
+      if (isAuthenticated) return;
+      await authService.login(provider);
+    };
+
+    const demoLogin = (role: string) => {
+      const demoUser = {
+        id: `demo-${role}`,
+        username: `Demo ${role}`,
+        provider: "demo",
+        role: role,
+      } as User;
+      authService.setSession("demo-token", demoUser);
+      setUser(demoUser);
+      setIsAuthenticated(true);
+    };
+
+    const logout = () => {
+      authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    };
+
+    return { user, isAuthenticated, login, demoLogin, logout };
+  };
+
   return {
     propertyEditorFocused,
     setPropertyEditorFocused,
@@ -139,5 +170,6 @@ export default function useUIManager(
     isPanning,
     setIsPanning,
     isDemo,
+    useAuth,
   };
 }

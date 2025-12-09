@@ -1,0 +1,116 @@
+export type OAuthProvider = "microsoft" | "demo"; // TODO: add other providers
+
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  provider: OAuthProvider;
+  avatar_url?: string;
+  role: string;
+}
+
+interface TokenResponse {
+  access_token: string;
+  user: User;
+}
+
+interface OAuthCallbackPayload {
+  provider: OAuthProvider;
+  code: string;
+  redirect_uri: string;
+}
+
+const API_URL = (import.meta.env.VITE_API_URL as string) ?? "http://localhost:8000";
+
+class AuthService {
+  private tokenKey = "weiss_auth_token";
+  private userKey = "weiss_user";
+
+  private async fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+    const res = await fetch(url, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers ?? {}),
+      },
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(`Request failed: ${res.status} - ${msg}`);
+    }
+
+    return res.json() as Promise<T>;
+  }
+
+  // Auth Flow
+  async getAuthorizeUrl(provider: OAuthProvider): Promise<string> {
+    const data = await this.fetchJson<{ authorize_url: string }>(
+      `${API_URL}/auth/${provider}/authorize`,
+      { method: "GET" }
+    );
+    return data.authorize_url;
+  }
+
+  async login(provider: OAuthProvider) {
+    const authorizeUrl = await this.getAuthorizeUrl(provider);
+    window.location.href = authorizeUrl;
+  }
+
+  async handleCallback(provider: OAuthProvider, code: string, redirectUri: string) {
+    const payload: OAuthCallbackPayload = {
+      provider,
+      code,
+      redirect_uri: redirectUri,
+    };
+
+    const data = await this.fetchJson<TokenResponse>(`${API_URL}/auth/callback`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    const { access_token, user } = data;
+    this.setSession(access_token, user);
+
+    return user;
+  }
+
+  // Session
+  setSession(token: string, user: User) {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+  }
+
+  logout() {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  getUser(): User | null {
+    // temporary user fetch from localStorage
+    // TODO: implement proper session management with backend validation
+    const data = localStorage.getItem(this.userKey);
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    if (
+      typeof parsed.id === "string" &&
+      typeof parsed.username === "string" &&
+      typeof parsed.provider === "string" &&
+      typeof parsed.role === "string"
+    ) {
+      return parsed as User;
+    }
+    return null;
+  }
+
+  isAuthenticated(): boolean {
+    return this.getToken() !== null;
+  }
+}
+
+export const authService = new AuthService();

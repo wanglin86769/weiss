@@ -18,11 +18,18 @@ import "./NavBar.css";
 import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import CustomGitIcon from "@src/components/CustomIcons/GitIcon.tsx";
 import ComputerIcon from "@mui/icons-material/Computer";
 import HelpOverlay from "./HelpOverlay.tsx";
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import GitLabIcon from "@components/CustomIcons/GitlabIcon.tsx";
+import { ListItemIcon, ListItemText, Menu, MenuItem, Avatar, Divider } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import PersonIcon from "@mui/icons-material/Person";
+import EngineeringIcon from "@mui/icons-material/Engineering";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import MicrosoftIcon from "@mui/icons-material/Microsoft";
+import type { OAuthProvider } from "@src/services/authService/authService.ts";
 
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -100,16 +107,28 @@ export default function NavBar() {
     downloadWidgets,
     loadWidgets,
     isDemo,
+    useAuth,
   } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const { user, isAuthenticated, login, demoLogin, logout } = useAuth();
+
+  const handleImportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setImportMenuAnchor(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleImportMenuClose = () => {
+    setImportMenuAnchor(null);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
   };
 
   const handleDownload = () => {
@@ -117,6 +136,7 @@ export default function NavBar() {
   };
 
   const handleImportFile = () => {
+    handleImportMenuClose();
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "application/json";
@@ -134,16 +154,9 @@ export default function NavBar() {
     input.click();
   };
 
-  const handleImportGithub = () => {
-    handleMenuClose();
-    console.log("TODO: trigger GitHub OAuth + file browser workflow");
-    window.alert("Not implemented. Coming soon!");
-  };
-
-  const handleImportGitlab = () => {
-    handleMenuClose();
-    console.log("TODO: trigger GitLab OAuth + file browser workflow");
-    window.alert("Not implemented. Coming soon!");
+  const handleImportGitRepo = () => {
+    handleImportMenuClose();
+    window.alert("Import from Git repository coming soon.");
   };
 
   const handleLoadDemo = async () => {
@@ -162,6 +175,21 @@ export default function NavBar() {
     } catch (err) {
       console.error("Load demo failed:", err);
     }
+  };
+
+  const handleLogin = async (provider: OAuthProvider) => {
+    handleUserMenuClose();
+    await login(provider);
+  };
+
+  const handleDemoLogin = (role: string) => {
+    handleUserMenuClose();
+    demoLogin(role);
+  };
+
+  const handleLogout = () => {
+    handleUserMenuClose();
+    logout();
   };
 
   return (
@@ -249,14 +277,19 @@ export default function NavBar() {
             </Tooltip>
             <Tooltip title="Import file">
               <Button
-                onClick={handleMenuOpen}
+                onClick={handleImportMenuOpen}
                 startIcon={<FileUploadIcon />}
                 sx={{ color: "white", textTransform: "none" }}
               >
                 Import
               </Button>
             </Tooltip>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+
+            <Menu
+              anchorEl={importMenuAnchor}
+              open={Boolean(importMenuAnchor)}
+              onClose={handleImportMenuClose}
+            >
               <MenuItem onClick={handleImportFile}>
                 <ListItemIcon>
                   <ComputerIcon fontSize="small" />
@@ -264,23 +297,17 @@ export default function NavBar() {
                 <ListItemText primary="From disk" />
               </MenuItem>
 
-              <MenuItem onClick={handleImportGithub}>
+              <MenuItem onClick={handleImportGitRepo}>
                 <ListItemIcon>
-                  <GitHubIcon fontSize="small" />
+                  <CustomGitIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="From GitHub" />
-              </MenuItem>
-
-              <MenuItem onClick={handleImportGitlab}>
-                <ListItemIcon>
-                  <GitLabIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="From GitLab" />
+                <ListItemText primary="From Git repository" />
               </MenuItem>
             </Menu>
-            <Box sx={{ flexGrow: 1 }} />
+
             <HelpOverlay />
-            <Tooltip title="GitHub Repository">
+
+            <Tooltip title="WEISS source repository">
               <IconButton
                 sx={{ color: "white" }}
                 href={APP_SRC_URL}
@@ -290,7 +317,81 @@ export default function NavBar() {
                 <GitHubIcon />
               </IconButton>
             </Tooltip>
-          </Box>{" "}
+            {isAuthenticated ? (
+              <>
+                <IconButton onClick={handleUserMenuOpen}>
+                  <Avatar
+                    src={user?.avatar_url}
+                    alt={user?.username}
+                    sx={{ width: 32, height: 32 }}
+                  >
+                    {user?.username?.[0]?.toUpperCase() ?? "U"}
+                  </Avatar>
+                </IconButton>
+
+                <Menu
+                  anchorEl={userMenuAnchor}
+                  open={Boolean(userMenuAnchor)}
+                  onClose={handleUserMenuClose}
+                >
+                  <MenuItem disabled>
+                    <ListItemIcon>
+                      <AccountCircleIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary={user?.username} secondary={user?.role} />
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleLogout}>
+                    <ListItemIcon>
+                      <LogoutIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Logout" />
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Button onClick={handleUserMenuOpen} sx={{ color: "white" }}>
+                  Sign in
+                </Button>
+                <Menu
+                  anchorEl={userMenuAnchor}
+                  open={Boolean(userMenuAnchor)}
+                  onClose={handleUserMenuClose}
+                >
+                  {isDemo && (
+                    <>
+                      <MenuItem onClick={() => void handleDemoLogin("user")}>
+                        <ListItemIcon>
+                          <PersonIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Demo User" />
+                      </MenuItem>
+                      <MenuItem onClick={() => void handleDemoLogin("engineer")}>
+                        <ListItemIcon>
+                          <EngineeringIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Demo Engineer" />
+                      </MenuItem>
+                      <MenuItem onClick={() => void handleDemoLogin("admin")}>
+                        <ListItemIcon>
+                          <AdminPanelSettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Demo Admin" />
+                      </MenuItem>
+                    </>
+                  )}
+                  {/* <MenuItem disabled={isDemo} onClick={() => void handleLogin("microsoft")}> */}
+                  <MenuItem onClick={() => void handleLogin("microsoft")}>
+                    <ListItemIcon>
+                      <MicrosoftIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Microsoft account" />
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
+          </Box>
         </Toolbar>
       </StyledAppBar>
     </Box>
