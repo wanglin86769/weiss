@@ -4,30 +4,41 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from enum import Enum
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import httpx
 import jwt
 import os
+import msal
 
 TITLE = "WEISS Backend API"
 VERSION = "0.1.0"
 
+# ------------------------------------------------------------------------------
 # JWT Config
+# ------------------------------------------------------------------------------
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = 60 * 24  # 24h
+JWT_EXPIRE_MINUTES = 60 * 24
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-# Microsoft ID Config
-MS_TENANT_ID = os.getenv("MS_TENANT_ID", "common")
-MS_CLIENT_ID = os.getenv("MS_CLIENT_ID")
-MS_CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET")
+# ------------------------------------------------------------------------------
+# Microsoft Auth / MSAL Config
+# ------------------------------------------------------------------------------
+MS_AUTH_TENANT_ID = os.getenv("MS_AUTH_TENANT_ID", "common")
+MS_AUTH_CLIENT_ID = os.getenv("MS_AUTH_CLIENT_ID")
+MS_AUTH_CLIENT_SECRET = os.getenv("MS_AUTH_CLIENT_SECRET")
 
-MS_AUTHORIZE_URL = f"https://login.microsoftonline.com/{MS_TENANT_ID}/oauth2/v2.0/authorize"
-MS_TOKEN_URL = f"https://login.microsoftonline.com/{MS_TENANT_ID}/oauth2/v2.0/token"
-MS_USERINFO_URL = "https://graph.microsoft.com/v1.0/me"
+if not MS_AUTH_CLIENT_ID or not MS_AUTH_CLIENT_SECRET:
+    raise RuntimeError("Microsoft OAuth client id/secret not configured")
 
+MS_AUTHORITY = f"https://login.microsoftonline.com/{MS_AUTH_TENANT_ID}"
+MS_SCOPES = ["email", "User.Read"]
+MS_GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me"
+
+# ------------------------------------------------------------------------------
+# FastAPI setup
+# ------------------------------------------------------------------------------
 app = FastAPI(title=TITLE, version=VERSION)
 
 app.add_middleware(
@@ -41,7 +52,9 @@ app.add_middleware(
 security = HTTPBearer()
 
 
+# ------------------------------------------------------------------------------
 # Models
+# ------------------------------------------------------------------------------
 class UserRole(str, Enum):
     ADMIN = "admin"
     ENGINEER = "engineer"
@@ -50,7 +63,7 @@ class UserRole(str, Enum):
 
 class AuthProvider(str, Enum):
     MICROSOFT = "microsoft"
-    # TODO: add other providers
+    DEMO = "demo"
 
 
 class User(BaseModel):
@@ -60,7 +73,7 @@ class User(BaseModel):
     provider: AuthProvider
     provider_id: str
     role: UserRole = UserRole.USER
-    created_at: datetime = Field(default_factory=datetime.now(datetime.timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TokenResponse(BaseModel):
@@ -70,20 +83,36 @@ class TokenResponse(BaseModel):
 
 
 class OAuthCallbackRequest(BaseModel):
-    code: str
-    redirect_uri: str
+    provider: AuthProvider
+    code: Optional[str] = None
+    redirect_uri: Optional[str] = None
 
 
-# Storage - TODO: Replace with real database
+# ------------------------------------------------------------------------------
+# Storage (temporary)
+# ------------------------------------------------------------------------------
 users_db: dict[str, User] = {}
 
 
+# ------------------------------------------------------------------------------
+# MSAL client
+# ------------------------------------------------------------------------------
+def get_msal_app() -> msal.ConfidentialClientApplication:
+    return msal.ConfidentialClientApplication(
+        client_id=MS_AUTH_CLIENT_ID,
+        client_credential=MS_AUTH_CLIENT_SECRET,
+        authority=MS_AUTHORITY,
+    )
+
+
+# ------------------------------------------------------------------------------
 # JWT helpers
+# ------------------------------------------------------------------------------
 def create_access_token(subject: str, role: UserRole) -> str:
     payload = {
         "sub": subject,
         "role": role.value,
-        "exp": datetime.now(datetime.timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES),
     }
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
@@ -109,65 +138,34 @@ async def get_current_user(
     return users_db[user_id]
 
 
-# Microsoft OAuth helpers
-async def exchange_ms_code(code: str, redirect_uri: str) -> dict:
-    async with httpx.AsyncClient() as client:
-        res = await client.post(
-            MS_TOKEN_URL,
-            data={
-                "client_id": MS_CLIENT_ID,
-                "client_secret": MS_CLIENT_SECRET,
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri,
-                "scope": "openid profile email User.Read",
-            },
-        )
-        res.raise_for_status()
-        return res.json()
-
-
+# ------------------------------------------------------------------------------
+# Provider helpers
+# ------------------------------------------------------------------------------
 async def get_ms_user(access_token: str) -> dict:
     async with httpx.AsyncClient() as client:
         res = await client.get(
-            MS_USERINFO_URL,
+            MS_GRAPH_ME_URL,
             headers={"Authorization": f"Bearer {access_token}"},
         )
         res.raise_for_status()
         return res.json()
 
 
-# Routes
-@app.get("/")
-async def root():
-    return {"service": TITLE, "version": VERSION}
-
-
-@app.get("/auth/microsoft/authorize")
-async def microsoft_authorize():
-    redirect_uri = f"{FRONTEND_URL}/auth/callback"
-
-    url = (
-        f"{MS_AUTHORIZE_URL}"
-        f"?client_id={MS_CLIENT_ID}"
-        f"&response_type=code"
-        f"&redirect_uri={redirect_uri}"
-        f"&response_mode=query"
-        f"&scope=openid profile email User.Read"
+async def handle_microsoft_callback(code: str, redirect_uri: str) -> TokenResponse:
+    msal_app = get_msal_app()
+    result = msal_app.acquire_token_by_authorization_code(
+        code,
+        scopes=MS_SCOPES,
+        redirect_uri=redirect_uri,
     )
 
-    return {"authorize_url": url}
+    if "access_token" not in result:
+        raise HTTPException(
+            status_code=400,
+            detail=f"MSAL token acquisition failed: {result.get('error_description')}",
+        )
 
-
-@app.post("/auth/microsoft/callback", response_model=TokenResponse)
-async def microsoft_callback(payload: OAuthCallbackRequest):
-    token_data = await exchange_ms_code(payload.code, payload.redirect_uri)
-    access_token = token_data.get("access_token")
-
-    if not access_token:
-        raise HTTPException(400, "Failed to obtain Microsoft access token")
-
-    ms_user = await get_ms_user(access_token)
+    ms_user = await get_ms_user(result["access_token"])
 
     provider_id = ms_user["id"]
     user_id = f"ms_{provider_id}"
@@ -175,7 +173,7 @@ async def microsoft_callback(payload: OAuthCallbackRequest):
     if user_id not in users_db:
         users_db[user_id] = User(
             id=user_id,
-            username=ms_user.get("displayName") or ms_user.get("mail"),
+            username=ms_user.get("displayName") or ms_user.get("userPrincipalName"),
             email=ms_user.get("mail") or ms_user.get("userPrincipalName"),
             provider=AuthProvider.MICROSOFT,
             provider_id=provider_id,
@@ -183,9 +181,80 @@ async def microsoft_callback(payload: OAuthCallbackRequest):
         )
 
     user = users_db[user_id]
-    jwt_token = create_access_token(user.id, user.role)
+    return TokenResponse(
+        access_token=create_access_token(user.id, user.role),
+        user=user,
+    )
 
-    return TokenResponse(access_token=jwt_token, user=user)
+
+async def handle_demo_login(role) -> TokenResponse:
+    user_id = f"demo_user_{role.value}"
+
+    if user_id not in users_db:
+        users_db[user_id] = User(
+            id=user_id,
+            username=f"Demo {role.value.capitalize()}",
+            email=None,
+            provider=AuthProvider.DEMO,
+            provider_id=AuthProvider.DEMO.value,
+            role=role,
+        )
+
+    user = users_db[user_id]
+    return TokenResponse(
+        access_token=create_access_token(user.id, user.role),
+        user=user,
+    )
+
+
+# ------------------------------------------------------------------------------
+# Routes
+# ------------------------------------------------------------------------------
+@app.get("/")
+async def root():
+    return {"service": TITLE, "version": VERSION}
+
+
+@app.get("/auth/{provider}/authorize")
+async def authorize(provider: AuthProvider, demo_profile: UserRole | None):
+    if provider == AuthProvider.MICROSOFT:
+        redirect_uri = f"{FRONTEND_URL}/auth/callback"
+
+        auth_url = get_msal_app().get_authorization_request_url(
+            scopes=MS_SCOPES,
+            redirect_uri=redirect_uri,
+            state="microsoft",
+            response_mode="query",
+        )
+        return {"authorize_url": auth_url}
+
+    if provider == AuthProvider.DEMO:
+        if demo_profile not in [role.value for role in UserRole]:
+            raise HTTPException(status_code=400, detail="Invalid demo profile")
+
+        dummy_code = f"demo_code_{demo_profile.value}"
+        redirect_url = f"{FRONTEND_URL}/auth/callback?code={dummy_code}&state=demo"
+        return {"authorize_url": redirect_url}
+
+    raise HTTPException(status_code=400, detail="Unsupported provider")
+
+
+@app.post("/auth/callback", response_model=TokenResponse)
+async def oauth_callback(payload: OAuthCallbackRequest):
+    if not payload.code or not payload.redirect_uri:
+        raise HTTPException(status_code=400, detail="Missing OAuth parameters")
+    if payload.provider == AuthProvider.MICROSOFT:
+        return await handle_microsoft_callback(
+            payload.code,
+            payload.redirect_uri,
+        )
+    elif payload.provider == AuthProvider.DEMO:
+        demo_role = payload.code.split("_")[-1]
+        if demo_role not in [role.value for role in UserRole]:
+            raise HTTPException(status_code=400, detail="Invalid demo profile")
+        return await handle_demo_login(UserRole(demo_role))
+
+    raise HTTPException(status_code=400, detail="Unsupported provider")
 
 
 @app.get("/auth/me", response_model=User)
@@ -195,7 +264,6 @@ async def me(current_user: User = Depends(get_current_user)):
 
 @app.post("/auth/logout")
 async def logout():
-    # Stateless JWT: frontend just discards token
     return {"message": "Logged out"}
 
 

@@ -29,7 +29,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
-import type { OAuthProvider } from "@src/services/authService/authService.ts";
+import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
+import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
 
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -113,7 +114,7 @@ export default function NavBar() {
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const { user, isAuthenticated, login, demoLogin, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const handleImportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setImportMenuAnchor(event.currentTarget);
@@ -177,14 +178,14 @@ export default function NavBar() {
     }
   };
 
-  const handleLogin = async (provider: OAuthProvider) => {
+  const handleLogin = async (provider: OAuthProvider, demoProfile?: Roles) => {
     handleUserMenuClose();
-    await login(provider);
-  };
-
-  const handleDemoLogin = (role: string) => {
-    handleUserMenuClose();
-    demoLogin(role);
+    if (isAuthenticated) return;
+    if (provider === OAuthProviders.DEMO && !demoProfile) {
+      console.error("Demo profile must be specified for demo login");
+      return;
+    }
+    await login(provider, demoProfile);
   };
 
   const handleLogout = () => {
@@ -361,19 +362,21 @@ export default function NavBar() {
                 >
                   {isDemo && (
                     <>
-                      <MenuItem onClick={() => void handleDemoLogin("user")}>
+                      <MenuItem onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.USER)}>
                         <ListItemIcon>
                           <PersonIcon fontSize="small" />
                         </ListItemIcon>
                         <ListItemText primary="Demo User" />
                       </MenuItem>
-                      <MenuItem onClick={() => void handleDemoLogin("engineer")}>
+                      <MenuItem
+                        onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ENGINEER)}
+                      >
                         <ListItemIcon>
                           <EngineeringIcon fontSize="small" />
                         </ListItemIcon>
                         <ListItemText primary="Demo Engineer" />
                       </MenuItem>
-                      <MenuItem onClick={() => void handleDemoLogin("admin")}>
+                      <MenuItem onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ADMIN)}>
                         <ListItemIcon>
                           <AdminPanelSettingsIcon fontSize="small" />
                         </ListItemIcon>
@@ -381,8 +384,8 @@ export default function NavBar() {
                       </MenuItem>
                     </>
                   )}
-                  {/* <MenuItem disabled={isDemo} onClick={() => void handleLogin("microsoft")}> */}
-                  <MenuItem onClick={() => void handleLogin("microsoft")}>
+                  {/* <MenuItem disabled={isDemo} onClick={() => void handleLogin(OAuthProviders.MICROSOFT)}> */}
+                  <MenuItem onClick={() => void handleLogin(OAuthProviders.MICROSOFT)}>
                     <ListItemIcon>
                       <MicrosoftIcon fontSize="small" />
                     </ListItemIcon>

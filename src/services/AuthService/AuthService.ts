@@ -1,4 +1,17 @@
-export type OAuthProvider = "microsoft" | "demo"; // TODO: add other providers
+export const OAuthProviders = {
+  MICROSOFT: "microsoft",
+  DEMO: "demo",
+} as const;
+
+export type OAuthProvider = (typeof OAuthProviders)[keyof typeof OAuthProviders];
+
+export const Roles = {
+  ADMIN: "admin",
+  USER: "user",
+  ENGINEER: "engineer",
+} as const;
+
+export type Roles = (typeof Roles)[keyof typeof Roles];
 
 export interface User {
   id: string;
@@ -6,7 +19,7 @@ export interface User {
   email?: string;
   provider: OAuthProvider;
   avatar_url?: string;
-  role: string;
+  role: Roles;
 }
 
 interface TokenResponse {
@@ -45,16 +58,21 @@ class AuthService {
   }
 
   // Auth Flow
-  async getAuthorizeUrl(provider: OAuthProvider): Promise<string> {
-    const data = await this.fetchJson<{ authorize_url: string }>(
-      `${API_URL}/auth/${provider}/authorize`,
-      { method: "GET" }
-    );
+  async getAuthorizeUrl(provider: OAuthProvider, demoProfile?: Roles): Promise<string> {
+    const params = new URLSearchParams();
+    if (provider === OAuthProviders.DEMO && demoProfile) {
+      params.append("demo_profile", demoProfile);
+    }
+    const url = `${API_URL}/auth/${provider}/authorize?${params.toString()}`;
+    const data = await this.fetchJson<{ authorize_url: string }>(url, { method: "GET" });
     return data.authorize_url;
   }
 
-  async login(provider: OAuthProvider) {
-    const authorizeUrl = await this.getAuthorizeUrl(provider);
+  async login(provider: OAuthProvider, demoProfile?: Roles) {
+    const authorizeUrl = await this.getAuthorizeUrl(provider, demoProfile);
+    if (!authorizeUrl) {
+      throw new Error("Failed to get authorize URL");
+    }
     window.location.href = authorizeUrl;
   }
 
@@ -76,7 +94,6 @@ class AuthService {
     return user;
   }
 
-  // Session
   setSession(token: string, user: User) {
     localStorage.setItem(this.tokenKey, token);
     localStorage.setItem(this.userKey, JSON.stringify(user));

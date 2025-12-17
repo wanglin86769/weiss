@@ -3,7 +3,7 @@ import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
-import { authService, type OAuthProvider, type User } from "@src/services/authService/authService";
+import { authService, Roles, type OAuthProvider } from "@src/services/AuthService/AuthService";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -129,21 +129,9 @@ export default function useUIManager(
     const [user, setUser] = useState(authService.getUser());
     const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
 
-    const login = async (provider: OAuthProvider) => {
+    const login = async (provider: OAuthProvider, demoProfile?: Roles) => {
       if (isAuthenticated) return;
-      await authService.login(provider);
-    };
-
-    const demoLogin = (role: string) => {
-      const demoUser = {
-        id: `demo-${role}`,
-        username: `Demo ${role}`,
-        provider: "demo",
-        role: role,
-      } as User;
-      authService.setSession("demo-token", demoUser);
-      setUser(demoUser);
-      setIsAuthenticated(true);
+      await authService.login(provider, demoProfile);
     };
 
     const logout = () => {
@@ -152,7 +140,7 @@ export default function useUIManager(
       setIsAuthenticated(false);
     };
 
-    return { user, isAuthenticated, login, demoLogin, logout };
+    return { user, isAuthenticated, login, logout };
   };
 
   return {
