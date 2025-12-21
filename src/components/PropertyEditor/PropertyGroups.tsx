@@ -12,6 +12,7 @@ import SelectProperty from "./Properties/SelectProperty";
 import StrListProperty from "./Properties/StrListProperty";
 import StrRecordProperty from "./Properties/StrRecordProperty";
 import ColorListProperty from "./Properties/ColorListProperty";
+import { FRONT_UI_ZIDX } from "@src/constants/constants";
 
 interface PropertyGroupsProps {
   groupedProperties: Record<string, Record<string, WidgetProperty>>;
@@ -33,7 +34,6 @@ const PropertyGroups: React.FC<PropertyGroupsProps> = ({
 
         return (
           <React.Fragment key={category}>
-            <Divider />
             <ListSubheader
               onClick={() => onToggleGroup(category)}
               sx={{
@@ -41,6 +41,7 @@ const PropertyGroups: React.FC<PropertyGroupsProps> = ({
                 display: "flex",
                 alignItems: "center",
                 userSelect: "none",
+                zIndex: FRONT_UI_ZIDX - 1,
               }}
             >
               <IconButton
@@ -111,6 +112,7 @@ const PropertyGroups: React.FC<PropertyGroupsProps> = ({
                 })}
               </List>
             )}
+            <Divider />
           </React.Fragment>
         );
       })}

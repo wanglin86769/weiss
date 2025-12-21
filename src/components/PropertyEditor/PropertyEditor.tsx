@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { styled } from "@mui/material/styles";
-import { Drawer as MuiDrawer } from "@mui/material";
+import { Divider, Drawer as MuiDrawer, Tab, Tabs } from "@mui/material";
 import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
@@ -12,6 +11,9 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { useEditorContext } from "@src/context/useEditorContext";
+import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+
 import type {
   WidgetProperties,
   PropertyValue,
@@ -107,7 +109,9 @@ const PropertyEditor: React.FC = () => {
     editingWidgets,
     batchWidgetUpdate,
     setPropertyEditorFocused,
+    useAuth,
   } = useEditorContext();
+
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
   const singleWidget = editingWidgets.length === 1;
   const DEFAULT_WIDTH = 360;
@@ -119,19 +123,24 @@ const PropertyEditor: React.FC = () => {
   const [pinned, setPinned] = useState(!isSmallScreen);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [drawerWidth, setDrawerWidth] = useState(DEFAULT_WIDTH);
+  const [tabIndex, setTabIndex] = useState(0);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     widthRef.current = drawerWidth;
   }, [drawerWidth]);
 
+  useEffect(() => {
+    if (!inEditMode) setTabIndex(1);
+  }, [inEditMode]);
+
   const properties: WidgetProperties = useMemo(() => {
     if (editingWidgets.length === 0) return {};
-    if (singleWidget) {
-      return editingWidgets[0].editableProperties;
-    }
-    // Get only common properties
+    if (singleWidget) return editingWidgets[0].editableProperties;
+
+    // Filter only common properties
     const common: WidgetProperties = { ...editingWidgets[0].editableProperties };
     for (let i = 1; i < editingWidgets.length; i++) {
       const currentProps = editingWidgets[i].editableProperties;
@@ -145,31 +154,22 @@ const PropertyEditor: React.FC = () => {
   }, [editingWidgets, singleWidget]);
 
   useEffect(() => {
-    if (!isOnlyGridSelected) {
-      setOpen(true);
-      return;
-    }
-    if (!pinned) setOpen(false);
+    if (!isOnlyGridSelected) setOpen(true);
+    else if (!pinned) setOpen(false);
   }, [pinned, isOnlyGridSelected]);
 
-  const toggleDrawer = () => {
-    setOpen((prev) => !prev);
-  };
-
-  const togglePin = () => {
-    setPinned((prev) => !prev);
-  };
-
+  const toggleDrawer = () => setOpen((prev) => !prev);
+  const togglePin = () => setPinned((prev) => !prev);
   const toggleGroup = useCallback((category: string) => {
-    setCollapsedGroups((prev) => ({
-      ...prev,
-      [category]: !(prev[category] ?? true),
-    }));
+    setCollapsedGroups((prev) => ({ ...prev, [category]: !(prev[category] ?? true) }));
   }, []);
 
-  const header = singleWidget
-    ? `${editingWidgets[0].widgetLabel} properties`
-    : "Common properties in selection";
+  const header =
+    tabIndex === 0
+      ? singleWidget
+        ? `${editingWidgets[0].widgetLabel} properties`
+        : "Common properties in selection"
+      : "Browse files";
   const groupedProperties = getGroupedProperties(properties);
 
   const handlePropChange = (propName: PropertyKey, newValue: PropertyValue) => {
@@ -218,7 +218,6 @@ const PropertyEditor: React.FC = () => {
     window.addEventListener("mouseup", onUp);
   };
 
-  if (!inEditMode) return null;
   return (
     <>
       {!open && (
@@ -244,41 +243,87 @@ const PropertyEditor: React.FC = () => {
         slotProps={{
           paper: {
             ref: paperRef,
-            style: { width: open ? drawerWidth : 0 },
+            style: { width: open ? drawerWidth : 0, display: "flex", flexDirection: "column" },
           },
         }}
       >
         <ResizeHandle onMouseDown={startResize} />
         <Toolbar />
-        <List sx={{ width: "100%" }}>
-          <ListItem
-            secondaryAction={
-              <>
-                <Tooltip title={pinned ? "Unpin" : "Pin"}>
-                  <IconButton edge="end" onClick={togglePin} size="small">
-                    {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
-                  </IconButton>
-                </Tooltip>
-                <IconButton
-                  edge="end"
-                  onClick={toggleDrawer}
-                  size="small"
-                  sx={{ display: pinned ? "none" : "auto" }}
-                >
-                  <ChevronRightIcon />
+
+        {/* Header */}
+        <ListItem
+          sx={{ width: "100%", flex: "0 0 auto", height: 60 }}
+          secondaryAction={
+            <>
+              <Tooltip title={pinned ? "Unpin" : "Pin"}>
+                <IconButton edge="end" onClick={togglePin} size="small">
+                  {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
                 </IconButton>
-              </>
-            }
+              </Tooltip>
+              <IconButton
+                edge="end"
+                onClick={toggleDrawer}
+                size="small"
+                sx={{ display: pinned ? "none" : "auto" }}
+              >
+                <ChevronRightIcon />
+              </IconButton>
+            </>
+          }
+        >
+          <ListItemText primary={header} />
+        </ListItem>
+        <Divider />
+        {/* Content */}
+        <div style={{ flex: "1 1 auto", overflowY: "auto" }}>
+          {tabIndex === 0 ? (
+            <PropertyGroups
+              groupedProperties={groupedProperties}
+              collapsedGroups={collapsedGroups}
+              onToggleGroup={toggleGroup}
+              onChange={handlePropChange}
+            />
+          ) : (
+            <div style={{ padding: 16 }}>Tree view coming soon...</div>
+          )}
+        </div>
+
+        {/* Tab selector */}
+        {isAuthenticated && inEditMode && (
+          <Tabs
+            value={tabIndex}
+            onChange={(_e, newVal: number) => setTabIndex(newVal)}
+            sx={{
+              flex: "0 0 auto",
+              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              width: "100%",
+              paddingBottom: 0.1,
+            }}
           >
-            <ListItemText primary={header} />
-          </ListItem>
-          <PropertyGroups
-            groupedProperties={groupedProperties}
-            collapsedGroups={collapsedGroups}
-            onToggleGroup={toggleGroup}
-            onChange={handlePropChange}
-          />
-        </List>
+            <Tab
+              icon={<ModeEditIcon fontSize="small" />}
+              iconPosition="start"
+              label="Edit"
+              sx={{
+                textTransform: "none",
+                width: "50%",
+                minHeight: 0,
+                paddingTop: 1.5,
+              }}
+            />
+            <Tab
+              icon={<FormatListBulletedIcon fontSize="small" />}
+              iconPosition="start"
+              label="Navigate"
+              sx={{
+                textTransform: "none",
+                width: "50%",
+                minHeight: 0,
+                paddingTop: 1.5,
+              }}
+            />
+          </Tabs>
+        )}
       </Drawer>
     </>
   );
