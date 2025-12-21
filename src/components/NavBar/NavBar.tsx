@@ -26,7 +26,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
-import EngineeringIcon from "@mui/icons-material/Engineering";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
@@ -335,7 +334,7 @@ export default function NavBar() {
                   open={Boolean(userMenuAnchor)}
                   onClose={handleUserMenuClose}
                 >
-                  <MenuItem disabled>
+                  <MenuItem>
                     <ListItemIcon>
                       <AccountCircleIcon fontSize="small" />
                     </ListItemIcon>
@@ -371,15 +370,6 @@ export default function NavBar() {
                               <PersonIcon fontSize="small" />
                             </ListItemIcon>
                             <ListItemText primary="Demo User" />
-                          </MenuItem>,
-                          <MenuItem
-                            key="demo-engineer"
-                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ENGINEER)}
-                          >
-                            <ListItemIcon>
-                              <EngineeringIcon fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText primary="Demo Engineer" />
                           </MenuItem>,
                           <MenuItem
                             key="demo-admin"

@@ -37,7 +37,6 @@ security = HTTPBearer()
 # Models
 class UserRole(str, Enum):
     ADMIN = "admin"
-    ENGINEER = "engineer"
     USER = "user"
 
 
