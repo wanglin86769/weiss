@@ -360,37 +360,48 @@ export default function NavBar() {
                   open={Boolean(userMenuAnchor)}
                   onClose={handleUserMenuClose}
                 >
-                  {isDemo && (
-                    <>
-                      <MenuItem onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.USER)}>
-                        <ListItemIcon>
-                          <PersonIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText primary="Demo User" />
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ENGINEER)}
-                      >
-                        <ListItemIcon>
-                          <EngineeringIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText primary="Demo Engineer" />
-                      </MenuItem>
-                      <MenuItem onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ADMIN)}>
-                        <ListItemIcon>
-                          <AdminPanelSettingsIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText primary="Demo Admin" />
-                      </MenuItem>
-                    </>
-                  )}
-                  {/* <MenuItem disabled={isDemo} onClick={() => void handleLogin(OAuthProviders.MICROSOFT)}> */}
-                  <MenuItem onClick={() => void handleLogin(OAuthProviders.MICROSOFT)}>
-                    <ListItemIcon>
-                      <MicrosoftIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary="Microsoft account" />
-                  </MenuItem>
+                  {[
+                    ...(isDemo
+                      ? [
+                          <MenuItem
+                            key="demo-user"
+                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.USER)}
+                          >
+                            <ListItemIcon>
+                              <PersonIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary="Demo User" />
+                          </MenuItem>,
+                          <MenuItem
+                            key="demo-engineer"
+                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ENGINEER)}
+                          >
+                            <ListItemIcon>
+                              <EngineeringIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary="Demo Engineer" />
+                          </MenuItem>,
+                          <MenuItem
+                            key="demo-admin"
+                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ADMIN)}
+                          >
+                            <ListItemIcon>
+                              <AdminPanelSettingsIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary="Demo Admin" />
+                          </MenuItem>,
+                        ]
+                      : []),
+                    <MenuItem
+                      key="microsoft"
+                      onClick={() => void handleLogin(OAuthProviders.MICROSOFT)}
+                    >
+                      <ListItemIcon>
+                        <MicrosoftIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="Microsoft account" />
+                    </MenuItem>,
+                  ]}
                 </Menu>
               </>
             )}
