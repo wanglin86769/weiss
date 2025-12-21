@@ -1,3 +1,7 @@
+import httpx
+import jwt
+import msal
+import os
 from api.config import FRONTEND_URL
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -5,12 +9,6 @@ from pydantic import BaseModel, Field
 from enum import Enum
 from typing import Optional
 from datetime import datetime, timedelta, timezone
-import httpx
-import jwt
-import msal
-import os
-
-router = APIRouter()
 
 # JWT Config
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
@@ -27,6 +25,11 @@ MS_AUTHORITY = f"https://login.microsoftonline.com/{MS_AUTH_TENANT_ID}"
 MS_SCOPES = ["email", "User.Read"]
 MS_GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me"
 
+
+router = APIRouter(
+    prefix="/api/v1/auth",
+    tags=["Authentication"],
+)
 
 security = HTTPBearer()
 
@@ -77,7 +80,6 @@ def ensure_microsoft_configured():
         )
 
 
-# MSAL client
 def get_msal_app() -> msal.ConfidentialClientApplication:
     ensure_microsoft_configured()
     return msal.ConfidentialClientApplication(
@@ -190,7 +192,7 @@ async def handle_demo_login(role) -> TokenResponse:
 ################
 # Routes
 ################
-@router.get("/auth/{provider}/authorize")
+@router.get("/{provider}/authorize")
 async def authorize(provider: AuthProvider, demo_profile: UserRole | None):
     if provider == AuthProvider.MICROSOFT:
         ensure_microsoft_configured()
@@ -215,7 +217,7 @@ async def authorize(provider: AuthProvider, demo_profile: UserRole | None):
     raise HTTPException(status_code=400, detail="Unsupported provider")
 
 
-@router.post("/auth/callback", response_model=TokenResponse)
+@router.post("/callback", response_model=TokenResponse)
 async def oauth_callback(payload: OAuthCallbackRequest):
     if not payload.code or not payload.redirect_uri:
         raise HTTPException(status_code=400, detail="Missing OAuth parameters")
@@ -233,11 +235,11 @@ async def oauth_callback(payload: OAuthCallbackRequest):
     raise HTTPException(status_code=400, detail="Unsupported provider")
 
 
-@router.get("/auth/me", response_model=User)
+@router.get("/me", response_model=User)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/auth/logout")
+@router.post("/logout")
 async def logout():
     return {"message": "Logged out"}

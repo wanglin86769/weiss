@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.auth import auth
+from api.repos import staging, deployed
 from api.config import FRONTEND_URL, TITLE, VERSION
 
 app = FastAPI(title=TITLE, version=VERSION)
@@ -18,6 +19,8 @@ app.add_middleware(
 # Routes
 ################
 app.include_router(auth.router)
+app.include_router(staging.router)
+app.include_router(deployed.router)
 
 
 @app.get("/")
