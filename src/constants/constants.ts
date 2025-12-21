@@ -82,9 +82,6 @@ export type Mode = typeof EDIT_MODE | typeof RUNTIME_MODE;
 /** Width of the widget selector panel in pixels */
 export const WIDGET_SELECTOR_WIDTH = 230;
 
-/** Width of the property editor panel in pixels */
-export const PROPERTY_EDITOR_WIDTH = 320;
-
 /** Reserved ID for the grid widget */
 export const GRID_ID = "__grid__";
 

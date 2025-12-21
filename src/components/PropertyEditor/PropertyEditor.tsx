@@ -1,14 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { styled, type Theme, type CSSObject } from "@mui/material/styles";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { styled } from "@mui/material/styles";
 import { Drawer as MuiDrawer } from "@mui/material";
 import Toolbar from "@mui/material/Toolbar";
 import List from "@mui/material/List";
-import Divider from "@mui/material/Divider";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import ListSubheader from "@mui/material/ListSubheader";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -21,71 +19,43 @@ import type {
   WidgetProperty,
   MultiWidgetPropertyUpdates,
 } from "@src/types/widgets";
-import { PROPERTY_EDITOR_WIDTH, FRONT_UI_ZIDX } from "@src/constants/constants";
-import TextFieldProperty from "./TextFieldProperty";
-import BooleanProperty from "./BooleanProperty";
-import ColorProperty from "./ColorProperty";
-import SelectProperty from "./SelectProperty";
+import { FRONT_UI_ZIDX } from "@src/constants/constants";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
-import StrListProperty from "./StrListProperty";
-import StrRecordProperty from "./StrRecordProperty";
-import ColorListProperty from "./ColorListProperty";
+import PropertyGroups from "./PropertyGroups";
 
-const openedMixin = (theme: Theme): CSSObject => ({
-  width: PROPERTY_EDITOR_WIDTH,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: "hidden",
-});
-
-const closedMixin = (theme: Theme): CSSObject => ({
-  width: 0,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: "hidden",
-});
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<{ open: boolean }>(({ theme, open }) => ({
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  position: "fixed",
-  right: 0,
-  top: 0,
-  height: "100vh",
-  ...(open && {
-    ...openedMixin(theme),
-    "& .MuiDrawer-paper": {
-      ...openedMixin(theme),
-      right: 0,
-    },
-  }),
-  ...(!open && {
-    ...closedMixin(theme),
-    "& .MuiDrawer-paper": {
-      ...closedMixin(theme),
-      right: 0,
-    },
-  }),
-}));
-
-const ToggleButton = styled(IconButton)<{ open: boolean }>(({ theme, open }) => ({
-  position: "fixed",
-  top: (theme.mixins.toolbar.minHeight as number) + 16,
-  right: open ? PROPERTY_EDITOR_WIDTH + 8 : 8,
-  zIndex: theme.zIndex.drawer + 2,
-  background: theme.palette.background.paper,
-  boxShadow: theme.shadows[2],
-  "&:hover": {
-    background: theme.palette.background.default,
+const Drawer = styled(MuiDrawer)(({ theme }) => ({
+  "& .MuiDrawer-paper": {
+    right: 0,
+    height: "100vh",
+    overflowX: "hidden",
+    transition: theme.transitions.create("width", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
   },
 }));
+
+const ToggleButton = styled(IconButton)<{ open: boolean; drawerWidth: number }>(
+  ({ theme, open, drawerWidth }) => ({
+    position: "fixed",
+    top: (theme.mixins.toolbar.minHeight as number) + 16,
+    right: open ? drawerWidth + 8 : 8,
+    zIndex: theme.zIndex.drawer + 2,
+    background: theme.palette.background.paper,
+    boxShadow: theme.shadows[2],
+    "&:hover": {
+      background: theme.palette.background.default,
+    },
+  })
+);
+
+const ResizeHandle = styled("div")({
+  position: "absolute",
+  width: 10,
+  height: "100%",
+  cursor: "col-resize",
+  zIndex: FRONT_UI_ZIDX,
+});
 
 const getGroupedProperties = (properties: WidgetProperties) => {
   const groups: Record<string, Record<string, WidgetProperty>> = {};
@@ -128,21 +98,7 @@ const getGroupedProperties = (properties: WidgetProperties) => {
 };
 
 /**
- * PropertyEditor renders the side panel that allows editing properties of the selected widget(s) in the editor.
- *
- * @features
- * - Automatically opens when a widget is selected.
- * - Shows either single widget properties or common properties across multiple selected widgets.
- * - Groups properties by category, allowing collapsible sections.
- * - Supports all PropertySelectorType definitions.
- * - Updates multiple widgets at once when properties are edited in batch.
- * - Toggle button to open/close the editor manually.
- * - Pin button to keep it open.
- *
- * @notes
- * - Only visible in EDIT_MODE.
- * - Width is defined by PROPERTY_EDITOR_WIDTH constant.
- * - Focus state is managed to coordinate with the editor context.
+ * PropertyEditor renders the side panel that allows editing properties of the selected widgets.
  */
 const PropertyEditor: React.FC = () => {
   const {
@@ -154,11 +110,22 @@ const PropertyEditor: React.FC = () => {
   } = useEditorContext();
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
   const singleWidget = editingWidgets.length === 1;
-  // do not start with editor open for smaller screens
+  const DEFAULT_WIDTH = 360;
+  const MIN_WIDTH = 300;
+  const MAX_WIDTH = 700;
+  // start with editor closed on smaller screens
   const isSmallScreen = window.innerWidth < 1024;
   const [open, setOpen] = useState(!isSmallScreen);
   const [pinned, setPinned] = useState(!isSmallScreen);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [drawerWidth, setDrawerWidth] = useState(DEFAULT_WIDTH);
+  const paperRef = useRef<HTMLDivElement | null>(null);
+  const widthRef = useRef(drawerWidth);
+
+  useEffect(() => {
+    widthRef.current = drawerWidth;
+  }, [drawerWidth]);
+
   const properties: WidgetProperties = useMemo(() => {
     if (editingWidgets.length === 0) return {};
     if (singleWidget) {
@@ -193,12 +160,12 @@ const PropertyEditor: React.FC = () => {
     setPinned((prev) => !prev);
   };
 
-  const toggleGroup = (category: string) => {
-    setCollapsedGroups((prev) => {
-      const current = prev[category] ?? true;
-      return { ...prev, [category]: !current };
-    });
-  };
+  const toggleGroup = useCallback((category: string) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [category]: !(prev[category] ?? true),
+    }));
+  }, []);
 
   const header = singleWidget
     ? `${editingWidgets[0].widgetLabel} properties`
@@ -213,98 +180,75 @@ const PropertyEditor: React.FC = () => {
     batchWidgetUpdate(updates);
   };
 
-  const renderGroupedPropertyFields = () =>
-    Object.entries(groupedProperties).map(([category, props]) => {
-      const collapsed = collapsedGroups[category] ?? false;
-      return (
-        <React.Fragment key={category}>
-          <Divider />
-          <ListSubheader
-            onClick={() => toggleGroup(category)}
-            sx={{
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              userSelect: "none",
-            }}
-          >
-            <IconButton
-              size="small"
-              sx={{
-                transform: collapsed ? "rotate(0deg)" : "rotate(90deg)",
-                transition: "transform 0.2s",
-                mr: 1,
-              }}
-            >
-              <ChevronRightIcon fontSize="inherit" />
-            </IconButton>
-            {category}
-          </ListSubheader>
-          {!collapsed && (
-            <List
-              disablePadding
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                width: "100%",
-                justifyContent: "center",
-              }}
-            >
-              {Object.entries(props).map(([propName, prop]) => {
-                const { selType, label, value, options, limits } = prop;
-                const commonProps = {
-                  propName: propName as PropertyKey,
-                  label,
-                  value,
-                  limits,
-                  category,
-                  onChange: handlePropChange,
-                };
-                switch (selType) {
-                  case "text":
-                  case "number":
-                    return <TextFieldProperty key={propName} {...commonProps} selType={selType} />;
-                  case "strList":
-                    return <StrListProperty key={propName} {...commonProps} />;
-                  case "strRecord":
-                    return <StrRecordProperty key={propName} {...commonProps} />;
-                  case "boolean":
-                    return <BooleanProperty key={propName} {...commonProps} />;
-                  case "colorSel":
-                    return <ColorProperty key={propName} {...commonProps} />;
-                  case "colorSelList":
-                    return <ColorListProperty key={propName} {...commonProps} />;
-                  case "select":
-                    return (
-                      <SelectProperty key={propName} {...commonProps} options={options ?? []} />
-                    );
-                  default:
-                    return null;
-                }
-              })}
-            </List>
-          )}
-        </React.Fragment>
-      );
-    });
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = widthRef.current;
+    const paper = paperRef.current;
+    const handle = e.currentTarget as HTMLDivElement;
+    if (!paper || !handle) return;
+    paper.style.transition = "none";
+    // create temporary handle overlay to avoid mouse leaving during resize
+    const movingHandle = handle.cloneNode(true) as HTMLDivElement;
+    movingHandle.style.position = "fixed";
+    movingHandle.style.top = `${handle.getBoundingClientRect().top}px`;
+    movingHandle.style.left = `${handle.getBoundingClientRect().left}px`;
+    movingHandle.style.width = "50px";
+    movingHandle.style.zIndex = `${2 * FRONT_UI_ZIDX}`;
+    movingHandle.style.cursor = "col-resize";
+    document.body.appendChild(movingHandle);
+
+    const onMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX;
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + delta));
+      widthRef.current = newWidth;
+      paper.style.width = `${newWidth}px`;
+      movingHandle.style.left = `${ev.clientX - 30}px`;
+    };
+
+    const onUp = () => {
+      paper.style.transition = "";
+      document.body.removeChild(movingHandle);
+      setDrawerWidth(widthRef.current);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
   if (!inEditMode) return null;
   return (
     <>
       {!open && (
         <Tooltip title="Show properties" placement="left">
-          <ToggleButton color="primary" open={open} onClick={toggleDrawer} size="small">
+          <ToggleButton
+            color="primary"
+            open={open}
+            drawerWidth={drawerWidth}
+            onClick={toggleDrawer}
+            size="small"
+          >
             <ChevronLeftIcon />
           </ToggleButton>
         </Tooltip>
       )}
       <Drawer
+        open={open}
         variant="permanent"
         anchor="right"
-        open={open}
         onFocus={() => setPropertyEditorFocused(true)}
         onBlur={() => setPropertyEditorFocused(false)}
         sx={{ zIndex: FRONT_UI_ZIDX + 1 }}
+        slotProps={{
+          paper: {
+            ref: paperRef,
+            style: { width: open ? drawerWidth : 0 },
+          },
+        }}
       >
+        <ResizeHandle onMouseDown={startResize} />
         <Toolbar />
         <List sx={{ width: "100%" }}>
           <ListItem
@@ -328,7 +272,12 @@ const PropertyEditor: React.FC = () => {
           >
             <ListItemText primary={header} />
           </ListItem>
-          {renderGroupedPropertyFields()}
+          <PropertyGroups
+            groupedProperties={groupedProperties}
+            collapsedGroups={collapsedGroups}
+            onToggleGroup={toggleGroup}
+            onChange={handlePropChange}
+          />
         </List>
       </Drawer>
     </>
