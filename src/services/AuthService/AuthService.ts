@@ -1,3 +1,5 @@
+import { API_URL } from "@src/constants/constants.ts";
+
 export const OAuthProviders = {
   MICROSOFT: "microsoft",
   DEMO: "demo",
@@ -44,8 +46,6 @@ export interface AuthCallbacks {
   onLogout?: () => void;
   onAuthError?: (error: unknown) => void;
 }
-
-const API_URL = (import.meta.env.VITE_API_URL as string) ?? "http://localhost:8000/api/v1";
 
 class AuthService {
   private tokenKey = "weiss_auth_token";

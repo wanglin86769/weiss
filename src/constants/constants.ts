@@ -55,6 +55,9 @@ export const FRONT_UI_ZIDX = parseInt(
 /** URL of the project source repository */
 export const APP_SRC_URL = "https://github.com/weiss-controls/weiss";
 
+/** Base URL of the REST API server */
+export const API_URL = "http://localhost:8000/api/v1"; //TODO: adjust for production
+
 /** WebSocket server URL for PV communication */
 export const WS_URL = (() => {
   const isHttps = window.location.protocol === "https:";
