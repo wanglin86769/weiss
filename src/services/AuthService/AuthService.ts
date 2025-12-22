@@ -32,15 +32,62 @@ interface OAuthCallbackPayload {
   redirect_uri: string;
 }
 
+export const AuthStatuses = {
+  AUTHENTICATED: 1,
+  UNAUTHENTICATED: 0,
+} as const;
+
+export type AuthStatus = (typeof AuthStatuses)[keyof typeof AuthStatuses];
+export interface AuthCallbacks {
+  onAuthStatusChange?: (status: AuthStatus, user: User | null) => void;
+  onLogin?: (user: User) => void;
+  onLogout?: () => void;
+  onAuthError?: (error: unknown) => void;
+}
+
 const API_URL = (import.meta.env.VITE_API_URL as string) ?? "http://localhost:8000/api/v1";
 
 class AuthService {
   private tokenKey = "weiss_auth_token";
   private userKey = "weiss_user";
 
+  private callbacks = new Set<AuthCallbacks>();
+
+  subscribe(callbacks: AuthCallbacks): () => void {
+    this.callbacks.add(callbacks);
+    return () => {
+      this.callbacks.delete(callbacks);
+    };
+  }
+
+  private notifyAuthStatus(status: AuthStatus, user: User | null) {
+    for (const cb of this.callbacks) {
+      cb.onAuthStatusChange?.(status, user);
+    }
+  }
+
+  private notifyLogin(user: User) {
+    for (const cb of this.callbacks) {
+      cb.onLogin?.(user);
+    }
+  }
+
+  private notifyLogout() {
+    for (const cb of this.callbacks) {
+      cb.onLogout?.();
+    }
+  }
+
+  private notifyError(err: unknown) {
+    for (const cb of this.callbacks) {
+      cb.onAuthError?.(err);
+    }
+  }
+
   private handleError(err: unknown, msg?: string) {
     const text = err instanceof Error ? err.message : String(err);
     window.alert(msg ? `${msg}: ${text}` : text);
+    this.notifyError(err);
   }
 
   private async fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -105,6 +152,9 @@ class AuthService {
       const { access_token, user } = data;
       this.setSession(access_token, user);
 
+      this.notifyLogin(user);
+      this.notifyAuthStatus(AuthStatuses.AUTHENTICATED, user);
+
       return user;
     } catch (err: unknown) {
       this.handleError(err, "Authentication callback failed");
@@ -122,6 +172,8 @@ class AuthService {
     // TODO: clean session on backend
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    this.notifyLogout();
+    this.notifyAuthStatus(AuthStatuses.UNAUTHENTICATED, null);
   }
 
   getToken(): string | null {

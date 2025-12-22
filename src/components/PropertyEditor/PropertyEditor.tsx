@@ -13,7 +13,6 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { useEditorContext } from "@src/context/useEditorContext";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-
 import type {
   WidgetProperties,
   PropertyValue,
@@ -109,7 +108,7 @@ const PropertyEditor: React.FC = () => {
     editingWidgets,
     batchWidgetUpdate,
     setPropertyEditorFocused,
-    useAuth,
+    isAuthenticated,
   } = useEditorContext();
 
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
@@ -126,7 +125,6 @@ const PropertyEditor: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     widthRef.current = drawerWidth;

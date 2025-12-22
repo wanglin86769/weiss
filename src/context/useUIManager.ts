@@ -3,22 +3,17 @@ import { EDIT_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
-import { authService, Roles, type OAuthProvider } from "@src/services/AuthService/AuthService";
+import {
+  authService,
+  Roles,
+  type OAuthProvider,
+  type User,
+  type AuthStatus,
+  AuthStatuses,
+} from "@src/services/AuthService/AuthService";
 
 /**
  * Hook that manages global UI state for WEISS.
- *
- * Responsibilities:
- * - Tracks editor mode (`edit` vs `runtime`).
- * - Tracks UI states such as widget selector panel and property editor focus.
- * - Coordinates session lifecycle when switching modes.
- * - Handles localStorage persistence for widgets (load on startup, save in edit mode).
- *
- * @param ws The WebSocket instance to be controlled.
- * @param editorWidgets Current list of widgets from the widget manager.
- * @param setSelectedWidgetIDs Function to update currently selected widgets.
- * @param loadWidgets Function to load widgets into the editor (used for localStorage).
- * @param formatWdgToExport Function to format (reduce) widgets to exporting format.
  */
 export default function useUIManager(
   ws: ReturnType<typeof useEpicsWS>,
@@ -33,27 +28,46 @@ export default function useUIManager(
   const [mode, setMode] = useState<Mode>(EDIT_MODE);
   const [isDragging, setIsDragging] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
+  const [user, setUser] = useState<User | null>(() => authService.getUser());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
+    authService.isAuthenticated()
+  );
   const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
 
-  /**
-   * Switch between edit and runtime modes.
-   *
-   * Edit mode:
-   * - Closes WebSocket connection.
-   *
-   * Runtime mode:
-   * - Clears widget selection.
-   * - Closes widget selector.
-   * - Starts a new WS session.
-   *
-   * @param newMode The mode to switch to ("edit" | "runtime").
-   */
+  useEffect(() => {
+    const authHandlers = {
+      onAuthStatusChange(status: AuthStatus, user: User | null) {
+        setUser(user);
+        setIsAuthenticated(status === AuthStatuses.AUTHENTICATED);
+      },
+      onLogout() {
+        // Additional logout handling if needed
+        // maybe redirect to login page? to be decided
+      },
+    };
+
+    const unsubscribe = authService.subscribe(authHandlers);
+    return unsubscribe;
+  }, []);
+
+  const login = useCallback(
+    async (provider: OAuthProvider, demoProfile?: Roles) => {
+      if (isAuthenticated) return;
+      await authService.login(provider, demoProfile);
+    },
+    [isAuthenticated]
+  );
+
+  const logout = useCallback(() => {
+    authService.logout();
+  }, []);
+
   const updateMode = useCallback(
     (newMode: Mode) => {
-      const isEdit = newMode == EDIT_MODE;
+      const isEdit = newMode === EDIT_MODE;
       if (isEdit) {
         ws.stopSession();
       } else {
@@ -125,24 +139,6 @@ export default function useUIManager(
     }
   }, [editorWidgets, inEditMode, formatWdgToExport]);
 
-  const useAuth = () => {
-    const [user, setUser] = useState(authService.getUser());
-    const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
-
-    const login = async (provider: OAuthProvider, demoProfile?: Roles) => {
-      if (isAuthenticated) return;
-      await authService.login(provider, demoProfile);
-    };
-
-    const logout = () => {
-      authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-    };
-
-    return { user, isAuthenticated, login, logout };
-  };
-
   return {
     propertyEditorFocused,
     setPropertyEditorFocused,
@@ -158,6 +154,9 @@ export default function useUIManager(
     isPanning,
     setIsPanning,
     isDemo,
-    useAuth,
+    user,
+    isAuthenticated,
+    login,
+    logout,
   };
 }
