@@ -298,12 +298,14 @@ export default function NavBar() {
                 <ListItemText primary="From disk" />
               </MenuItem>
 
-              <MenuItem onClick={handleImportGitRepo}>
-                <ListItemIcon>
-                  <CustomGitIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="From Git repository" />
-              </MenuItem>
+              {isAuthenticated && (
+                <MenuItem onClick={handleImportGitRepo}>
+                  <ListItemIcon>
+                    <CustomGitIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="From Git repository" />
+                </MenuItem>
+              )}
             </Menu>
 
             <HelpOverlay />

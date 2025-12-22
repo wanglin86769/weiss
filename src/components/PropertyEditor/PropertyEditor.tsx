@@ -131,8 +131,8 @@ const PropertyEditor: React.FC = () => {
   }, [drawerWidth]);
 
   useEffect(() => {
-    if (!inEditMode) setTabIndex(1);
-  }, [inEditMode]);
+    if (isAuthenticated && !inEditMode) setTabIndex(1);
+  }, [isAuthenticated, inEditMode]);
 
   const properties: WidgetProperties = useMemo(() => {
     if (editingWidgets.length === 0) return {};
@@ -215,6 +215,8 @@ const PropertyEditor: React.FC = () => {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   };
+
+  if (!inEditMode && !isAuthenticated) return null;
 
   return (
     <>
