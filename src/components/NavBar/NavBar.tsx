@@ -11,7 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Tooltip from "@mui/material/Tooltip";
-import { COLORS, RUNTIME_MODE, EDIT_MODE, APP_SRC_URL } from "@src/constants/constants";
+import { COLORS, RUNTIME_MODE, EDIT_MODE, APP_SRC_URL, API_URL } from "@src/constants/constants";
 import { useEditorContext } from "@src/context/useEditorContext.tsx";
 import { WIDGET_SELECTOR_WIDTH } from "@src/constants/constants";
 import "./NavBar.css";
@@ -30,7 +30,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
-
+import ImportGitRepoDialog, { type GitImportData } from "./ImportGitRepoDialog";
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
   drawerWidth: number;
@@ -115,6 +115,7 @@ export default function NavBar() {
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  const [gitImportOpen, setGitImportOpen] = useState(false);
 
   const handleImportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setImportMenuAnchor(event.currentTarget);
@@ -149,7 +150,7 @@ export default function NavBar() {
         const text = await file.text();
         loadWidgets(text);
       } catch (err) {
-        console.error("Failed to read file:", err);
+        window.alert("Failed to load file: " + (err instanceof Error ? err.message : String(err)));
       }
     };
     input.click();
@@ -157,7 +158,41 @@ export default function NavBar() {
 
   const handleImportGitRepo = () => {
     handleImportMenuClose();
-    window.alert("Import from Git repository coming soon.");
+    setGitImportOpen(true);
+  };
+
+  const handleConfirmGitImport = (importData: GitImportData) => {
+    const endpoint = `${API_URL}/repos/staging/register`;
+    // Content of response is in the form of the class below
+    // class RepoInfo(BaseModel):
+    // id: str
+    // name: str
+    // repo_url: str
+    // created_at: str
+    void fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(importData),
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to register repo: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Repository registered successfully:", data);
+        // Further actions can be taken here, such as notifying the user or updating state
+      })
+      .catch((err) => {
+        window.alert(
+          "Error importing Git repository: " + (err instanceof Error ? err.message : String(err))
+        );
+      });
+    setGitImportOpen(false);
   };
 
   const handleLoadDemo = async () => {
@@ -399,6 +434,11 @@ export default function NavBar() {
               </>
             )}
           </Box>
+          <ImportGitRepoDialog
+            open={gitImportOpen}
+            onClose={() => setGitImportOpen(false)}
+            onConfirm={handleConfirmGitImport}
+          />
         </Toolbar>
       </StyledAppBar>
     </Box>

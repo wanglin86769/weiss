@@ -39,7 +39,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     pasteWidget,
     downloadWidgets,
     deleteWidget,
-    propertyEditorFocused,
+    releaseShortcuts,
     allWidgetIDs,
     pickedWidget,
     groupSelected,
@@ -244,7 +244,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
   // Shortcuts handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (propertyEditorFocused) return;
+      if (releaseShortcuts) return;
       // shortcuts for all modes
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault();

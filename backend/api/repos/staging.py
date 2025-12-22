@@ -27,14 +27,14 @@ router = APIRouter(
 # Models
 # -----------------------------------------------------------------------------
 class RepoCreateRequest(BaseModel):
-    name: str = Field(..., description="Logical OPI group name")
-    repo_url: str = Field(..., description="Git repository URL")
+    alias: str = Field(..., description="Local OPI repository name")
+    git_url: str = Field(..., description="Git repository URL")
 
 
 class RepoInfo(BaseModel):
     id: str
-    name: str
-    repo_url: str
+    alias: str
+    git_url: str
     created_at: str
 
 
@@ -72,11 +72,11 @@ def run_git(cmd: list, cwd: str = None):
         raise HTTPException(status_code=500, detail=f"Git command failed: {e.stderr}")
 
 
-def clone_or_fetch(repo_url: str, repo_id: str) -> str:
+def clone_or_fetch(git_url: str, repo_id: str) -> str:
     repo_path = os.path.join(REPOS_BASE_PATH, repo_id, STAGING_REL_FOLDER)
     if not os.path.exists(repo_path):
         os.makedirs(os.path.dirname(repo_path), exist_ok=True)
-        run_git(["clone", "--recursive", repo_url, repo_path])
+        run_git(["clone", "--recursive", git_url, repo_path])
     else:
         run_git(["fetch", "--all", "--tags", "--prune"], cwd=repo_path)
     return repo_path
@@ -128,15 +128,15 @@ def register_repository(payload: RepoCreateRequest):
     created_at = datetime.now(timezone.utc)
 
     try:
-        clone_or_fetch(payload.repo_url, repo_id)
+        clone_or_fetch(payload.git_url, repo_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     meta_file = os.path.join(REPOS_BASE_PATH, repo_id, "repo.json")
     meta_data = {
         "id": repo_id,
-        "name": payload.name,
-        "repo_url": payload.repo_url,
+        "alias": payload.alias,
+        "git_url": payload.git_url,
         "created_at": created_at.isoformat(),
     }
     with open(meta_file, "w") as f:

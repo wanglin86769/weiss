@@ -22,7 +22,7 @@ export default function useUIManager(
   loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],
   formatWdgToExport: ReturnType<typeof useWidgetManager>["formatWdgToExport"]
 ) {
-  const [propertyEditorFocused, setPropertyEditorFocused] = useState(false);
+  const [releaseShortcuts, setReleaseShortcuts] = useState(false);
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
   const [pickedWidget, setPickedWidget] = useState<Widget | null>(null);
   const [mode, setMode] = useState<Mode>(EDIT_MODE);
@@ -140,8 +140,8 @@ export default function useUIManager(
   }, [editorWidgets, inEditMode, formatWdgToExport]);
 
   return {
-    propertyEditorFocused,
-    setPropertyEditorFocused,
+    releaseShortcuts,
+    setReleaseShortcuts,
     mode,
     updateMode,
     wdgPickerOpen,

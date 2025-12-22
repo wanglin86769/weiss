@@ -107,7 +107,7 @@ const PropertyEditor: React.FC = () => {
     selectedWidgetIDs,
     editingWidgets,
     batchWidgetUpdate,
-    setPropertyEditorFocused,
+    setReleaseShortcuts,
     isAuthenticated,
   } = useEditorContext();
 
@@ -237,8 +237,8 @@ const PropertyEditor: React.FC = () => {
         open={open}
         variant="permanent"
         anchor="right"
-        onFocus={() => setPropertyEditorFocused(true)}
-        onBlur={() => setPropertyEditorFocused(false)}
+        onFocus={() => setReleaseShortcuts(true)}
+        onBlur={() => setReleaseShortcuts(false)}
         sx={{ zIndex: FRONT_UI_ZIDX + 1 }}
         slotProps={{
           paper: {
