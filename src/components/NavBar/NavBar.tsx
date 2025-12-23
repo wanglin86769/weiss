@@ -401,22 +401,22 @@ export default function NavBar() {
                     ...(isDemo
                       ? [
                           <MenuItem
-                            key="demo-user"
-                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.USER)}
+                            key="demo-operator"
+                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.OPERATOR)}
                           >
                             <ListItemIcon>
                               <PersonIcon fontSize="small" />
                             </ListItemIcon>
-                            <ListItemText primary="Demo User" />
+                            <ListItemText primary="Demo Operator" />
                           </MenuItem>,
                           <MenuItem
-                            key="demo-admin"
-                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.ADMIN)}
+                            key="demo-developer"
+                            onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.DEVELOPER)}
                           >
                             <ListItemIcon>
                               <AdminPanelSettingsIcon fontSize="small" />
                             </ListItemIcon>
-                            <ListItemText primary="Demo Admin" />
+                            <ListItemText primary="Demo Developer" />
                           </MenuItem>,
                         ]
                       : []),

@@ -8,8 +8,8 @@ export const OAuthProviders = {
 export type OAuthProvider = (typeof OAuthProviders)[keyof typeof OAuthProviders];
 
 export const Roles = {
-  ADMIN: "admin",
-  USER: "user",
+  DEVELOPER: "developer",
+  OPERATOR: "operator",
 } as const;
 
 export type Roles = (typeof Roles)[keyof typeof Roles];

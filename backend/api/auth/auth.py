@@ -36,8 +36,8 @@ security = HTTPBearer()
 
 # Models
 class UserRole(str, Enum):
-    ADMIN = "admin"
-    USER = "user"
+    DEVELOPER = "developer"
+    OPERATOR = "operator"
 
 
 class AuthProvider(str, Enum):
@@ -51,7 +51,7 @@ class User(BaseModel):
     email: Optional[str]
     provider: AuthProvider
     provider_id: str
-    role: UserRole = UserRole.USER
+    role: UserRole = UserRole.OPERATOR
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -158,7 +158,7 @@ async def handle_microsoft_callback(code: str, redirect_uri: str) -> TokenRespon
             email=ms_user.get("mail") or ms_user.get("userPrincipalName"),
             provider=AuthProvider.MICROSOFT,
             provider_id=provider_id,
-            role=UserRole.USER,
+            role=UserRole.OPERATOR,
         )
 
     user = users_db[user_id]
