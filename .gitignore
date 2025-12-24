@@ -26,6 +26,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.storage
 
 # python
 __pycache__

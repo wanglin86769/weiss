@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel
 from typing import List, Optional
 
-REPOS_BASE_PATH = os.getenv("REPOS_BASE_PATH", "../data/repos")
+REPOS_BASE_PATH = os.getenv("REPOS_BASE_PATH", "../storage/repos")
 STAGING_REL_FOLDER = "staging"
 DEPLOYMENTS_REL_FOLDER = "deployments"
 SNAPSHOT_REL_FOLDER = "snapshot"
