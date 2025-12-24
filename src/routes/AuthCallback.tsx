@@ -8,10 +8,11 @@ export default function AuthCallback() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    const provider = params.get("state") as OAuthProvider;
+    const provider = params.get("state") as OAuthProvider | null;
+
     if (!code || !provider) {
-      console.error("OAuth callback missing code");
-      navigate("/login", { replace: true });
+      console.error("OAuth callback missing parameters");
+      void navigate("/login", { replace: true });
       return;
     }
 
@@ -19,13 +20,9 @@ export default function AuthCallback() {
 
     authService
       .handleCallback(provider, code, redirectUri)
-      .then(() => {
-        navigate("/", { replace: true });
-      })
-      .catch((err) => {
-        console.error("OAuth callback failed:", err);
-        navigate("/login", { replace: true });
-      });
+      .then(() => authService.restoreSession())
+      .then(() => navigate("/", { replace: true }))
+      .catch(() => navigate("/login", { replace: true }));
   }, [navigate]);
 
   return null;

@@ -29,13 +29,16 @@ export default function useUIManager(
   const [isDragging, setIsDragging] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [user, setUser] = useState<User | null>(() => authService.getUser());
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
-    authService.isAuthenticated()
-  );
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
+
+  useEffect(() => {
+    void authService.restoreSession().finally(() => setAuthChecked(true));
+  }, []);
 
   useEffect(() => {
     const authHandlers = {
@@ -62,7 +65,7 @@ export default function useUIManager(
   );
 
   const logout = useCallback(() => {
-    authService.logout();
+    void authService.logout();
   }, []);
 
   const updateMode = useCallback(
@@ -155,6 +158,7 @@ export default function useUIManager(
     setIsPanning,
     isDemo,
     user,
+    authChecked,
     isAuthenticated,
     login,
     logout,
