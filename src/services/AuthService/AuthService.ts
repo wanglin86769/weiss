@@ -1,4 +1,5 @@
 import { API_URL } from "@src/constants/constants";
+import { notifyUser } from "@src/services/Notifications/Notification";
 
 export const OAuthProviders = {
   MICROSOFT: "microsoft",
@@ -129,7 +130,7 @@ class AuthService {
       window.location.href = authorizeUrl;
     } catch (err: unknown) {
       this.logAndNotifyError(err);
-      window.alert("Login failed. Please try again.");
+      notifyUser("Login failed. Please, try again. If problem persists, contact support", "error");
     }
   }
 
@@ -162,7 +163,10 @@ class AuthService {
         return user;
       } catch (err) {
         this.logAndNotifyError(err);
-        window.alert("Authentication failed. Auth code might have expired or was already used.");
+        notifyUser(
+          "Authentication failed. Auth code might have expired or was already used.",
+          "error"
+        );
         return null;
       } finally {
         this.callbackPromise = null;
