@@ -11,13 +11,12 @@ import MenuIcon from "@mui/icons-material/Menu";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Tooltip from "@mui/material/Tooltip";
-import { COLORS, RUNTIME_MODE, EDIT_MODE, APP_SRC_URL, API_URL } from "@src/constants/constants";
+import { COLORS, RUNTIME_MODE, EDIT_MODE, API_URL } from "@src/constants/constants";
 import { useEditorContext } from "@src/context/useEditorContext.tsx";
 import { WIDGET_SELECTOR_WIDTH } from "@src/constants/constants";
 import "./NavBar.css";
 import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import GitHubIcon from "@mui/icons-material/GitHub";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon.tsx";
 import ComputerIcon from "@mui/icons-material/Computer";
 import HelpOverlay from "./HelpOverlay.tsx";
@@ -26,7 +25,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
@@ -163,12 +162,6 @@ export default function NavBar() {
 
   const handleConfirmGitImport = (importData: GitImportData) => {
     const endpoint = `${API_URL}/repos/staging/register`;
-    // Content of response is in the form of the class below
-    // class RepoInfo(BaseModel):
-    // id: str
-    // name: str
-    // repo_url: str
-    // created_at: str
     void fetch(endpoint, {
       method: "POST",
       headers: {
@@ -345,16 +338,6 @@ export default function NavBar() {
 
             <HelpOverlay />
 
-            <Tooltip title="WEISS source repository">
-              <IconButton
-                sx={{ color: "white" }}
-                href={APP_SRC_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <GitHubIcon />
-              </IconButton>
-            </Tooltip>
             {isAuthenticated ? (
               <>
                 <IconButton onClick={handleUserMenuOpen}>
@@ -414,7 +397,7 @@ export default function NavBar() {
                             onClick={() => void handleLogin(OAuthProviders.DEMO, Roles.DEVELOPER)}
                           >
                             <ListItemIcon>
-                              <AdminPanelSettingsIcon fontSize="small" />
+                              <IntegrationInstructionsIcon fontSize="small" />
                             </ListItemIcon>
                             <ListItemText primary="Demo Developer" />
                           </MenuItem>,

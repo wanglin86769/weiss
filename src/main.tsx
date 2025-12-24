@@ -1,19 +1,30 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import { EditorProvider } from "./context/EditorProvider.tsx";
-import App from "./App.jsx";
-
+import "@src/index.css";
+import { EditorProvider } from "@src/context/EditorProvider.tsx";
+import App from "@src/App.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AuthCallback from "./routes/AuthCallback.tsx";
+import AuthCallback from "@src/routes/AuthCallback.tsx";
+import LoginPage from "@src/routes/Login.tsx";
+import ProtectedRoute from "@src/routes/ProtectedRoute.tsx";
+import NotificationService from "./services/Notifications/NotificationService";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
+      <NotificationService />
       <EditorProvider>
         <Routes>
-          <Route path="/" element={<App />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <App />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </EditorProvider>
     </BrowserRouter>
