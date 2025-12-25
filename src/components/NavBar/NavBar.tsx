@@ -30,6 +30,7 @@ import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
 import ImportGitRepoDialog, { type GitImportData } from "./ImportGitRepoDialog";
+import { notifyUser } from "@src/services/Notifications/Notification.ts";
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
   drawerWidth: number;
@@ -115,6 +116,7 @@ export default function NavBar() {
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [gitImportOpen, setGitImportOpen] = useState(false);
+  const isDeveloper = user?.role === Roles.DEVELOPER;
 
   const handleImportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setImportMenuAnchor(event.currentTarget);
@@ -149,7 +151,11 @@ export default function NavBar() {
         const text = await file.text();
         loadWidgets(text);
       } catch (err) {
-        window.alert("Failed to load file: " + (err instanceof Error ? err.message : String(err)));
+        console.error("File import failed:", err);
+        notifyUser(
+          `File import failed: ${err instanceof Error ? err.message : String(err)}`,
+          "error"
+        );
       }
     };
     input.click();
@@ -176,13 +182,13 @@ export default function NavBar() {
         }
         return res.json();
       })
-      .then((data) => {
-        console.log("Repository registered successfully:", data);
-        // Further actions can be taken here, such as notifying the user or updating state
+      .then(() => {
+        notifyUser("Git repository imported successfully.", "success");
       })
       .catch((err) => {
-        window.alert(
-          "Error importing Git repository: " + (err instanceof Error ? err.message : String(err))
+        notifyUser(
+          `Git import failed: ${err instanceof Error ? err.message : String(err)}`,
+          "error"
         );
       });
     setGitImportOpen(false);
@@ -255,89 +261,94 @@ export default function NavBar() {
               WEISS
             </Typography>
           </Tooltip>
-          <FormControlLabel
-            control={
-              <ModeSwitch
-                checked={!inEditMode}
-                onChange={() => updateMode(inEditMode ? RUNTIME_MODE : EDIT_MODE)}
-                color="default"
-                sx={{ mr: 1 }}
+          {isDeveloper && (
+            <>
+              <FormControlLabel
+                control={
+                  <ModeSwitch
+                    checked={!inEditMode}
+                    onChange={() => updateMode(inEditMode ? RUNTIME_MODE : EDIT_MODE)}
+                    color="default"
+                    sx={{ mr: 1 }}
+                  />
+                }
+                label="Runtime"
+                sx={{ color: "white", ml: 3 }}
               />
-            }
-            label="Runtime"
-            sx={{ color: "white", ml: 3 }}
-          />
-          {isDemo && inEditMode && (
-            <Tooltip title="Load demo OPI">
-              <Button
-                onClick={() => {
-                  void handleLoadDemo();
-                }}
-                startIcon={<RefreshIcon />}
-                variant="contained"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 500,
-                  borderRadius: 1.5,
-                  px: 2,
-                  py: 0.5,
-                  backgroundColor: "rgba(255,255,255,0.12)",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.22)",
-                  },
-                }}
-              >
-                Load demo
-              </Button>
-            </Tooltip>
+              {isDemo && inEditMode && (
+                <Tooltip title="Load demo OPI">
+                  <Button
+                    onClick={() => {
+                      void handleLoadDemo();
+                    }}
+                    startIcon={<RefreshIcon />}
+                    variant="contained"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 500,
+                      borderRadius: 1.5,
+                      px: 2,
+                      py: 0.5,
+                      backgroundColor: "rgba(255,255,255,0.12)",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "rgba(255,255,255,0.22)",
+                      },
+                    }}
+                  >
+                    Load demo
+                  </Button>
+                </Tooltip>
+              )}
+            </>
           )}
           <Box sx={{ flexGrow: 1 }} />
           {/* Right-side actions */}
           <Box className="rightButtons" sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Tooltip title="Export file">
-              <Button
-                onClick={handleDownload}
-                startIcon={<FileDownloadIcon />}
-                sx={{ color: "white", textTransform: "none" }}
-              >
-                Export
-              </Button>
-            </Tooltip>
-            <Tooltip title="Import file">
-              <Button
-                onClick={handleImportMenuOpen}
-                startIcon={<FileUploadIcon />}
-                sx={{ color: "white", textTransform: "none" }}
-              >
-                Import
-              </Button>
-            </Tooltip>
+            {isDeveloper && (
+              <>
+                <Tooltip title="Export file">
+                  <Button
+                    onClick={handleDownload}
+                    startIcon={<FileDownloadIcon />}
+                    sx={{ color: "white", textTransform: "none" }}
+                  >
+                    Export
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Import file">
+                  <Button
+                    onClick={handleImportMenuOpen}
+                    startIcon={<FileUploadIcon />}
+                    sx={{ color: "white", textTransform: "none" }}
+                  >
+                    Import
+                  </Button>
+                </Tooltip>
+                <Menu
+                  anchorEl={importMenuAnchor}
+                  open={Boolean(importMenuAnchor)}
+                  onClose={handleImportMenuClose}
+                >
+                  <MenuItem onClick={handleImportFile}>
+                    <ListItemIcon>
+                      <ComputerIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="From disk" />
+                  </MenuItem>
 
-            <Menu
-              anchorEl={importMenuAnchor}
-              open={Boolean(importMenuAnchor)}
-              onClose={handleImportMenuClose}
-            >
-              <MenuItem onClick={handleImportFile}>
-                <ListItemIcon>
-                  <ComputerIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="From disk" />
-              </MenuItem>
-
-              {isAuthenticated && (
-                <MenuItem onClick={handleImportGitRepo}>
-                  <ListItemIcon>
-                    <CustomGitIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText primary="From Git repository" />
-                </MenuItem>
-              )}
-            </Menu>
-
-            <HelpOverlay />
-
+                  {isAuthenticated && (
+                    <MenuItem onClick={handleImportGitRepo}>
+                      <ListItemIcon>
+                        <CustomGitIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText primary="From Git repository" />
+                    </MenuItem>
+                  )}
+                </Menu>
+                <HelpOverlay />
+              </>
+            )}
             {isAuthenticated ? (
               <>
                 <IconButton onClick={handleUserMenuOpen}>

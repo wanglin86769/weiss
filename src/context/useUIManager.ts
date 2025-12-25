@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { EDIT_MODE, type Mode } from "@src/constants/constants";
+import { EDIT_MODE, RUNTIME_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { ExportedWidget, Widget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
@@ -40,34 +40,6 @@ export default function useUIManager(
     void authService.restoreSession().finally(() => setAuthChecked(true));
   }, []);
 
-  useEffect(() => {
-    const authHandlers = {
-      onAuthStatusChange(status: AuthStatus, user: User | null) {
-        setUser(user);
-        setIsAuthenticated(status === AuthStatuses.AUTHENTICATED);
-      },
-      onLogout() {
-        // Additional logout handling if needed
-        // maybe redirect to login page? to be decided
-      },
-    };
-
-    const unsubscribe = authService.subscribe(authHandlers);
-    return unsubscribe;
-  }, []);
-
-  const login = useCallback(
-    async (provider: OAuthProvider, demoProfile?: Roles) => {
-      if (isAuthenticated) return;
-      await authService.login(provider, demoProfile);
-    },
-    [isAuthenticated]
-  );
-
-  const logout = useCallback(() => {
-    void authService.logout();
-  }, []);
-
   const updateMode = useCallback(
     (newMode: Mode) => {
       const isEdit = newMode === EDIT_MODE;
@@ -82,6 +54,36 @@ export default function useUIManager(
     },
     [setSelectedWidgetIDs, ws]
   );
+
+  useEffect(() => {
+    const authHandlers = {
+      onAuthStatusChange(status: AuthStatus, user: User | null) {
+        setUser(user);
+        setIsAuthenticated(status === AuthStatuses.AUTHENTICATED);
+        if (user?.role === Roles.OPERATOR) {
+          updateMode(RUNTIME_MODE);
+        }
+      },
+      onLogout() {
+        // Additional logout handling if needed
+      },
+    };
+
+    const unsubscribe = authService.subscribe(authHandlers);
+    return unsubscribe;
+  }, [updateMode]);
+
+  const login = useCallback(
+    async (provider: OAuthProvider, demoProfile?: Roles) => {
+      if (isAuthenticated) return;
+      await authService.login(provider, demoProfile);
+    },
+    [isAuthenticated]
+  );
+
+  const logout = useCallback(() => {
+    void authService.logout();
+  }, []);
 
   /**
    * Handles WS reconnection when needed
