@@ -111,12 +111,12 @@ export default function NavBar() {
     isAuthenticated,
     login,
     logout,
+    isDeveloper,
   } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [gitImportOpen, setGitImportOpen] = useState(false);
-  const isDeveloper = user?.role === Roles.DEVELOPER;
 
   const handleImportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setImportMenuAnchor(event.currentTarget);

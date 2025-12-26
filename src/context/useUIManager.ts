@@ -35,6 +35,7 @@ export default function useUIManager(
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
+  const isDeveloper = user?.role === Roles.DEVELOPER;
 
   useEffect(() => {
     void authService.restoreSession().finally(() => setAuthChecked(true));
@@ -160,6 +161,7 @@ export default function useUIManager(
     setIsPanning,
     isDemo,
     user,
+    isDeveloper,
     authChecked,
     isAuthenticated,
     login,
