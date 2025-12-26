@@ -1,16 +1,17 @@
 import os
 import json
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from datetime import datetime
 from api.repos.common import (
     TreeNode,
     FileResponse,
+    RepoInfo,
+    DeploymentInfo,
     build_full_tree,
+    list_all_repositories,
     REPOS_BASE_PATH,
     DEPLOYMENTS_REL_FOLDER,
-    SNAPSHOT_REL_FOLDER,
     CURRENT_SYMLINK,
     DEPLOYMENT_META,
 )
@@ -19,17 +20,6 @@ router = APIRouter(
     prefix="/api/v1/repos/runtime",
     tags=["OPI Repositories"],
 )
-
-
-# ---------------------------------------------------------------------------
-# Models
-# ---------------------------------------------------------------------------
-class DeploymentInfo(BaseModel):
-    id: str
-    repo_id: str
-    ref: str
-    commit_hash: str
-    deployed_at: Optional[datetime]
 
 
 # ---------------------------------------------------------------------------
@@ -42,10 +32,7 @@ def get_current_snapshot_path(repo_id: str) -> str:
     current_link = os.path.join(REPOS_BASE_PATH, repo_id, DEPLOYMENTS_REL_FOLDER, CURRENT_SYMLINK)
     if not os.path.exists(current_link) or not os.path.islink(current_link):
         raise HTTPException(status_code=404, detail="No deployed snapshot available")
-    snapshot_path = os.path.join(current_link, SNAPSHOT_REL_FOLDER)
-    if not os.path.exists(snapshot_path):
-        raise HTTPException(status_code=404, detail="Snapshot folder missing")
-    return snapshot_path
+    return current_link
 
 
 def get_current_deployment_meta(repo_id: str) -> dict:
@@ -63,6 +50,18 @@ def get_current_deployment_meta(repo_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+
+@router.get("/", response_model=List[RepoInfo])
+def list_repositories():
+    all_repos = list_all_repositories()
+    repos_w_deployment: List[RepoInfo] = []
+    for repo in all_repos:
+        if repo.current_deployment is not None:
+            repos_w_deployment.append(repo)
+    return repos_w_deployment
+
+
 @router.get("/{repo_id}/tree", response_model=List[TreeNode])
 def get_runtime_repo_tree(repo_id: str):
     """

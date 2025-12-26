@@ -1,8 +1,10 @@
 import os
+import json
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
-REPOS_BASE_PATH = os.getenv("REPOS_BASE_PATH", "../storage/repos")
+REPOS_BASE_PATH = os.path.abspath(os.getenv("REPOS_BASE_PATH", "../storage/repos"))
 STAGING_REL_FOLDER = "staging"
 DEPLOYMENTS_REL_FOLDER = "deployments"
 SNAPSHOT_REL_FOLDER = "snapshot"
@@ -29,6 +31,24 @@ class FileResponse(BaseModel):
     path: str
     content: str
     encoding: str = "utf-8"
+
+
+class RepoInfo(BaseModel):
+    id: str
+    alias: str
+    git_url: str
+    created_at: str
+    current_deployment: Optional[str] = None
+    deployed_ref: Optional[str] = None
+    deployed_at: Optional[str] = None
+
+
+class DeploymentInfo(BaseModel):
+    id: str
+    repo_id: str
+    ref: str
+    commit_hash: str
+    deployed_at: Optional[datetime]
 
 
 def build_full_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
@@ -80,3 +100,29 @@ def build_full_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
             )
 
     return nodes
+
+
+def list_all_repositories() -> List[RepoInfo]:
+    """List all registered repositories"""
+    repos = []
+    repos_base = os.path.join(REPOS_BASE_PATH)
+    if not os.path.exists(repos_base):
+        return repos
+
+    for repo_id in os.listdir(repos_base):
+        meta_file = os.path.join(repos_base, repo_id, REPO_META)
+        if os.path.exists(meta_file):
+            with open(meta_file, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+                repos.append(
+                    RepoInfo(
+                        id=meta["id"],
+                        alias=meta["alias"],
+                        git_url=meta["git_url"],
+                        created_at=meta["created_at"],
+                        deployed_ref=meta["deployed_ref"],
+                        deployed_at=meta["deployed_at"],
+                        current_deployment=meta["current_deployment"],
+                    )
+                )
+    return repos

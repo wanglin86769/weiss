@@ -5,14 +5,16 @@ import json
 from .common import REPOS_BASE_PATH
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
 from datetime import datetime, timezone
 from api.repos.common import (
     TreeNode,
+    RepoInfo,
+    DeploymentInfo,
     build_full_tree,
+    list_all_repositories,
     DEPLOYMENTS_REL_FOLDER,
     STAGING_REL_FOLDER,
-    SNAPSHOT_REL_FOLDER,
     CURRENT_SYMLINK,
     REPO_META,
 )
@@ -31,13 +33,6 @@ class RepoCreateRequest(BaseModel):
     git_url: str = Field(..., description="Git repository URL")
 
 
-class RepoInfo(BaseModel):
-    id: str
-    alias: str
-    git_url: str
-    created_at: str
-
-
 class RepoRefInfo(BaseModel):
     ref: str
     commit_hash: str
@@ -46,14 +41,6 @@ class RepoRefInfo(BaseModel):
 class ValidationResult(BaseModel):
     valid: bool
     errors: List[str] = []
-
-
-class DeploymentInfo(BaseModel):
-    id: str
-    repo_id: str
-    ref: str
-    commit_hash: str
-    deployed_at: Optional[datetime]
 
 
 class DeployRequest(BaseModel):
@@ -94,13 +81,11 @@ def create_snapshot(repo_id: str, ref: str) -> str:
     deployments_root = os.path.join(REPOS_BASE_PATH, repo_id, DEPLOYMENTS_REL_FOLDER)
     os.makedirs(deployments_root, exist_ok=True)
     deployment_path = os.path.join(deployments_root, deployment_id)
-    snapshot_path = os.path.join(deployment_path, SNAPSHOT_REL_FOLDER)
-    os.makedirs(snapshot_path, exist_ok=False)
+    print(f"Creating snapshot at {deployment_path}")
+    run_git(["clone", "--recursive", repo_path, deployment_path])
+    run_git(["checkout", ref], cwd=deployment_path)
 
-    run_git(["clone", "--recursive", repo_path, snapshot_path])
-    run_git(["checkout", ref], cwd=snapshot_path)
-
-    return deployment_id, snapshot_path
+    return deployment_id, deployment_path
 
 
 def validate_repo_content(repo_path: str, ref: str) -> ValidationResult:
@@ -118,7 +103,7 @@ def get_staging_path(repo_id: str) -> str:
 
 @router.get("/", response_model=List[RepoInfo])
 def list_repositories():
-    raise HTTPException(status_code=501, detail="Not implemented")
+    return list_all_repositories()
 
 
 @router.post("/register", response_model=RepoInfo)
