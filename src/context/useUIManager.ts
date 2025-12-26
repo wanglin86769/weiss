@@ -11,6 +11,7 @@ import {
   type AuthStatus,
   AuthStatuses,
 } from "@src/services/AuthService/AuthService";
+import { notifyUser } from "@src/services/Notifications/Notification";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -98,6 +99,7 @@ export default function useUIManager(
       if (!inEditMode && !ws.wsConnected) {
         triedReconnect = true;
         console.warn("Socket disconnected. Attempting reconnection...");
+        notifyUser("Connection lost. Attempting to reconnect...", "warning");
         ws.startNewSession();
       }
     }, RECONNECT_TIMEOUT);
@@ -105,7 +107,7 @@ export default function useUIManager(
     return () => {
       clearInterval(intervalId);
       if (triedReconnect) {
-        console.log("Reconnected.");
+        notifyUser("Reconnected to server.", "success");
       }
     };
   }, [inEditMode, ws]);

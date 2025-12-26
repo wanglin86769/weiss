@@ -15,18 +15,6 @@ REPO_META = "repo.json"
 os.makedirs(REPOS_BASE_PATH, exist_ok=True)
 
 
-class TreeNode(BaseModel):
-    name: str
-    path: str  # path relative to repo/snapshot root
-    type: str  # "file" | "directory"
-    children: Optional[List["TreeNode"]] = None
-
-
-class TreeResponse(BaseModel):
-    path: str
-    entries: List[TreeNode]
-
-
 class FileResponse(BaseModel):
     path: str
     content: str
@@ -43,6 +31,17 @@ class RepoInfo(BaseModel):
     deployed_at: Optional[str] = None
 
 
+class TreeNode(BaseModel):
+    name: str
+    path: str  # path relative to repo/snapshot root
+    type: str  # "file" | "directory"
+    children: Optional[List["TreeNode"]] = None
+
+
+class RepoTreeInfo(RepoInfo):
+    tree: List[TreeNode]
+
+
 class DeploymentInfo(BaseModel):
     id: str
     repo_id: str
@@ -51,7 +50,7 @@ class DeploymentInfo(BaseModel):
     deployed_at: Optional[datetime]
 
 
-def build_full_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
+def build_path_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
     """
     Recursively build a directory tree starting at root_path/rel_path.
 
@@ -77,7 +76,7 @@ def build_full_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
         entry_rel_path = os.path.join(rel_path, entry.name)
 
         if entry.is_dir(follow_symlinks=False):
-            children = build_full_tree(root_path, entry_rel_path)
+            children = build_path_tree(root_path, entry_rel_path)
             if children:  # avoid empty directories
                 nodes.append(
                     TreeNode(

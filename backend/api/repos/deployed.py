@@ -7,8 +7,9 @@ from api.repos.common import (
     TreeNode,
     FileResponse,
     RepoInfo,
+    RepoTreeInfo,
     DeploymentInfo,
-    build_full_tree,
+    build_path_tree,
     list_all_repositories,
     REPOS_BASE_PATH,
     DEPLOYMENTS_REL_FOLDER,
@@ -62,13 +63,24 @@ def list_repositories():
     return repos_w_deployment
 
 
+@router.get("/tree", response_model=List[RepoTreeInfo])
+def get_all_repos_tree():
+    all_trees = []
+    for repo in list_all_repositories():
+        if repo.current_deployment is not None:
+            snapshot_path = get_current_snapshot_path(repo.id)
+            tree = build_path_tree(snapshot_path)
+            all_trees.append(RepoTreeInfo(**repo.model_dump(), tree=tree))
+    return all_trees
+
+
 @router.get("/{repo_id}/tree", response_model=List[TreeNode])
 def get_runtime_repo_tree(repo_id: str):
     """
     Return the full tree of the currently deployed snapshot.
     """
     snapshot_path = get_current_snapshot_path(repo_id)
-    return build_full_tree(snapshot_path)
+    return build_path_tree(snapshot_path)
 
 
 @router.get("/{repo_id}/file", response_model=FileResponse)

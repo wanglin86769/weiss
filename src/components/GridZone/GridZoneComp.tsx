@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { GridPosition, Widget, WidgetUpdate } from "@src/types/widgets";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
 import { useEditorContext } from "@src/context/useEditorContext.tsx";
-import { API_URL, FRONT_UI_ZIDX, GRID_ID, MAX_ZOOM, MIN_ZOOM } from "@src/constants/constants";
+import { FRONT_UI_ZIDX, GRID_ID, MAX_ZOOM, MIN_ZOOM } from "@src/constants/constants";
 import ContextMenu from "@components/ContextMenu/ContextMenu";
 import "./GridZone.css";
 import WidgetRenderer from "@components/WidgetRenderer/WidgetRenderer.tsx";
@@ -10,7 +10,6 @@ import ToolbarButtons from "@components/Toolbar/Toolbar.tsx";
 import { v4 as uuidv4 } from "uuid";
 import SelectionManager from "./SelectionManager/SelectionManager";
 import { CircularProgress } from "@mui/material";
-import { notifyUser } from "@src/services/Notifications/Notification";
 
 /**
  * GridZoneComp renders the main editor canvas where widgets are displayed, moved, and interacted with.
@@ -51,7 +50,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     setIsPanning,
     inEditMode,
     wsConnected,
-    isDeveloper,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -84,23 +82,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     setZoom(1);
     setShouldCenterPan(true);
   };
-
-  useEffect(() => {
-    const reposBaseEndpoint = `${API_URL}/repos/${isDeveloper ? "staging" : "runtime"}`;
-    fetch(reposBaseEndpoint)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Error fetching repositories: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Fetched repositories:", data);
-      })
-      .catch((error) => {
-        notifyUser(`Failed to fetch repositories: ${error.message}`, "error");
-      });
-  }, [isDeveloper]);
 
   useEffect(() => {
     if (shouldCenterPan && zoom === 1) {

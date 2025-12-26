@@ -10,8 +10,9 @@ from datetime import datetime, timezone
 from api.repos.common import (
     TreeNode,
     RepoInfo,
+    RepoTreeInfo,
     DeploymentInfo,
-    build_full_tree,
+    build_path_tree,
     list_all_repositories,
     DEPLOYMENTS_REL_FOLDER,
     STAGING_REL_FOLDER,
@@ -104,6 +105,16 @@ def get_staging_path(repo_id: str) -> str:
 @router.get("/", response_model=List[RepoInfo])
 def list_repositories():
     return list_all_repositories()
+
+
+@router.get("/tree", response_model=List[RepoTreeInfo])
+def get_all_repos_tree():
+    all_trees = []
+    for repo in list_all_repositories():
+        repo_path = get_staging_path(repo.id)
+        tree = build_path_tree(repo_path)
+        all_trees.append(RepoTreeInfo(**repo.model_dump(), tree=tree))
+    return all_trees
 
 
 @router.post("/register", response_model=RepoInfo)
@@ -224,4 +235,4 @@ def checkout_repo_ref(repo_id: str, ref: str):
 @router.get("/{repo_id}/tree", response_model=List[TreeNode])
 def get_staging_repo_tree(repo_id: str):
     repo_path = get_staging_path(repo_id)
-    return build_full_tree(repo_path)
+    return build_path_tree(repo_path)
