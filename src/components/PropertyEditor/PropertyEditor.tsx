@@ -23,7 +23,7 @@ import type {
 import { API_URL, FRONT_UI_ZIDX } from "@src/constants/constants";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
 import PropertyGroups from "./PropertyGroups";
-import RepoTree, { type TreeNode } from "./FileNavigator";
+import RepoTree, { type RepoTreeInfo } from "./FileNavigator";
 import { notifyUser } from "@src/services/Notifications/Notification";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
@@ -128,10 +128,10 @@ const PropertyEditor: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
-  const [repoTree, setRepoTree] = useState<[TreeNode] | null>(null);
+  const [repoTreeInfo, setRepoTreeInfo] = useState<RepoTreeInfo | null>(null);
 
   useEffect(() => {
-    const reposBaseEndpoint = `${API_URL}/repos/${isDeveloper ? "staging" : "runtime"}`;
+    const reposBaseEndpoint = `${API_URL}/repos/${isDeveloper ? "staging" : "runtime"}/tree`;
     fetch(reposBaseEndpoint)
       .then((response) => {
         if (!response.ok) {
@@ -140,11 +140,11 @@ const PropertyEditor: React.FC = () => {
         return response.json();
       })
       .then((data) => {
-        console.log("Fetched repositories:", data);
         if (data.length > 0) {
-          setRepoTree(data as [TreeNode]);
+          setRepoTreeInfo(data as RepoTreeInfo);
+          console.log("Fetched repositories:", data as RepoTreeInfo);
         } else {
-          setRepoTree(null);
+          setRepoTreeInfo(null);
         }
       })
       .catch((error) => {
@@ -309,13 +309,13 @@ const PropertyEditor: React.FC = () => {
               onToggleGroup={toggleGroup}
               onChange={handlePropChange}
             />
-          ) : repoTree ? (
+          ) : repoTreeInfo ? (
             <div style={{ padding: 16 }}>
               <RepoTree
-                root={repoTree[0]}
-                onSelect={(node) => {
-                  if (node.type === "file") {
-                    console.log("Open file:", node.path);
+                repoTreeInfo={repoTreeInfo}
+                onSelect={(child) => {
+                  if (child.type === "file") {
+                    console.log("Open file:", child.path);
                   }
                 }}
               />
