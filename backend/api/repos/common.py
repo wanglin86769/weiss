@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-REPOS_BASE_PATH = os.path.abspath(os.getenv("REPOS_BASE_PATH", "../storage/repos"))
+REPOS_BASE_PATH = "/app/storage/repos"  # Abs path inside container - adjust if running locally
 STAGING_REL_FOLDER = "staging"
 DEPLOYMENTS_REL_FOLDER = "deployments"
 SNAPSHOT_REL_FOLDER = "snapshot"
@@ -119,9 +119,9 @@ def list_all_repositories() -> List[RepoInfo]:
                         alias=meta["alias"],
                         git_url=meta["git_url"],
                         created_at=meta["created_at"],
-                        deployed_ref=meta["deployed_ref"],
-                        deployed_at=meta["deployed_at"],
-                        current_deployment=meta["current_deployment"],
+                        deployed_ref=meta.get("deployed_ref"),
+                        deployed_at=meta.get("deployed_at"),
+                        current_deployment=meta.get("current_deployment"),
                     )
                 )
     return repos

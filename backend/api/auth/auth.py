@@ -188,7 +188,10 @@ async def handle_demo_login(role: UserRole) -> User:
 ################
 # Routes
 ################
-@router.get("/{provider}/authorize")
+@router.get(
+    "/{provider}/authorize",
+    operation_id="authAuthorize",
+)
 async def authorize(provider: AuthProvider, demo_profile: UserRole | None = None):
     if provider == AuthProvider.MICROSOFT:
         ensure_microsoft_configured()
@@ -213,7 +216,11 @@ async def authorize(provider: AuthProvider, demo_profile: UserRole | None = None
     raise HTTPException(status_code=400, detail="Unsupported provider")
 
 
-@router.post("/callback", response_model=User)
+@router.post(
+    "/callback",
+    response_model=User,
+    operation_id="authCallback",
+)
 async def oauth_callback(
     payload: OAuthCallbackRequest,
     response: Response,
@@ -251,12 +258,19 @@ async def oauth_callback(
     return user
 
 
-@router.get("/me", response_model=User)
+@router.get(
+    "/me",
+    response_model=User,
+    operation_id="authMe",
+)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    operation_id="authLogout",
+)
 async def logout(request: Request, response: Response):
     session_id = request.cookies.get(SESSION_COOKIE_NAME)
     if session_id:

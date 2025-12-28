@@ -102,12 +102,12 @@ def get_staging_path(repo_id: str) -> str:
     return repo_path
 
 
-@router.get("/", response_model=List[RepoInfo])
+@router.get("/", response_model=List[RepoInfo], operation_id="listRepos")
 def list_repositories():
     return list_all_repositories()
 
 
-@router.get("/tree", response_model=List[RepoTreeInfo])
+@router.get("/tree", response_model=List[RepoTreeInfo], operation_id="getAllReposTree")
 def get_all_repos_tree():
     all_trees = []
     for repo in list_all_repositories():
@@ -117,7 +117,7 @@ def get_all_repos_tree():
     return all_trees
 
 
-@router.post("/register", response_model=RepoInfo)
+@router.post("/register", response_model=RepoInfo, operation_id="registerRepo")
 def register_repository(payload: RepoCreateRequest):
     """Register a Git repository and create a clone"""
     repo_id = str(uuid.uuid4())
@@ -141,7 +141,7 @@ def register_repository(payload: RepoCreateRequest):
     return RepoInfo(**meta_data)
 
 
-@router.get("/{repo_id}/refs", response_model=List[RepoRefInfo])
+@router.get("/{repo_id}/refs", response_model=List[RepoRefInfo], operation_id="listRepoRefs")
 def list_repository_refs(repo_id: str):
     repo_path = get_staging_path(repo_id)
     tags_output = run_git(["tag"], cwd=repo_path)
@@ -156,7 +156,7 @@ def list_repository_refs(repo_id: str):
     ]
 
 
-@router.post("/{repo_id}/update")
+@router.post("/{repo_id}/fetch", operation_id="fetchRepo")
 def update_repo(repo_id: str):
     """Fetch new tags/commits from remote without deploying"""
     repo_path = get_staging_path(repo_id)
@@ -164,7 +164,7 @@ def update_repo(repo_id: str):
     return {"message": "Fetched latest remote versions"}
 
 
-@router.post("/{repo_id}/deploy", response_model=DeploymentInfo)
+@router.post("/{repo_id}/deploy", response_model=DeploymentInfo, operation_id="deployRepo")
 def deploy_repo(repo_id: str, payload: DeployRequest):
     """Deploy a selected tag or commit to make it available for users"""
     meta_file = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
@@ -217,7 +217,7 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
     )
 
 
-@router.get("/{repo_id}/checkout", response_model=RepoRefInfo)
+@router.get("/{repo_id}/checkout", response_model=RepoRefInfo, operation_id="checkoutRepoRef")
 def checkout_repo_ref(repo_id: str, ref: str):
     """Checkout a specific ref in the staging repo"""
     repo_path = get_staging_path(repo_id)
@@ -232,7 +232,7 @@ def checkout_repo_ref(repo_id: str, ref: str):
     )
 
 
-@router.get("/{repo_id}/tree", response_model=List[TreeNode])
+@router.get("/{repo_id}/tree", response_model=List[TreeNode], operation_id="getStagingRepoTree")
 def get_staging_repo_tree(repo_id: str):
     repo_path = get_staging_path(repo_id)
     return build_path_tree(repo_path)

@@ -23,12 +23,12 @@ app.include_router(staging.router)
 app.include_router(deployed.router)
 
 
-@app.get("/")
+@app.get("/", operation_id="rootInfo")
 async def root():
     return {"service": TITLE, "version": VERSION}
 
 
-@app.get("/health")
+@app.get("/health", operation_id="healthCheck")
 async def health():
     return {"status": "ok"}
 

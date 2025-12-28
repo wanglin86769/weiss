@@ -53,7 +53,7 @@ def get_current_deployment_meta(repo_id: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/", response_model=List[RepoInfo])
+@router.get("/", response_model=List[RepoInfo], operation_id="listDeployedRepos")
 def list_repositories():
     all_repos = list_all_repositories()
     repos_w_deployment: List[RepoInfo] = []
@@ -63,7 +63,7 @@ def list_repositories():
     return repos_w_deployment
 
 
-@router.get("/tree", response_model=List[RepoTreeInfo])
+@router.get("/tree", response_model=List[RepoTreeInfo], operation_id="getAllDeployedReposTree")
 def get_all_repos_tree():
     all_trees = []
     for repo in list_all_repositories():
@@ -74,7 +74,7 @@ def get_all_repos_tree():
     return all_trees
 
 
-@router.get("/{repo_id}/tree", response_model=List[TreeNode])
+@router.get("/{repo_id}/tree", response_model=List[TreeNode], operation_id="getDeployedRepoTree")
 def get_runtime_repo_tree(repo_id: str):
     """
     Return the full tree of the currently deployed snapshot.
@@ -83,7 +83,7 @@ def get_runtime_repo_tree(repo_id: str):
     return build_path_tree(snapshot_path)
 
 
-@router.get("/{repo_id}/file", response_model=FileResponse)
+@router.get("/{repo_id}/file", response_model=FileResponse, operation_id="getDeployedRepoFile")
 def runtime_get_repo_file(
     repo_id: str, path: str = Query(..., description="Path to file inside repository")
 ):
@@ -101,7 +101,9 @@ def runtime_get_repo_file(
     return FileResponse(path=path, content=content)
 
 
-@router.get("/{repo_id}/info", response_model=DeploymentInfo)
+@router.get(
+    "/{repo_id}/info", response_model=DeploymentInfo, operation_id="getCurrentDeploymentInfo"
+)
 def get_current_deployment_info(repo_id: str):
     """
     Return information about the currently deployed snapshot.
