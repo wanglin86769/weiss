@@ -28,15 +28,15 @@ services:
       VITE_DEMO_MODE: ${VITE_DEMO_MODE:-false}
       VITE_APP_VERSION: ${VITE_APP_VERSION}
     depends_on:
-      - weiss-epicsws
-      - weiss-api
-  weiss-epicsws:
+      - weiss-epicsws-dev
+      - weiss-api-dev
+  weiss-epicsws-dev:
     build:
       context: ./backend/epicsWS
     volumes:
       - ./backend/epicsWS:/app
-    image: weiss-epicsws:${VITE_APP_VERSION}
-    container_name: weiss-epicsws
+    image: weiss-epicsws-dev:${VITE_APP_VERSION}
+    container_name: weiss-epicsws-dev
     ports:
       - "8080:8080"
     restart: always
@@ -45,13 +45,14 @@ services:
       EPICS_CA_ADDR_LIST: ${EPICS_CA_ADDR_LIST}
       EPICS_PVA_ADDR_LIST: ${EPICS_PVA_ADDR_LIST}
 
-  weiss-api:
+  weiss-api-dev:
     build:
       context: ./backend/api
     volumes:
       - ./backend/api:/app/api
-    image: weiss-api:${VITE_APP_VERSION}
-    container_name: weiss-api
+      - ${REPOS_MOUNT_PATH}:/app/storage/repos
+    image: weiss-api-dev:${VITE_APP_VERSION}
+    container_name: weiss-api-dev
     ports:
       - "8000:8000"
     restart: always

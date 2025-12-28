@@ -39,7 +39,7 @@ services:
     build:
       context: ./backend/api
     volumes:
-      - ./backend/api:/app/api
+      - ${REPOS_MOUNT_PATH}:/app/repos
     image: weiss-api:${VITE_APP_VERSION}
     container_name: weiss-api
     ports:
