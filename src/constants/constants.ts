@@ -58,9 +58,6 @@ export const APP_SRC_URL = "https://github.com/weiss-controls/weiss";
 /** Running application version */
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "dev";
 
-/** Base URL of the REST API server */
-export const API_URL = "http://localhost:8000/api/v1"; //TODO: adjust for production
-
 /** WebSocket server URL for PV communication */
 export const WS_URL = (() => {
   const isHttps = window.location.protocol === "https:";

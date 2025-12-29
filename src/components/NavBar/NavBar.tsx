@@ -11,7 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Tooltip from "@mui/material/Tooltip";
-import { COLORS, RUNTIME_MODE, EDIT_MODE, API_URL } from "@src/constants/constants";
+import { COLORS, RUNTIME_MODE, EDIT_MODE } from "@src/constants/constants";
 import { useEditorContext } from "@src/context/useEditorContext.tsx";
 import { WIDGET_SELECTOR_WIDTH } from "@src/constants/constants";
 import "./NavBar.css";
@@ -29,8 +29,10 @@ import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstruct
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
-import ImportGitRepoDialog, { type GitImportData } from "./ImportGitRepoDialog";
+import ImportGitRepoDialog from "./ImportGitRepoDialog";
 import { notifyUser } from "@src/services/Notifications/Notification.ts";
+import { registerRepo } from "@src/services/APIClient/sdk.gen.ts";
+import type { RepoCreateRequest } from "@src/services/APIClient/types.gen.ts";
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
   drawerWidth: number;
@@ -112,6 +114,7 @@ export default function NavBar() {
     login,
     logout,
     isDeveloper,
+    fetchRepoTreeList,
   } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
@@ -166,31 +169,16 @@ export default function NavBar() {
     setGitImportOpen(true);
   };
 
-  const handleConfirmGitImport = (importData: GitImportData) => {
-    const endpoint = `${API_URL}/repos/staging/register`;
-    void fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(importData),
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to register repo: ${res.status} ${res.statusText}`);
-        }
-        return res.json();
-      })
-      .then(() => {
+  const handleConfirmGitImport = async (importData: RepoCreateRequest) => {
+    try {
+      const data = await registerRepo({ body: importData }).then((r) => r.data);
+      if (data) {
         notifyUser("Git repository imported successfully.", "success");
-      })
-      .catch((err) => {
-        notifyUser(
-          `Git import failed: ${err instanceof Error ? err.message : String(err)}`,
-          "error"
-        );
-      });
+        void fetchRepoTreeList();
+      }
+    } catch (err) {
+      notifyUser(`Git import failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+    }
     setGitImportOpen(false);
   };
 
@@ -352,11 +340,7 @@ export default function NavBar() {
             {isAuthenticated ? (
               <>
                 <IconButton onClick={handleUserMenuOpen}>
-                  <Avatar
-                    src={user?.avatar_url}
-                    alt={user?.username}
-                    sx={{ width: 32, height: 32 }}
-                  >
+                  <Avatar alt={user?.username} sx={{ width: 32, height: 32 }}>
                     {user?.username?.[0]?.toUpperCase() ?? "U"}
                   </Avatar>
                 </IconButton>
@@ -431,7 +415,7 @@ export default function NavBar() {
           <ImportGitRepoDialog
             open={gitImportOpen}
             onClose={() => setGitImportOpen(false)}
-            onConfirm={handleConfirmGitImport}
+            onConfirm={(data) => void handleConfirmGitImport(data)}
           />
         </Toolbar>
       </StyledAppBar>

@@ -7,11 +7,16 @@ import {
   authService,
   Roles,
   type OAuthProvider,
-  type User,
   type AuthStatus,
   AuthStatuses,
 } from "@src/services/AuthService/AuthService";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import {
+  getAllDeployedReposTree,
+  getAllReposTree,
+  type RepoTreeInfo,
+  type User,
+} from "@src/services/APIClient";
 
 /**
  * Hook that manages global UI state for WEISS.
@@ -37,6 +42,17 @@ export default function useUIManager(
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
   const isDeveloper = user?.role === Roles.DEVELOPER;
+  const [repoTreeList, setRepoTreeList] = useState<RepoTreeInfo[] | null>(null);
+
+  const fetchRepoTreeList = useCallback(async () => {
+    try {
+      const response = isDeveloper ? await getAllReposTree() : await getAllDeployedReposTree();
+      const data = response.data;
+      setRepoTreeList(data.length > 0 ? data : null);
+    } catch (error) {
+      notifyUser(`Failed to fetch repositories: ${String(error)}`, "error");
+    }
+  }, [isDeveloper]);
 
   useEffect(() => {
     void authService.restoreSession().finally(() => setAuthChecked(true));
@@ -168,5 +184,7 @@ export default function useUIManager(
     isAuthenticated,
     login,
     logout,
+    repoTreeList,
+    fetchRepoTreeList,
   };
 }

@@ -30,7 +30,7 @@ export default function NotificationService() {
       open={open}
       autoHideDuration={4000}
       onClose={() => setOpen(false)}
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      anchorOrigin={{ vertical: "top", horizontal: "center" }}
     >
       <Alert
         onClose={() => setOpen(false)}

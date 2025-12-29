@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
 import { useEditorContext } from "@src/context/useEditorContext";
+import type { RepoCreateRequest } from "@src/services/APIClient";
 
 function isValidGitUrl(url: string): boolean {
   if (!url) return false;
@@ -22,14 +23,10 @@ function isValidGitUrl(url: string): boolean {
   return httpsPattern.test(url);
 }
 
-export interface GitImportData {
-  alias: string;
-  git_url: string;
-}
 interface ImportGitRepoDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (data: GitImportData) => void;
+  onConfirm: (data: RepoCreateRequest) => void;
 }
 
 function suggestAliasFromGitUrl(url: string): string {

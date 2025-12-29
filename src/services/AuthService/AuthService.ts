@@ -1,6 +1,9 @@
-import { API_URL } from "@src/constants/constants";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import { authGetAuthUrl, authCallback, authMe, authLogout } from "@src/services/APIClient";
+import type { User } from "@src/services/APIClient";
 
+// -----
+// exceptionally, redefine these types from APIClient to allow usage as enum-like
 export const OAuthProviders = {
   MICROSOFT: "microsoft",
   DEMO: "demo",
@@ -15,15 +18,7 @@ export const Roles = {
 
 export type Roles = (typeof Roles)[keyof typeof Roles];
 
-export interface User {
-  id: string;
-  username: string;
-  email?: string;
-  provider: OAuthProvider;
-  avatar_url?: string;
-  role: Roles;
-}
-
+// -----
 interface OAuthCallbackPayload {
   provider: OAuthProvider;
   code: string;
@@ -47,7 +42,6 @@ export interface AuthCallbacks {
 class AuthService {
   private callbacks = new Set<AuthCallbacks>();
   private currentUser: User | null = null;
-  // Deduplicate Promise for handling OAuth callback requests.
   private callbackPromise: Promise<User | null> | null = null;
 
   subscribe(callbacks: AuthCallbacks): () => void {
@@ -56,66 +50,34 @@ class AuthService {
   }
 
   private notifyAuthStatus(status: AuthStatus, user: User | null) {
-    for (const cb of this.callbacks) {
-      cb.onAuthStatusChange?.(status, user);
-    }
+    for (const cb of this.callbacks) cb.onAuthStatusChange?.(status, user);
   }
 
   private notifyLogin(user: User) {
-    for (const cb of this.callbacks) {
-      cb.onLogin?.(user);
-    }
+    for (const cb of this.callbacks) cb.onLogin?.(user);
   }
 
   private notifyLogout() {
-    for (const cb of this.callbacks) {
-      cb.onLogout?.();
-    }
+    for (const cb of this.callbacks) cb.onLogout?.();
   }
 
   private notifyError(err: unknown) {
-    for (const cb of this.callbacks) {
-      cb.onAuthError?.(err);
-    }
+    for (const cb of this.callbacks) cb.onAuthError?.(err);
   }
 
-  /**
-   * Internal error handler for reporting.
-   * UI feedback (alerts) is handled at the caller level if necessary.
-   */
   private logAndNotifyError(err: unknown) {
     console.error("[AuthService]", err);
     this.notifyError(err);
   }
 
-  private async fetchJson<T>(url: string, options: RequestInit = {}): Promise<T> {
-    const res = await fetch(url, {
-      ...options,
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers ?? {}),
-      },
-    });
-
-    if (!res.ok) {
-      const msg = await res.text();
-      throw new Error(`Request failed: ${res.status} - ${msg}`);
-    }
-
-    return res.json() as Promise<T>;
-  }
-
   async getAuthorizeUrl(provider: OAuthProvider, demoProfile?: Roles): Promise<string | null> {
     try {
-      const params = new URLSearchParams();
-      if (provider === OAuthProviders.DEMO && demoProfile) {
-        params.append("demo_profile", demoProfile);
-      }
-      const url = `${API_URL}/auth/${provider}/authorize?${params.toString()}`;
-      const data = await this.fetchJson<{ authorize_url: string }>(url, { method: "GET" });
-      return data.authorize_url;
-    } catch (err: unknown) {
+      const params = demoProfile ? { demo_profile: demoProfile } : undefined;
+      const response = await authGetAuthUrl({ path: { provider }, query: params }).then(
+        (r) => r.data
+      );
+      return response.authorize_url;
+    } catch (err) {
       this.logAndNotifyError(err);
       return null;
     }
@@ -124,11 +86,9 @@ class AuthService {
   async login(provider: OAuthProvider, demoProfile?: Roles) {
     try {
       const authorizeUrl = await this.getAuthorizeUrl(provider, demoProfile);
-      if (!authorizeUrl) {
-        throw new Error("No authorize URL returned");
-      }
+      if (!authorizeUrl) throw new Error("No authorize URL returned");
       window.location.href = authorizeUrl;
-    } catch (err: unknown) {
+    } catch (err) {
       this.logAndNotifyError(err);
       notifyUser("Login failed. Please, try again. If problem persists, contact support", "error");
     }
@@ -139,27 +99,15 @@ class AuthService {
     code: string,
     redirectUri: string
   ): Promise<User | null> {
-    if (this.callbackPromise) {
-      return this.callbackPromise;
-    }
+    if (this.callbackPromise) return this.callbackPromise;
 
     this.callbackPromise = (async () => {
       try {
-        const payload: OAuthCallbackPayload = {
-          provider,
-          code,
-          redirect_uri: redirectUri,
-        };
-
-        const user = await this.fetchJson<User>(`${API_URL}/auth/callback`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-
+        const payload: OAuthCallbackPayload = { provider, code, redirect_uri: redirectUri };
+        const user = await authCallback({ body: payload }).then((r) => r.data);
         this.currentUser = user;
         this.notifyLogin(user);
         this.notifyAuthStatus(AuthStatuses.AUTHENTICATED, user);
-
         return user;
       } catch (err) {
         this.logAndNotifyError(err);
@@ -176,16 +124,11 @@ class AuthService {
     return this.callbackPromise;
   }
 
-  /**
-   * Restore session on app startup if applicable
-   */
   async restoreSession(): Promise<User | null> {
     try {
-      const user = await this.fetchJson<User>(`${API_URL}/auth/me`);
-
+      const user = await authMe().then((r) => r.data);
       this.currentUser = user;
       this.notifyAuthStatus(AuthStatuses.AUTHENTICATED, user);
-
       return user;
     } catch {
       this.currentUser = null;
@@ -196,10 +139,7 @@ class AuthService {
 
   async logout() {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await authLogout();
     } catch (err) {
       this.logAndNotifyError(err);
     } finally {

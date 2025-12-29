@@ -20,11 +20,10 @@ import type {
   WidgetProperty,
   MultiWidgetPropertyUpdates,
 } from "@src/types/widgets";
-import { API_URL, FRONT_UI_ZIDX } from "@src/constants/constants";
+import { FRONT_UI_ZIDX } from "@src/constants/constants";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
 import PropertyGroups from "./PropertyGroups";
-import RepoTree, { type RepoTreeInfo } from "./FileNavigator";
-import { notifyUser } from "@src/services/Notifications/Notification";
+import RepoTree from "./FileNavigator";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -111,7 +110,8 @@ const PropertyEditor: React.FC = () => {
     batchWidgetUpdate,
     setReleaseShortcuts,
     isAuthenticated,
-    isDeveloper,
+    fetchRepoTreeList,
+    repoTreeList,
   } = useEditorContext();
 
   const isOnlyGridSelected = selectedWidgetIDs.length === 0;
@@ -128,29 +128,10 @@ const PropertyEditor: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
-  const [repoTreeInfo, setRepoTreeInfo] = useState<RepoTreeInfo | null>(null);
 
   useEffect(() => {
-    const reposBaseEndpoint = `${API_URL}/repos/${isDeveloper ? "staging" : "runtime"}/tree`;
-    fetch(reposBaseEndpoint)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Error fetching repositories: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.length > 0) {
-          setRepoTreeInfo(data as RepoTreeInfo);
-          console.log("Fetched repositories:", data as RepoTreeInfo);
-        } else {
-          setRepoTreeInfo(null);
-        }
-      })
-      .catch((error) => {
-        notifyUser(`Failed to fetch repositories: ${error.message}`, "error");
-      });
-  }, [isDeveloper]);
+    void fetchRepoTreeList();
+  }, [fetchRepoTreeList]);
 
   useEffect(() => {
     widthRef.current = drawerWidth;
@@ -309,10 +290,10 @@ const PropertyEditor: React.FC = () => {
               onToggleGroup={toggleGroup}
               onChange={handlePropChange}
             />
-          ) : repoTreeInfo ? (
+          ) : repoTreeList ? (
             <div style={{ padding: 16 }}>
               <RepoTree
-                repoTreeInfo={repoTreeInfo}
+                repoTreeList={repoTreeList}
                 onSelect={(child) => {
                   if (child.type === "file") {
                     console.log("Open file:", child.path);

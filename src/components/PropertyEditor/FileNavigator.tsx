@@ -2,31 +2,14 @@ import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { Box, Typography } from "@mui/material";
-
-export interface TreeNode {
-  name: string;
-  path: string;
-  type: "file" | "directory";
-  children?: TreeNode[];
-}
-
-export interface RepoTreeInfo {
-  id: string;
-  alias: string;
-  git_url: string;
-  created_at: string;
-  current_deployment?: string;
-  deployed_ref?: string;
-  deployed_at?: string;
-  tree: TreeNode[];
-}
+import type { RepoTreeInfo, TreeNode } from "@src/services/APIClient";
 
 export interface RepoTreeProps {
-  repoTreeInfo: RepoTreeInfo;
+  repoTreeList: RepoTreeInfo[];
   onSelect?: (node: TreeNode) => void;
 }
 
-export default function RepoTree({ repoTreeInfo, onSelect }: RepoTreeProps) {
+export default function RepoTree({ repoTreeList, onSelect }: RepoTreeProps) {
   const renderNode = (node: TreeNode) => {
     const isDir = node.type === "directory";
     return (
@@ -59,7 +42,7 @@ export default function RepoTree({ repoTreeInfo, onSelect }: RepoTreeProps) {
     >
       <Box sx={{ flex: 1, overflowY: "auto" }}>
         <SimpleTreeView>
-          {Object.values(repoTreeInfo).map((repo: RepoTreeInfo) => (
+          {Object.values(repoTreeList).map((repo: RepoTreeInfo) => (
             <TreeItem key={repo.id} itemId={repo.id} label={repo.alias}>
               {repo.tree.map((node: TreeNode) => renderNode(node))}
             </TreeItem>
