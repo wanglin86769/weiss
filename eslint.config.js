@@ -24,6 +24,7 @@ export default tseslint.config([
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    ignores: ["openapi-ts.config.ts"],
     rules: {
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
