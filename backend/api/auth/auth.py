@@ -61,6 +61,10 @@ class Session(BaseModel):
     expires_at: datetime
 
 
+class AuthURL(BaseModel):
+    authorize_url: str
+
+
 # In-memory storage (temporary, replace with DB soon)
 users_db: dict[str, User] = {}
 sessions: dict[str, Session] = {}
@@ -188,10 +192,7 @@ async def handle_demo_login(role: UserRole) -> User:
 ################
 # Routes
 ################
-@router.get(
-    "/{provider}/authorize",
-    operation_id="authAuthorize",
-)
+@router.get("/{provider}/authorize", operation_id="authGetAuthURL", response_model=AuthURL)
 async def authorize(provider: AuthProvider, demo_profile: UserRole | None = None):
     if provider == AuthProvider.MICROSOFT:
         ensure_microsoft_configured()

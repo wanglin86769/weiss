@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from api.auth import auth
 from api.repos import staging, deployed
@@ -15,6 +16,15 @@ app.add_middleware(
 )
 
 
+class RootInfo(BaseModel):
+    service: str
+    version: str
+
+
+class Health(BaseModel):
+    status: str
+
+
 ################
 # Routes
 ################
@@ -23,12 +33,12 @@ app.include_router(staging.router)
 app.include_router(deployed.router)
 
 
-@app.get("/", operation_id="rootInfo")
+@app.get("/", operation_id="rootInfo", response_model=RootInfo)
 async def root():
     return {"service": TITLE, "version": VERSION}
 
 
-@app.get("/health", operation_id="healthCheck")
+@app.get("/health", operation_id="healthCheck", response_model=Health)
 async def health():
     return {"status": "ok"}
 
