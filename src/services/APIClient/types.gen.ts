@@ -147,6 +147,10 @@ export type RepoInfo = {
      */
     created_at: string;
     /**
+     * Refs
+     */
+    refs: Array<string>;
+    /**
      * Current Deployment
      */
     current_deployment?: string | null;
@@ -161,17 +165,13 @@ export type RepoInfo = {
 };
 
 /**
- * RepoRefInfo
+ * RepoRef
  */
-export type RepoRefInfo = {
+export type RepoRef = {
     /**
      * Ref
      */
     ref: string;
-    /**
-     * Commit Hash
-     */
-    commit_hash: string;
 };
 
 /**
@@ -194,6 +194,10 @@ export type RepoTreeInfo = {
      * Created At
      */
     created_at: string;
+    /**
+     * Refs
+     */
+    refs: Array<string>;
     /**
      * Current Deployment
      */
@@ -474,7 +478,7 @@ export type ListRepoRefsResponses = {
      *
      * Successful Response
      */
-    200: Array<RepoRefInfo>;
+    200: Array<string>;
 };
 
 export type ListRepoRefsResponse = ListRepoRefsResponses[keyof ListRepoRefsResponses];
@@ -567,7 +571,7 @@ export type CheckoutRepoRefResponses = {
     /**
      * Successful Response
      */
-    200: RepoRefInfo;
+    200: RepoRef;
 };
 
 export type CheckoutRepoRefResponse = CheckoutRepoRefResponses[keyof CheckoutRepoRefResponses];

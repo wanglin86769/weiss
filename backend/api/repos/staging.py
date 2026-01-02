@@ -4,6 +4,7 @@ import subprocess
 import json
 from .common import REPOS_BASE_PATH
 from fastapi import APIRouter, HTTPException
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from typing import List
 from datetime import datetime, timezone
@@ -34,9 +35,8 @@ class RepoCreateRequest(BaseModel):
     git_url: str = Field(..., description="Git repository URL")
 
 
-class RepoRefInfo(BaseModel):
+class RepoRef(BaseModel):
     ref: str
-    commit_hash: str
 
 
 class ValidationResult(BaseModel):
@@ -129,11 +129,13 @@ def register_repository(payload: RepoCreateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
     meta_file = os.path.join(REPOS_BASE_PATH, repo_id, "repo.json")
+    refs = list_repository_refs(repo_id)
     meta_data = {
         "id": repo_id,
         "alias": payload.alias,
         "git_url": payload.git_url,
         "created_at": created_at.isoformat(),
+        "refs": refs,
     }
     with open(meta_file, "w") as f:
         json.dump(meta_data, f)
@@ -141,19 +143,32 @@ def register_repository(payload: RepoCreateRequest):
     return RepoInfo(**meta_data)
 
 
-@router.get("/{repo_id}/refs", response_model=List[RepoRefInfo], operation_id="listRepoRefs")
+@router.get("/{repo_id}/refs", response_model=list[str], operation_id="listRepoRefs")
 def list_repository_refs(repo_id: str):
     repo_path = get_staging_path(repo_id)
-    tags_output = run_git(["tag"], cwd=repo_path)
-    tags = tags_output.splitlines() if tags_output else []
 
-    return [
-        RepoRefInfo(
-            ref=t,
-            commit_hash=run_git(["rev-parse", t], cwd=repo_path),
+    commits_output = run_git(
+        ["rev-list", "--max-count=20", "HEAD"],
+        cwd=repo_path,
+    )
+    commits = commits_output.splitlines() if commits_output else []
+
+    refs: list[str] = []
+
+    for commit in commits:
+        tag_output = run_git(
+            ["tag", "--points-at", commit],
+            cwd=repo_path,
         )
-        for t in tags
-    ]
+        tags = tag_output.splitlines() if tag_output else []
+
+        if tags:
+            for tag in tags:
+                refs.append(tag)
+        else:
+            refs.append(commit)
+
+    return refs
 
 
 @router.post("/{repo_id}/fetch", operation_id="fetchRepo")
@@ -161,6 +176,7 @@ def update_repo(repo_id: str):
     """Fetch new tags/commits from remote without deploying"""
     repo_path = get_staging_path(repo_id)
     run_git(["fetch", "--all", "--tags", "--prune"], cwd=repo_path)
+    # TODO: update meta_file with latest info
     return {"message": "Fetched latest remote versions"}
 
 
@@ -217,19 +233,15 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
     )
 
 
-@router.get("/{repo_id}/checkout", response_model=RepoRefInfo, operation_id="checkoutRepoRef")
+@router.get("/{repo_id}/checkout", response_model=RepoRef, operation_id="checkoutRepoRef")
 def checkout_repo_ref(repo_id: str, ref: str):
     """Checkout a specific ref in the staging repo"""
     repo_path = get_staging_path(repo_id)
     try:
         run_git(["checkout", ref], cwd=repo_path)
-        commit_hash = run_git(["rev-parse", ref], cwd=repo_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to checkout ref: {str(e)}")
-    return RepoRefInfo(
-        ref=ref,
-        commit_hash=commit_hash,
-    )
+    return {"ref": ref}
 
 
 @router.get("/{repo_id}/tree", response_model=List[TreeNode], operation_id="getStagingRepoTree")
