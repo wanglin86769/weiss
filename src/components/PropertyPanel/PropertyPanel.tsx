@@ -22,8 +22,8 @@ import type {
 } from "@src/types/widgets";
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
-import PropertyGroups from "./PropertyGroups";
-import RepoTree from "./FileNavigator";
+import PropertyGroups from "./PropertyEditor/PropertyGroups";
+import FileTree from "./ProjectNavigator/ProjectNavigator";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -100,9 +100,10 @@ const getGroupedProperties = (properties: WidgetProperties) => {
 };
 
 /**
- * PropertyEditor renders the side panel that allows editing properties of the selected widgets.
+ * PropertyPanel renders the side panel that allows editing
+ * properties of the selected widgets and navigating through files
  */
-const PropertyEditor: React.FC = () => {
+const PropertyPanel: React.FC = () => {
   const {
     inEditMode,
     selectedWidgetIDs,
@@ -174,7 +175,7 @@ const PropertyEditor: React.FC = () => {
       ? singleWidget
         ? `${editingWidgets[0].widgetLabel} properties`
         : "Common properties in selection"
-      : "Browse files";
+      : "Browse projects";
   const groupedProperties = getGroupedProperties(properties);
 
   const handlePropChange = (propName: PropertyKey, newValue: PropertyValue) => {
@@ -292,14 +293,7 @@ const PropertyEditor: React.FC = () => {
             />
           ) : repoTreeList ? (
             <div style={{ padding: 16 }}>
-              <RepoTree
-                repoTreeList={repoTreeList}
-                onSelect={(child) => {
-                  if (child.type === "file") {
-                    console.log("Open file:", child.path);
-                  }
-                }}
-              />
+              <FileTree repoTreeList={repoTreeList} />
             </div>
           ) : (
             <div style={{ padding: 16 }}>No repositories available.</div>
@@ -347,4 +341,4 @@ const PropertyEditor: React.FC = () => {
   );
 };
 
-export default PropertyEditor;
+export default PropertyPanel;

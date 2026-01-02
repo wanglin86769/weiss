@@ -37,12 +37,12 @@ export default function useUIManager(
   const [user, setUser] = useState<User | null>(() => authService.getUser());
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [repoTreeList, setRepoTreeList] = useState<RepoTreeInfo[] | null>(null);
   const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
   const isDeveloper = user?.role === Roles.DEVELOPER;
-  const [repoTreeList, setRepoTreeList] = useState<RepoTreeInfo[] | null>(null);
 
   const fetchRepoTreeList = useCallback(async () => {
     try {
