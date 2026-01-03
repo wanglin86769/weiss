@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { EDIT_MODE, RUNTIME_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
-import type { ExportedWidget, Widget } from "@src/types/widgets";
+import type { Widget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
 import {
   authService,
@@ -23,10 +23,7 @@ import {
  */
 export default function useUIManager(
   ws: ReturnType<typeof useEpicsWS>,
-  editorWidgets: ReturnType<typeof useWidgetManager>["editorWidgets"],
-  setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
-  loadWidgets: ReturnType<typeof useWidgetManager>["loadWidgets"],
-  formatWdgToExport: ReturnType<typeof useWidgetManager>["formatWdgToExport"]
+  setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"]
 ) {
   const [releaseShortcuts, setReleaseShortcuts] = useState(false);
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
@@ -38,7 +35,6 @@ export default function useUIManager(
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [repoTreeList, setRepoTreeList] = useState<RepoTreeInfo[] | null>(null);
-  const loadedRef = useRef(false);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
@@ -127,41 +123,6 @@ export default function useUIManager(
       }
     };
   }, [inEditMode, ws]);
-
-  /**
-   * Load widgets from localStorage on component mount.
-   * This runs only once and initializes the editor with saved layout if available.
-   */
-  useEffect(() => {
-    if (!loadedRef.current) {
-      const saved = localStorage.getItem("editorWidgets");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as ExportedWidget[];
-          if (parsed.length > 1) loadWidgets(parsed);
-        } catch (err) {
-          console.error("Failed to load widgets from localStorage:", err);
-        }
-      }
-      loadedRef.current = true;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /**
-   * Save widgets to localStorage whenever they change.
-   * Only writes while in edit mode to avoid saving runtime PV updates.
-   */
-  useEffect(() => {
-    if (inEditMode) {
-      try {
-        const exportable = editorWidgets.map(formatWdgToExport);
-        localStorage.setItem("editorWidgets", JSON.stringify(exportable));
-      } catch (err) {
-        console.error("Failed to save widgets:", err);
-      }
-    }
-  }, [editorWidgets, inEditMode, formatWdgToExport]);
 
   return {
     releaseShortcuts,
