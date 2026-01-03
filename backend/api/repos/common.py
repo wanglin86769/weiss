@@ -27,6 +27,7 @@ class RepoInfo(BaseModel):
     git_url: str
     created_at: str
     refs: List[str]
+    checked_out_ref: str
     current_deployment: Optional[str] = None
     deployed_ref: Optional[str] = None
     deployed_at: Optional[str] = None
@@ -121,6 +122,7 @@ def list_all_repositories() -> List[RepoInfo]:
                         git_url=meta["git_url"],
                         created_at=meta["created_at"],
                         refs=meta["refs"],
+                        checked_out_ref=meta["checked_out_ref"],
                         deployed_ref=meta.get("deployed_ref"),
                         deployed_at=meta.get("deployed_at"),
                         current_deployment=meta.get("current_deployment"),

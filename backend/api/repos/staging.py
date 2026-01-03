@@ -3,13 +3,13 @@ import uuid
 import subprocess
 import json
 from .common import REPOS_BASE_PATH
-from fastapi import APIRouter, HTTPException
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from typing import List
 from datetime import datetime, timezone
 from api.repos.common import (
     TreeNode,
+    FileResponse,
     RepoInfo,
     RepoTreeInfo,
     DeploymentInfo,
@@ -19,6 +19,7 @@ from api.repos.common import (
     STAGING_REL_FOLDER,
     CURRENT_SYMLINK,
     REPO_META,
+    DEPLOYMENT_META,
 )
 
 router = APIRouter(
@@ -124,19 +125,24 @@ def register_repository(payload: RepoCreateRequest):
     created_at = datetime.now(timezone.utc)
 
     try:
-        clone_or_fetch(payload.git_url, repo_id)
+        repo_path = clone_or_fetch(payload.git_url, repo_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    meta_file = os.path.join(REPOS_BASE_PATH, repo_id, "repo.json")
+    checked_out_ref = run_git(["rev-parse", "HEAD"], cwd=repo_path)
     refs = list_repository_refs(repo_id)
+
     meta_data = {
         "id": repo_id,
         "alias": payload.alias,
         "git_url": payload.git_url,
         "created_at": created_at.isoformat(),
+        "updated_at": created_at.isoformat(),
         "refs": refs,
+        "checked_out_ref": checked_out_ref,
     }
+
+    meta_file = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
     with open(meta_file, "w") as f:
         json.dump(meta_data, f)
 
@@ -144,28 +150,25 @@ def register_repository(payload: RepoCreateRequest):
 
 
 @router.get("/{repo_id}/refs", response_model=list[str], operation_id="listRepoRefs")
-def list_repository_refs(repo_id: str):
+def list_repository_refs(repo_id: str) -> list[str]:
+    """List 20 latest repository refs available in default branch"""
     repo_path = get_staging_path(repo_id)
-
-    commits_output = run_git(
-        ["rev-list", "--max-count=20", "HEAD"],
+    tag_output = run_git(["tag"], cwd=repo_path)
+    tags = tag_output.splitlines() if tag_output else []
+    default_branch = run_git(
+        ["symbolic-ref", "refs/remotes/origin/HEAD"],
+        cwd=repo_path,
+    ).replace("refs/remotes/", "")
+    commit_output = run_git(
+        ["rev-list", "--max-count=20", default_branch],
         cwd=repo_path,
     )
-    commits = commits_output.splitlines() if commits_output else []
-
+    commits = commit_output.splitlines() if commit_output else []
     refs: list[str] = []
-
+    refs.extend(tags)
+    tagged_commits = set(run_git(["rev-list", "--tags"], cwd=repo_path).splitlines())
     for commit in commits:
-        tag_output = run_git(
-            ["tag", "--points-at", commit],
-            cwd=repo_path,
-        )
-        tags = tag_output.splitlines() if tag_output else []
-
-        if tags:
-            for tag in tags:
-                refs.append(tag)
-        else:
+        if commit not in tagged_commits:
             refs.append(commit)
 
     return refs
@@ -173,11 +176,39 @@ def list_repository_refs(repo_id: str):
 
 @router.post("/{repo_id}/fetch", operation_id="fetchRepo")
 def update_repo(repo_id: str):
-    """Fetch new tags/commits from remote without deploying"""
+    """Fetch new tags/commits from remote"""
     repo_path = get_staging_path(repo_id)
     run_git(["fetch", "--all", "--tags", "--prune"], cwd=repo_path)
-    # TODO: update meta_file with latest info
-    return {"message": "Fetched latest remote versions"}
+    meta_file = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
+    if not os.path.exists(meta_file):
+        raise HTTPException(status_code=404, detail="Repository metadata not found")
+
+    with open(meta_file) as f:
+        repo_meta = json.load(f)
+    refs = list_repository_refs(repo_id)
+    repo_meta["refs"] = refs
+    repo_meta["updated_at"] = datetime.now(timezone.utc).isoformat()
+    with open(meta_file, "w") as f:
+        json.dump(repo_meta, f, indent=2)
+    return Response(status_code=204)
+
+
+@router.get("/{repo_id}/file", response_model=FileResponse, operation_id="getStagingRepoFile")
+def staging_get_repo_file(
+    repo_id: str, path: str = Query(..., description="Path to file inside repository")
+):
+    """
+    Return the content of a file from the current state of staging repo.
+    """
+    file_path = get_staging_path(repo_id)
+    full_path = os.path.join(file_path, path)
+    if not os.path.exists(full_path) or not os.path.isfile(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    with open(full_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    return FileResponse(path=path, content=content)
 
 
 @router.post("/{repo_id}/deploy", response_model=DeploymentInfo, operation_id="deployRepo")
@@ -208,7 +239,7 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
         "deployed_at": datetime.now(timezone.utc).isoformat(),
     }
     deployment_meta_path = os.path.join(
-        REPOS_BASE_PATH, repo_id, DEPLOYMENTS_REL_FOLDER, deployment_id, "deployment.json"
+        REPOS_BASE_PATH, repo_id, DEPLOYMENTS_REL_FOLDER, deployment_id, DEPLOYMENT_META
     )
     with open(deployment_meta_path, "w") as f:
         json.dump(deployment_meta, f, indent=2)
@@ -233,15 +264,23 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
     )
 
 
-@router.get("/{repo_id}/checkout", response_model=RepoRef, operation_id="checkoutRepoRef")
+@router.post("/{repo_id}/checkout", status_code=204, operation_id="checkoutRepoRef")
 def checkout_repo_ref(repo_id: str, ref: str):
     """Checkout a specific ref in the staging repo"""
     repo_path = get_staging_path(repo_id)
-    try:
-        run_git(["checkout", ref], cwd=repo_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to checkout ref: {str(e)}")
-    return {"ref": ref}
+    meta_file = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
+
+    if not os.path.exists(meta_file):
+        raise HTTPException(status_code=404, detail="Repository metadata not found")
+    run_git(["checkout", ref], cwd=repo_path)
+    # get actual hash to avoid tags
+    checked_out_ref = run_git(["rev-parse", "HEAD"], cwd=repo_path)
+    with open(meta_file) as f:
+        repo_meta = json.load(f)
+    repo_meta["checked_out_ref"] = checked_out_ref
+    repo_meta["updated_at"] = datetime.now(timezone.utc).isoformat()
+    with open(meta_file, "w") as f:
+        json.dump(repo_meta, f, indent=2)
 
 
 @router.get("/{repo_id}/tree", response_model=List[TreeNode], operation_id="getStagingRepoTree")

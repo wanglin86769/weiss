@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, RootInfoData, RootInfoResponses } from './types.gen';
+import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoFileData, GetStagingRepoFileErrors, GetStagingRepoFileResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, RootInfoData, RootInfoResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -71,15 +71,24 @@ export const registerRepo = <ThrowOnError extends boolean = true>(options: Optio
 
 /**
  * List Repository Refs
+ *
+ * List 20 latest repository refs available in default branch
  */
 export const listRepoRefs = <ThrowOnError extends boolean = true>(options: Options<ListRepoRefsData, ThrowOnError>) => (options.client ?? client).get<ListRepoRefsResponses, ListRepoRefsErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/refs', ...options });
 
 /**
  * Update Repo
  *
- * Fetch new tags/commits from remote without deploying
+ * Fetch new tags/commits from remote
  */
 export const fetchRepo = <ThrowOnError extends boolean = true>(options: Options<FetchRepoData, ThrowOnError>) => (options.client ?? client).post<FetchRepoResponses, FetchRepoErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/fetch', ...options });
+
+/**
+ * Staging Get Repo File
+ *
+ * Return the content of a file from the current state of staging repo.
+ */
+export const getStagingRepoFile = <ThrowOnError extends boolean = true>(options: Options<GetStagingRepoFileData, ThrowOnError>) => (options.client ?? client).get<GetStagingRepoFileResponses, GetStagingRepoFileErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/file', ...options });
 
 /**
  * Deploy Repo
@@ -100,7 +109,7 @@ export const deployRepo = <ThrowOnError extends boolean = true>(options: Options
  *
  * Checkout a specific ref in the staging repo
  */
-export const checkoutRepoRef = <ThrowOnError extends boolean = true>(options: Options<CheckoutRepoRefData, ThrowOnError>) => (options.client ?? client).get<CheckoutRepoRefResponses, CheckoutRepoRefErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/checkout', ...options });
+export const checkoutRepoRef = <ThrowOnError extends boolean = true>(options: Options<CheckoutRepoRefData, ThrowOnError>) => (options.client ?? client).post<CheckoutRepoRefResponses, CheckoutRepoRefErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/checkout', ...options });
 
 /**
  * Get Staging Repo Tree

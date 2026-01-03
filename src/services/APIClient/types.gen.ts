@@ -151,6 +151,10 @@ export type RepoInfo = {
      */
     refs: Array<string>;
     /**
+     * Checked Out Ref
+     */
+    checked_out_ref: string;
+    /**
      * Current Deployment
      */
     current_deployment?: string | null;
@@ -162,16 +166,6 @@ export type RepoInfo = {
      * Deployed At
      */
     deployed_at?: string | null;
-};
-
-/**
- * RepoRef
- */
-export type RepoRef = {
-    /**
-     * Ref
-     */
-    ref: string;
 };
 
 /**
@@ -198,6 +192,10 @@ export type RepoTreeInfo = {
      * Refs
      */
     refs: Array<string>;
+    /**
+     * Checked Out Ref
+     */
+    checked_out_ref: string;
     /**
      * Current Deployment
      */
@@ -511,6 +509,43 @@ export type FetchRepoResponses = {
     200: unknown;
 };
 
+export type GetStagingRepoFileData = {
+    body?: never;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query: {
+        /**
+         * Path
+         *
+         * Path to file inside repository
+         */
+        path: string;
+    };
+    url: '/api/v1/repos/staging/{repo_id}/file';
+};
+
+export type GetStagingRepoFileErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetStagingRepoFileError = GetStagingRepoFileErrors[keyof GetStagingRepoFileErrors];
+
+export type GetStagingRepoFileResponses = {
+    /**
+     * Successful Response
+     */
+    200: FileResponse;
+};
+
+export type GetStagingRepoFileResponse = GetStagingRepoFileResponses[keyof GetStagingRepoFileResponses];
+
 export type DeployRepoData = {
     body: DeployRequest;
     path: {
@@ -571,7 +606,7 @@ export type CheckoutRepoRefResponses = {
     /**
      * Successful Response
      */
-    200: RepoRef;
+    204: void;
 };
 
 export type CheckoutRepoRefResponse = CheckoutRepoRefResponses[keyof CheckoutRepoRefResponses];
