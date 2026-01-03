@@ -23,7 +23,7 @@ import type {
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
 import PropertyGroups from "./PropertyEditor/PropertyGroups";
-import FileTree from "./ProjectNavigator/ProjectNavigator";
+import ProjectNavigator from "./ProjectNavigator/ProjectNavigator";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -126,7 +126,7 @@ const PropertyPanel: React.FC = () => {
   const [pinned, setPinned] = useState(!isSmallScreen);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [drawerWidth, setDrawerWidth] = useState(DEFAULT_WIDTH);
-  const [tabIndex, setTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(1);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
 
@@ -293,7 +293,7 @@ const PropertyPanel: React.FC = () => {
             />
           ) : repoTreeList ? (
             <div style={{ padding: 16 }}>
-              <FileTree repoTreeList={repoTreeList} />
+              <ProjectNavigator repoTreeList={repoTreeList} />
             </div>
           ) : (
             <div style={{ padding: 16 }}>No repositories available.</div>
