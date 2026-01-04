@@ -1,3 +1,4 @@
+import { useCallback, useMemo, useState, useEffect, forwardRef } from "react";
 import {
   Box,
   Typography,
@@ -9,9 +10,11 @@ import {
   IconButton,
   Menu,
   Tooltip,
+  Collapse,
 } from "@mui/material";
-import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
+import { RichTreeView, type TreeViewBaseItem, TreeItemLabel, TreeItemIcon } from "@mui/x-tree-view";
 import FolderIcon from "@mui/icons-material/Folder";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -19,9 +22,10 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommitIcon from "@mui/icons-material/Commit";
 import SyncIcon from "@mui/icons-material/Sync";
-import Collapse from "@mui/material/Collapse";
-
-import { useState } from "react";
+import { useTreeItem, type UseTreeItemParameters } from "@mui/x-tree-view/useTreeItem";
+import { TreeItemRoot, TreeItemContent, TreeItemIconContainer } from "@mui/x-tree-view/TreeItem";
+import { TreeItemProvider } from "@mui/x-tree-view/TreeItemProvider";
+import { useTreeItemModel } from "@mui/x-tree-view/hooks";
 import {
   checkoutRepoRef,
   deployRepo,
@@ -32,30 +36,96 @@ import {
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
 import { useEditorContext } from "@src/context/useEditorContext";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import { COLORS } from "@src/constants/constants";
+
+type RichTreeItem = TreeViewBaseItem & {
+  type: "file" | "directory";
+  path: string;
+  children?: RichTreeItem[];
+};
 
 export interface ProjectSectionProps {
   repo: RepoTreeInfo;
   onFileSelect: (repo_id: string, path: string) => Promise<void>;
+  defaultSelectedPath?: string;
 }
 
-export default function ProjectSection({ repo, onFileSelect }: ProjectSectionProps) {
-  const REF_MAX_DISPLAY_SIZE = 7;
+// Custom TreeItem - extracted from MUI docs
+const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function CustomTreeItem(
+  props,
+  ref
+) {
+  const { id, itemId, label, disabled, children, ...other } = props;
+  const {
+    getContextProviderProps,
+    getRootProps,
+    getContentProps,
+    getIconContainerProps,
+    getLabelProps,
+    getGroupTransitionProps,
+    status,
+  } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
 
+  const item = useTreeItemModel<RichTreeItem>(itemId)!;
+  const itemIconSx = { color: COLORS.midGray };
+  return (
+    <TreeItemProvider {...getContextProviderProps()}>
+      <TreeItemRoot {...getRootProps(other)}>
+        <TreeItemContent {...getContentProps()}>
+          <TreeItemIconContainer {...getIconContainerProps()}>
+            <TreeItemIcon status={status} />
+          </TreeItemIconContainer>
+          {item.type === "directory" ? (
+            status.expanded ? (
+              <FolderOpenIcon sx={itemIconSx} />
+            ) : (
+              <FolderIcon sx={itemIconSx} />
+            )
+          ) : (
+            <InsertDriveFileIcon sx={itemIconSx} />
+          )}
+          <TreeItemLabel {...getLabelProps()} />
+        </TreeItemContent>
+        {children && (
+          <Collapse {...getGroupTransitionProps()} sx={{ pl: 1 }}>
+            {children}
+          </Collapse>
+        )}
+      </TreeItemRoot>
+    </TreeItemProvider>
+  );
+});
+
+export default function ProjectSection({
+  repo,
+  onFileSelect,
+  defaultSelectedPath,
+}: ProjectSectionProps) {
+  const REF_MAX_DISPLAY_SIZE = 7;
   const { isDeveloper, fetchRepoTreeList } = useEditorContext();
 
-  const [expanded, setExpanded] = useState(true);
-  const selectedRef = repo.checked_out_ref;
+  const [sectionExpanded, setSectionExpanded] = useState(true);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-
   const menuOpen = Boolean(menuAnchor);
+  const selectedRef = repo.checked_out_ref;
+
   const shortRef = (ref: string) => ref.substring(0, REF_MAX_DISPLAY_SIZE);
+
+  // restore selected path on mount
+  useEffect(() => {
+    if (defaultSelectedPath) {
+      setSelectedItem(defaultSelectedPath);
+      const parts = defaultSelectedPath.split("/");
+      const parents = parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join("/"));
+      setExpandedItems(parents);
+    }
+  }, [defaultSelectedPath]);
 
   const handleRefChange = async (ref: string) => {
     try {
-      await checkoutRepoRef({
-        path: { repo_id: repo.id },
-        query: { ref },
-      });
+      await checkoutRepoRef({ path: { repo_id: repo.id }, query: { ref } });
       await fetchRepoTreeList();
       notifyUser(`Success: HEAD at ${shortRef(ref)}`, "success");
     } catch (err) {
@@ -84,11 +154,6 @@ export default function ProjectSection({ repo, onFileSelect }: ProjectSectionPro
     setMenuAnchor(null);
   };
 
-  const handleFileClick = (node: TreeNode) => {
-    if (node.type !== "file") return;
-    void onFileSelect(repo.id, node.path);
-  };
-
   const handleSyncClick = async () => {
     try {
       await fetchRepo({ path: { repo_id: repo.id } });
@@ -98,42 +163,40 @@ export default function ProjectSection({ repo, onFileSelect }: ProjectSectionPro
     }
   };
 
-  const renderNode = (node: TreeNode) => {
-    const isDir = node.type === "directory";
+  const findItemById = useCallback((items: RichTreeItem[], id: string): RichTreeItem | null => {
+    for (const item of items) {
+      if (item.id === id) return item;
+      if (item.children) {
+        const found = findItemById(item.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, []);
 
-    return (
-      <TreeItem
-        key={node.path}
-        itemId={node.path}
-        label={
-          <Box display="flex" alignItems="center" gap={1}>
-            {isDir ? <FolderIcon fontSize="small" /> : <InsertDriveFileIcon fontSize="small" />}
-            <Typography variant="body2" noWrap>
-              {node.name}
-            </Typography>
-          </Box>
-        }
-        onClick={() => handleFileClick(node)}
-      >
-        {isDir && node.children?.map(renderNode)}
-      </TreeItem>
-    );
-  };
+  // convert TreeNode[] to RichTree accepted format
+  const toRichItems = useCallback((nodes: TreeNode[]): RichTreeItem[] => {
+    return nodes.map((node) => ({
+      id: node.path,
+      label: node.name,
+      type: node.type,
+      path: node.path,
+      children: node.children ? toRichItems(node.children) : undefined,
+    }));
+  }, []);
+
+  const items = useMemo(() => toRichItems(repo.tree), [repo.tree, toRichItems]);
 
   return (
     <Paper variant="outlined" sx={{ mb: 2, overflow: "hidden" }}>
       {/* Header */}
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <IconButton size="small" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+      <Box sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
+        <IconButton size="small" onClick={() => setSectionExpanded((v) => !v)}>
+          {sectionExpanded ? (
+            <ExpandLessIcon fontSize="small" />
+          ) : (
+            <ExpandMoreIcon fontSize="small" />
+          )}
         </IconButton>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -151,12 +214,12 @@ export default function ProjectSection({ repo, onFileSelect }: ProjectSectionPro
         {isDeveloper && (
           <>
             <CustomGitIcon fontSize="small" />
-            <Tooltip placement="top" title={"Checked-out ref"}>
+            <Tooltip placement="top" title="Checked-out ref">
               <Select
                 size="small"
                 value={selectedRef}
                 onChange={(e) => void handleRefChange(e.target.value)}
-                renderValue={(value) => shortRef(value)} // only show text when closed
+                renderValue={(value) => shortRef(value)}
                 sx={{
                   minWidth: 14 * REF_MAX_DISPLAY_SIZE,
                   maxWidth: 14 * REF_MAX_DISPLAY_SIZE,
@@ -210,9 +273,21 @@ export default function ProjectSection({ repo, onFileSelect }: ProjectSectionPro
 
       <Divider />
 
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
+      {/* Repo content */}
+      <Collapse in={sectionExpanded} timeout="auto" unmountOnExit>
         <Box sx={{ px: 1, py: 0.5 }}>
-          <SimpleTreeView id={repo.id}>{repo.tree.map(renderNode)}</SimpleTreeView>
+          <RichTreeView
+            items={items}
+            selectedItems={selectedItem}
+            onSelectedItemsChange={(_, id) => {
+              setSelectedItem(id);
+              const item = id ? findItemById(items, id) : null;
+              if (item?.type === "file") void onFileSelect(repo.id, item.path);
+            }}
+            expandedItems={expandedItems}
+            onExpandedItemsChange={(_, ids) => setExpandedItems(ids)}
+            slots={{ item: CustomTreeItem }}
+          />
         </Box>
       </Collapse>
     </Paper>
