@@ -35,6 +35,7 @@ export const COLORS = {
   inputColor: getComputedStyle(document.documentElement).getPropertyValue("--input-color").trim(),
   readColor: getComputedStyle(document.documentElement).getPropertyValue("--read-color").trim(),
   lightGray: getComputedStyle(document.documentElement).getPropertyValue("--light-gray").trim(),
+  midGray: getComputedStyle(document.documentElement).getPropertyValue("--mid-gray").trim(),
   gridLineColor: getComputedStyle(document.documentElement)
     .getPropertyValue("--grid-line-color")
     .trim(),
