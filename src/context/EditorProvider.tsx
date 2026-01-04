@@ -26,7 +26,7 @@ export type EditorContextType = ReturnType<typeof useWidgetManager> &
 export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const widgetManager = useWidgetManager();
   const ws = useEpicsWS(widgetManager.PVMap);
-  const ui = useUIManager(ws, widgetManager.setSelectedWidgetIDs);
+  const ui = useUIManager(ws, widgetManager.setSelectedWidgetIDs, widgetManager.fileLoadedTrig);
 
   const value = React.useMemo<EditorContextType>(
     () => ({

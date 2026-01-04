@@ -82,17 +82,27 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
   );
 
   /**
+   * Stops the current WebSocket session.
+   */
+  const stopSession = useCallback(() => {
+    if (!ws.current) return;
+    ws.current.unsubscribe(substitutedList);
+    ws.current.close();
+    ws.current = null;
+    setWSConnected(false);
+    setPVState({});
+  }, [setWSConnected, substitutedList]);
+
+  /**
    * Starts a new WebSocket session.
    */
   const startNewSession = useCallback(() => {
     if (ws.current) {
-      ws.current.unsubscribe(substitutedList);
-      ws.current.close();
-      ws.current = null;
+      stopSession();
     }
     ws.current = new WSClient(WS_URL, handleConnect, onMessage);
     ws.current.open();
-  }, [substitutedList, handleConnect, onMessage]);
+  }, [handleConnect, onMessage, stopSession]);
 
   /**
    * Writes a new value to a PV.
@@ -110,18 +120,6 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
     },
     [PVMap]
   );
-
-  /**
-   * Stops the current WebSocket session.
-   */
-  const stopSession = useCallback(() => {
-    if (!ws.current) return;
-    ws.current.unsubscribe(substitutedList);
-    ws.current.close();
-    ws.current = null;
-    setWSConnected(false);
-    setPVState({});
-  }, [setWSConnected, substitutedList]);
 
   return {
     ws,

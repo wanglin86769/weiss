@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { EDIT_MODE, RUNTIME_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
 import type { Widget } from "@src/types/widgets";
@@ -23,8 +23,10 @@ import {
  */
 export default function useUIManager(
   ws: ReturnType<typeof useEpicsWS>,
-  setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"]
+  setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
+  fileLoadedTrig: ReturnType<typeof useWidgetManager>["fileLoadedTrig"]
 ) {
+  const lastFileLoadedTrig = useRef(0);
   const [releaseShortcuts, setReleaseShortcuts] = useState(false);
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
   const [pickedWidget, setPickedWidget] = useState<Widget | null>(null);
@@ -53,6 +55,15 @@ export default function useUIManager(
   useEffect(() => {
     void authService.restoreSession().finally(() => setAuthChecked(true));
   }, []);
+
+  // ensure session is restored after file change
+  useEffect(() => {
+    if (!inEditMode) {
+      ws.startNewSession();
+      lastFileLoadedTrig.current = fileLoadedTrig;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileLoadedTrig]);
 
   const updateMode = useCallback(
     (newMode: Mode) => {

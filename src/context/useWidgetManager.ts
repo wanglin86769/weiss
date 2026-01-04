@@ -39,6 +39,8 @@ export function useWidgetManager() {
   const [redoStack, setRedoStack] = useState<Widget[][]>([]);
   const [editorWidgets, setEditorWidgets] = useState<Widget[]>([GridZone]);
   const [selectedWidgetIDs, setSelectedWidgetIDs] = useState<string[]>([]);
+  const [fileLoadedTrig, setFileLoadedTrig] = useState(0);
+
   const clipboard = useRef<Widget[]>([]);
   const copiedSelectionBounds = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -686,6 +688,7 @@ export function useWidgetManager() {
 
         updateEditorWidgetList(imported);
         setSelectedWidgetIDs([]);
+        setFileLoadedTrig((t) => t + 1);
       } catch (err) {
         console.error("Failed to load widgets:", err);
       }
@@ -791,5 +794,6 @@ export function useWidgetManager() {
     macros,
     allWidgetIDs,
     formatWdgToExport,
+    fileLoadedTrig,
   };
 }
