@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 
 REPOS_BASE_PATH = "/app/storage/repos"  # Abs path inside container - adjust if running locally
@@ -36,7 +36,7 @@ class RepoInfo(BaseModel):
 class TreeNode(BaseModel):
     name: str
     path: str  # path relative to repo/snapshot root
-    type: str  # "file" | "directory"
+    type: Literal["file", "directory"]
     children: Optional[List["TreeNode"]] = None
 
 

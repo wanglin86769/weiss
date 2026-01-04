@@ -243,7 +243,7 @@ export type TreeNode = {
     /**
      * Type
      */
-    type: string;
+    type: 'file' | 'directory';
     /**
      * Children
      */
