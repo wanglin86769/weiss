@@ -9,7 +9,6 @@ import WidgetRenderer from "@components/WidgetRenderer/WidgetRenderer.tsx";
 import ToolbarButtons from "@components/Toolbar/Toolbar.tsx";
 import { v4 as uuidv4 } from "uuid";
 import SelectionManager from "./SelectionManager/SelectionManager";
-import { CircularProgress } from "@mui/material";
 
 /**
  * GridZoneComp renders the main editor canvas where widgets are displayed, moved, and interacted with.
@@ -49,7 +48,6 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     isPanning,
     setIsPanning,
     inEditMode,
-    wsConnected,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -330,20 +328,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
 
-  return !inEditMode && !wsConnected ? (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      Connecting...
-      <br />
-      <CircularProgress />
-    </div>
-  ) : (
+  return (
     <div
       ref={gridRef}
       id={GRID_ID}
