@@ -21,6 +21,16 @@ class FileResponse(BaseModel):
     encoding: str = "utf-8"
 
 
+class GitFileStatus(BaseModel):
+    path: str
+    status: Literal["modified", "added", "deleted", "renamed", "untracked"]
+
+
+class GitWorkingTreeStatus(BaseModel):
+    dirty: bool
+    files: List[GitFileStatus]
+
+
 class RepoInfo(BaseModel):
     id: str
     alias: str
@@ -42,6 +52,7 @@ class TreeNode(BaseModel):
 
 class RepoTreeInfo(RepoInfo):
     tree: List[TreeNode]
+    working_tree_status: Optional[GitWorkingTreeStatus] = None
 
 
 class DeploymentInfo(BaseModel):
@@ -89,7 +100,9 @@ def build_path_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
                     )
                 )
         else:
-            if not entry.name.lower().endswith(".json"):
+            if entry.name in [REPO_META, DEPLOYMENT_META] or not entry.name.lower().endswith(
+                ".json"
+            ):
                 continue
 
             nodes.append(
@@ -101,6 +114,16 @@ def build_path_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
             )
 
     return nodes
+
+
+def get_repo_info(repo_id: str) -> RepoInfo:
+    """Get content of repository metadata file (repo.json)"""
+    meta_file_path = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
+    if not os.path.exists(meta_file_path):
+        raise FileNotFoundError
+    with open(meta_file_path) as f:
+        repo_meta = json.load(f)
+    return meta_file_path, RepoInfo(**repo_meta)
 
 
 def list_all_repositories() -> List[RepoInfo]:
@@ -129,3 +152,9 @@ def list_all_repositories() -> List[RepoInfo]:
                     )
                 )
     return repos
+
+
+REGISTERED_REPO_URLS = []
+# initialize registered repos on startup
+for repo in list_all_repositories():
+    REGISTERED_REPO_URLS.append(repo.git_url)

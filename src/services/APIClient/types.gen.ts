@@ -74,6 +74,34 @@ export type FileResponse = {
 };
 
 /**
+ * GitFileStatus
+ */
+export type GitFileStatus = {
+    /**
+     * Path
+     */
+    path: string;
+    /**
+     * Status
+     */
+    status: 'modified' | 'added' | 'deleted' | 'renamed' | 'untracked';
+};
+
+/**
+ * GitWorkingTreeStatus
+ */
+export type GitWorkingTreeStatus = {
+    /**
+     * Dirty
+     */
+    dirty: boolean;
+    /**
+     * Files
+     */
+    files: Array<GitFileStatus>;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -212,6 +240,7 @@ export type RepoTreeInfo = {
      * Tree
      */
     tree: Array<TreeNode>;
+    working_tree_status?: GitWorkingTreeStatus | null;
 };
 
 /**
@@ -634,11 +663,9 @@ export type GetStagingRepoTreeError = GetStagingRepoTreeErrors[keyof GetStagingR
 
 export type GetStagingRepoTreeResponses = {
     /**
-     * Response Getstagingrepotree
-     *
      * Successful Response
      */
-    200: Array<TreeNode>;
+    200: RepoTreeInfo;
 };
 
 export type GetStagingRepoTreeResponse = GetStagingRepoTreeResponses[keyof GetStagingRepoTreeResponses];
