@@ -21,7 +21,6 @@ import CustomGitIcon from "@src/components/CustomIcons/GitIcon.tsx";
 import ComputerIcon from "@mui/icons-material/Computer";
 import HelpOverlay from "./HelpOverlay.tsx";
 import { ListItemIcon, ListItemText, Menu, MenuItem, Avatar, Divider } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonIcon from "@mui/icons-material/Person";
@@ -114,7 +113,7 @@ export default function NavBar() {
     login,
     logout,
     isDeveloper,
-    fetchRepoTreeList,
+    updateReposTreeInfo,
   } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
@@ -174,30 +173,12 @@ export default function NavBar() {
       const data = await registerRepo({ body: importData }).then((r) => r.data);
       if (data) {
         notifyUser("Git repository imported successfully.", "success");
-        void fetchRepoTreeList();
+        void updateReposTreeInfo();
       }
     } catch (err) {
       notifyUser(`Git import failed: ${err instanceof Error ? err.message : String(err)}`, "error");
     }
     setGitImportOpen(false);
-  };
-
-  const handleLoadDemo = async () => {
-    try {
-      const url =
-        "https://raw.githubusercontent.com/weiss-controls/weiss/main/examples/example-opi.json";
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.error("Failed to fetch example-opi.json");
-        return;
-      }
-
-      const text = await res.text();
-      loadWidgets(text);
-    } catch (err) {
-      console.error("Load demo failed:", err);
-    }
   };
 
   const handleLogin = async (provider: OAuthProvider, demoProfile?: Roles) => {
@@ -263,31 +244,6 @@ export default function NavBar() {
                 label="Runtime"
                 sx={{ color: "white", ml: 3 }}
               />
-              {isDemo && inEditMode && (
-                <Tooltip title="Load demo OPI">
-                  <Button
-                    onClick={() => {
-                      void handleLoadDemo();
-                    }}
-                    startIcon={<RefreshIcon />}
-                    variant="contained"
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 500,
-                      borderRadius: 1.5,
-                      px: 2,
-                      py: 0.5,
-                      backgroundColor: "rgba(255,255,255,0.12)",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.22)",
-                      },
-                    }}
-                  >
-                    Load demo
-                  </Button>
-                </Tooltip>
-              )}
             </>
           )}
           <Box sx={{ flexGrow: 1 }} />
