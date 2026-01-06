@@ -3,45 +3,49 @@ import type { CSSProperties } from "react";
 /**
  * Color palette used across the application.
  * Values are read dynamically from CSS variables.
+ * Main palletes:
+ *  - https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd  
+    - https://coolors.co/palette/0466c8-0353a4-023e7d-002855-001845-001233-33415c-5c677d-7d8597-979dac  
+    - https://coolors.co/palette/f8f9fa-e9ecef-dee2e6-ced4da-adb5bd-6c757d-495057-343a40-212529  
  */
 export const COLORS = {
-  // Darker
-  textColor: getComputedStyle(document.documentElement).getPropertyValue("--text-color").trim(),
-  titleBarColor: getComputedStyle(document.documentElement)
-    .getPropertyValue("--title-bar-color")
-    .trim(),
-  graphLineColor: getComputedStyle(document.documentElement)
-    .getPropertyValue("--graph-line-color")
-    .trim(),
-  midDarkBlue: getComputedStyle(document.documentElement)
-    .getPropertyValue("--mid-dark-blue")
-    .trim(),
+  // Text / primary UI
+  textColor: "#000000",
+  titleBarColor: "#415a77",
+  labelColor: "transparent",
 
-  // Status / highlights
-  highlighted: getComputedStyle(document.documentElement).getPropertyValue("--highlighted").trim(),
-  onColor: getComputedStyle(document.documentElement).getPropertyValue("--on-color").trim(),
-  offColor: getComputedStyle(document.documentElement).getPropertyValue("--off-color").trim(),
-  minor: getComputedStyle(document.documentElement).getPropertyValue("--minor").trim(),
-  major: getComputedStyle(document.documentElement).getPropertyValue("--major").trim(),
-  invalid: getComputedStyle(document.documentElement).getPropertyValue("--invalid").trim(),
-  disconnected: getComputedStyle(document.documentElement)
-    .getPropertyValue("--disconnected")
-    .trim(),
+  // Backgrounds / surfaces
+  backgroundColor: "#e9ecef",
+  inputColor: "#ffffff",
+  readColor: "#ced4da",
+  gridLineColor: "#dee2e6",
+  buttonColor: "#979dac",
+  lightGray: "#adb5bd",
+  midGray: "#6c757d",
 
-  // Neutrals / base
-  backgroundColor: getComputedStyle(document.documentElement)
-    .getPropertyValue("--background-color")
-    .trim(),
-  inputColor: getComputedStyle(document.documentElement).getPropertyValue("--input-color").trim(),
-  readColor: getComputedStyle(document.documentElement).getPropertyValue("--read-color").trim(),
-  lightGray: getComputedStyle(document.documentElement).getPropertyValue("--light-gray").trim(),
-  midGray: getComputedStyle(document.documentElement).getPropertyValue("--mid-gray").trim(),
-  gridLineColor: getComputedStyle(document.documentElement)
-    .getPropertyValue("--grid-line-color")
-    .trim(),
-  buttonColor: getComputedStyle(document.documentElement).getPropertyValue("--button-color").trim(),
-  labelColor: getComputedStyle(document.documentElement).getPropertyValue("--label-color").trim(),
-};
+  // Blues
+  graphLineColor: "#0353a4",
+  midDarkBlue: "#023e7d",
+  highlighted: "#0466c8",
+
+  // Status / boolean
+  onColor: "#00ac25",
+  offColor: "#ac0000",
+
+  // EPICS alarm colors
+  minor: "#ffff00",
+  major: "#ff0000",
+  invalid: "#5b00c4",
+  disconnected: "#5b00c4",
+
+  // Git file status
+  gitAdded: "#057c0b",
+  gitModified: "#b48c06ff",
+  gitDeleted: "#ac0000",
+
+  // Utility
+  transparent: "transparent",
+} as const;
 
 /** z-index value for back layer of the UI (read from CSS variable) */
 export const BACK_UI_ZIDX = parseInt(

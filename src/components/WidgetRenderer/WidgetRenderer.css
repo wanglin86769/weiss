@@ -5,7 +5,7 @@
 }
 
 .selected {
-  outline: 2px dashed var(--highlighted);
+  outline: 2px dashed #0466c8; /* highlighted from COLORS */
   box-shadow: 2 2 2px rgba(33, 150, 243, 0.5);
 }
 
@@ -17,7 +17,7 @@
 
 .selectionGroup {
   position: absolute;
-  outline: 2px dashed var(--highlighted);
+  outline: 2px dashed #0466c8;
   background-color: rgba(59, 130, 246, 0.1);
   z-index: var(--front-ui-zidx);
   box-sizing: border-box;
