@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import "./App.css";
 import { GridZone } from "./components/GridZone";
 import WidgetPicker from "./components/WidgetPicker/WidgetPicker";
-import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
+import EditorSidebar from "./components/EditorSidebar/EditorSidebar";
 import NavBar from "./components/NavBar/NavBar";
 import { useEditorContext } from "./context/useEditorContext";
 import { GRID_ID } from "./constants/constants";
@@ -28,7 +28,7 @@ const App: React.FC = () => {
           <GridZone.component data={gridProperties!} />
         </div>
         <div className="propertyPanel">
-          <PropertyPanel />
+          <EditorSidebar />
         </div>
       </div>
     </div>

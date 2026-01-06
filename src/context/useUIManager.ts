@@ -36,17 +36,17 @@ export default function useUIManager(
   const [user, setUser] = useState<User | null>(() => authService.getUser());
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [repoTreeList, setRepoTreeList] = useState<RepoTreeInfo[] | null>(null);
+  const [reposTreeInfo, setReposTreeInfo] = useState<RepoTreeInfo[] | null>(null);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
   const isDeveloper = user?.role === Roles.DEVELOPER;
 
-  const fetchRepoTreeList = useCallback(async () => {
+  const updateReposTreeInfo = useCallback(async () => {
     try {
       const response = isDeveloper ? await getAllReposTree() : await getAllDeployedReposTree();
       const data = response.data;
-      setRepoTreeList(data.length > 0 ? data : null);
+      setReposTreeInfo(data.length > 0 ? data : null);
     } catch (error) {
       notifyUser(`Failed to fetch repositories: ${String(error)}`, "error");
     }
@@ -156,7 +156,7 @@ export default function useUIManager(
     isAuthenticated,
     login,
     logout,
-    repoTreeList,
-    fetchRepoTreeList,
+    reposTreeInfo,
+    updateReposTreeInfo,
   };
 }

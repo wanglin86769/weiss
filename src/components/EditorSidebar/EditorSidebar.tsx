@@ -1,29 +1,28 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styled } from "@mui/material/styles";
-import { Divider, Drawer as MuiDrawer, Tab, Tabs } from "@mui/material";
-import Toolbar from "@mui/material/Toolbar";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
+import {
+  Divider,
+  Drawer as MuiDrawer,
+  Tab,
+  Tabs,
+  Toolbar,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import { useEditorContext } from "@src/context/useEditorContext";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import type {
-  WidgetProperties,
-  PropertyValue,
-  PropertyKey,
-  WidgetProperty,
-  MultiWidgetPropertyUpdates,
-} from "@src/types/widgets";
+
+import { useEditorContext } from "@src/context/useEditorContext";
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
-import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
-import PropertyGroups from "./PropertyEditor/PropertyGroups";
-import ProjectNavigator from "./ProjectNavigator/ProjectNavigator";
+
+import PropertyNavigator from "./PropertiesTab/PropertiesTab";
+import ProjectsTab from "./ProjectsTab/ProjectsTab";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -37,19 +36,20 @@ const Drawer = styled(MuiDrawer)(({ theme }) => ({
   },
 }));
 
-const ToggleButton = styled(IconButton)<{ open: boolean; drawerWidth: number }>(
-  ({ theme, open, drawerWidth }) => ({
-    position: "fixed",
-    top: (theme.mixins.toolbar.minHeight as number) + 16,
-    right: open ? drawerWidth + 8 : 8,
-    zIndex: theme.zIndex.drawer + 2,
-    background: theme.palette.background.paper,
-    boxShadow: theme.shadows[2],
-    "&:hover": {
-      background: theme.palette.background.default,
-    },
-  })
-);
+const ToggleButton = styled(IconButton)<{
+  open: boolean;
+  drawerWidth: number;
+}>(({ theme, open, drawerWidth }) => ({
+  position: "fixed",
+  top: (theme.mixins.toolbar.minHeight as number) + 16,
+  right: open ? drawerWidth + 8 : 8,
+  zIndex: theme.zIndex.drawer + 2,
+  background: theme.palette.background.paper,
+  boxShadow: theme.shadows[2],
+  "&:hover": {
+    background: theme.palette.background.default,
+  },
+}));
 
 const ResizeHandle = styled("div")({
   position: "absolute",
@@ -59,142 +59,57 @@ const ResizeHandle = styled("div")({
   zIndex: FRONT_UI_ZIDX,
 });
 
-const getGroupedProperties = (properties: WidgetProperties) => {
-  const groups: Record<string, Record<string, WidgetProperty>> = {};
-  if (!properties) return groups;
+const EditorSidebar: React.FC = () => {
+  const { inEditMode, isAuthenticated, selectedWidgetIDs, editingWidgets, setReleaseShortcuts } =
+    useEditorContext();
 
-  const presentCategories = new Set(Object.values(properties).map((prop) => prop.category));
-  CATEGORY_DISPLAY_ORDER.filter((cat) => presentCategories.has(cat)).forEach((cat) => {
-    groups[cat] = {};
-  });
-
-  Array.from(presentCategories)
-    .filter((cat) => !CATEGORY_DISPLAY_ORDER.includes(cat))
-    .forEach((cat) => {
-      groups[cat] = {};
-    });
-
-  for (const [propName, prop] of Object.entries(properties)) {
-    const category = prop.category ?? "Other";
-    groups[category][propName] = prop;
-  }
-
-  // put booleans and colors last
-  for (const category of Object.keys(groups)) {
-    const entries = Object.entries(groups[category]);
-
-    const sorted = [
-      ...entries.filter(
-        ([, p]) =>
-          p.selType !== "boolean" && p.selType !== "colorSel" && p.selType !== "colorSelList"
-      ),
-      ...entries.filter(([, p]) => p.selType === "colorSelList"),
-      ...entries.filter(([, p]) => p.selType === "colorSel"),
-      ...entries.filter(([, p]) => p.selType === "boolean"),
-    ];
-
-    groups[category] = Object.fromEntries(sorted);
-  }
-
-  return groups;
-};
-
-/**
- * PropertyPanel renders the side panel that allows editing
- * properties of the selected widgets and navigating through files
- */
-const PropertyPanel: React.FC = () => {
-  const {
-    inEditMode,
-    selectedWidgetIDs,
-    editingWidgets,
-    batchWidgetUpdate,
-    setReleaseShortcuts,
-    isAuthenticated,
-    fetchRepoTreeList,
-    repoTreeList,
-  } = useEditorContext();
-
-  const isOnlyGridSelected = selectedWidgetIDs.length === 0;
-  const singleWidget = editingWidgets.length === 1;
   const DEFAULT_WIDTH = 360;
   const MIN_WIDTH = 300;
   const MAX_WIDTH = 700;
-  // start with editor closed on smaller screens
+
   const isSmallScreen = window.innerWidth < 1024;
+
   const [open, setOpen] = useState(!isSmallScreen);
   const [pinned, setPinned] = useState(!isSmallScreen);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [drawerWidth, setDrawerWidth] = useState(DEFAULT_WIDTH);
   const [tabIndex, setTabIndex] = useState(1);
+
   const paperRef = useRef<HTMLDivElement | null>(null);
   const widthRef = useRef(drawerWidth);
-
-  useEffect(() => {
-    void fetchRepoTreeList();
-  }, [fetchRepoTreeList]);
 
   useEffect(() => {
     widthRef.current = drawerWidth;
   }, [drawerWidth]);
 
   useEffect(() => {
-    if (isAuthenticated && !inEditMode) setTabIndex(1);
+    if (isAuthenticated && !inEditMode) {
+      setTabIndex(1);
+    }
   }, [isAuthenticated, inEditMode]);
 
-  const properties: WidgetProperties = useMemo(() => {
-    if (editingWidgets.length === 0) return {};
-    if (singleWidget) return editingWidgets[0].editableProperties;
-
-    // Filter only common properties
-    const common: WidgetProperties = { ...editingWidgets[0].editableProperties };
-    for (let i = 1; i < editingWidgets.length; i++) {
-      const currentProps = editingWidgets[i].editableProperties;
-      for (const key of Object.keys(common)) {
-        const propName = key as PropertyKey;
-        if (!(currentProps[propName] as WidgetProperty)) delete common[propName];
-      }
-    }
-
-    return common;
-  }, [editingWidgets, singleWidget]);
-
   useEffect(() => {
-    if (!isOnlyGridSelected) setOpen(true);
-    else if (!pinned) setOpen(false);
-  }, [pinned, isOnlyGridSelected]);
+    if (selectedWidgetIDs.length > 0) {
+      setOpen(true);
+    } else if (!pinned) {
+      setOpen(false);
+    }
+  }, [selectedWidgetIDs.length, pinned]);
 
   const toggleDrawer = () => setOpen((prev) => !prev);
   const togglePin = () => setPinned((prev) => !prev);
-  const toggleGroup = useCallback((category: string) => {
-    setCollapsedGroups((prev) => ({ ...prev, [category]: !(prev[category] ?? true) }));
-  }, []);
-
-  const header =
-    tabIndex === 0
-      ? singleWidget
-        ? `${editingWidgets[0].widgetLabel} properties`
-        : "Common properties in selection"
-      : "Browse projects";
-  const groupedProperties = getGroupedProperties(properties);
-
-  const handlePropChange = (propName: PropertyKey, newValue: PropertyValue) => {
-    const updates: MultiWidgetPropertyUpdates = {};
-    editingWidgets.forEach((w) => {
-      updates[w.id] = { [propName]: newValue };
-    });
-    batchWidgetUpdate(updates);
-  };
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();
+
     const startX = e.clientX;
     const startWidth = widthRef.current;
     const paper = paperRef.current;
     const handle = e.currentTarget as HTMLDivElement;
+
     if (!paper || !handle) return;
+
     paper.style.transition = "none";
-    // create temporary handle overlay to avoid mouse leaving during resize
+
     const movingHandle = handle.cloneNode(true) as HTMLDivElement;
     movingHandle.style.position = "fixed";
     movingHandle.style.top = `${handle.getBoundingClientRect().top}px`;
@@ -202,11 +117,13 @@ const PropertyPanel: React.FC = () => {
     movingHandle.style.width = "50px";
     movingHandle.style.zIndex = `${2 * FRONT_UI_ZIDX}`;
     movingHandle.style.cursor = "col-resize";
+
     document.body.appendChild(movingHandle);
 
     const onMove = (ev: MouseEvent) => {
       const delta = startX - ev.clientX;
       const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + delta));
+
       widthRef.current = newWidth;
       paper.style.width = `${newWidth}px`;
       movingHandle.style.left = `${ev.clientX - 30}px`;
@@ -226,6 +143,13 @@ const PropertyPanel: React.FC = () => {
 
   if (!inEditMode && !isAuthenticated) return null;
 
+  const header =
+    tabIndex === 0
+      ? editingWidgets.length === 1
+        ? `${editingWidgets[0].widgetLabel} properties`
+        : "Common properties in selection"
+      : "Browse projects";
+
   return (
     <>
       {!open && (
@@ -241,6 +165,7 @@ const PropertyPanel: React.FC = () => {
           </ToggleButton>
         </Tooltip>
       )}
+
       <Drawer
         open={open}
         variant="permanent"
@@ -251,7 +176,11 @@ const PropertyPanel: React.FC = () => {
         slotProps={{
           paper: {
             ref: paperRef,
-            style: { width: open ? drawerWidth : 0, display: "flex", flexDirection: "column" },
+            style: {
+              width: open ? drawerWidth : 0,
+              display: "flex",
+              flexDirection: "column",
+            },
           },
         }}
       >
@@ -268,6 +197,7 @@ const PropertyPanel: React.FC = () => {
                   {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
                 </IconButton>
               </Tooltip>
+
               <IconButton
                 edge="end"
                 onClick={toggleDrawer}
@@ -281,26 +211,21 @@ const PropertyPanel: React.FC = () => {
         >
           <ListItemText primary={header} />
         </ListItem>
+
         <Divider />
+
         {/* Content */}
         <div style={{ flex: "1 1 auto", overflowY: "auto" }}>
           {tabIndex === 0 ? (
-            <PropertyGroups
-              groupedProperties={groupedProperties}
-              collapsedGroups={collapsedGroups}
-              onToggleGroup={toggleGroup}
-              onChange={handlePropChange}
-            />
-          ) : repoTreeList ? (
-            <div style={{ padding: 16 }}>
-              <ProjectNavigator repoTreeList={repoTreeList} />
-            </div>
+            <PropertyNavigator />
           ) : (
-            <div style={{ padding: 16 }}>No repositories available.</div>
+            <div style={{ padding: 16 }}>
+              <ProjectsTab />
+            </div>
           )}
         </div>
 
-        {/* Tab selector */}
+        {/* Tabs */}
         {isAuthenticated && inEditMode && (
           <Tabs
             value={tabIndex}
@@ -341,4 +266,4 @@ const PropertyPanel: React.FC = () => {
   );
 };
 
-export default PropertyPanel;
+export default EditorSidebar;

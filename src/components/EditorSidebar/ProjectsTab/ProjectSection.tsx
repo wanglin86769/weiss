@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { RichTreeView, type TreeViewBaseItem, TreeItemLabel, TreeItemIcon } from "@mui/x-tree-view";
 import FolderIcon from "@mui/icons-material/Folder";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -30,6 +29,7 @@ import {
   checkoutRepoRef,
   deployRepo,
   fetchRepo,
+  type GitFileStatus,
   type RepoTreeInfo,
   type TreeNode,
 } from "@src/services/APIClient";
@@ -41,6 +41,7 @@ import { COLORS } from "@src/constants/constants";
 type RichTreeItem = TreeViewBaseItem & {
   type: "file" | "directory";
   path: string;
+  gitStatus?: GitFileStatus["status"];
   children?: RichTreeItem[];
 };
 
@@ -50,7 +51,24 @@ export interface ProjectSectionProps {
   defaultSelectedPath?: string;
 }
 
-// Custom TreeItem - extracted from MUI docs
+const getGitStatusHighlight = (status?: GitFileStatus["status"]) => {
+  switch (status) {
+    case "modified":
+      return { color: COLORS.gitModified };
+    case "added":
+      return { color: COLORS.gitAdded };
+    case "deleted":
+      return { color: COLORS.gitDeleted };
+    case "untracked":
+      return { color: COLORS.gitAdded };
+    default:
+      return undefined;
+  }
+};
+
+const hasDirtyDescendant = (children?: RichTreeItem[]): boolean =>
+  !!children?.some((c) => c.gitStatus ?? hasDirtyDescendant(c.children));
+
 const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function CustomTreeItem(
   props,
   ref
@@ -67,7 +85,15 @@ const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function
   } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
 
   const item = useTreeItemModel<RichTreeItem>(itemId)!;
-  const itemIconSx = { color: COLORS.midGray };
+  const labelSx = {
+    ...getGitStatusHighlight(item.gitStatus),
+    fontWeight: item.gitStatus ? 600 : 200,
+  };
+
+  const NodeIcon = item.type === "directory" ? FolderIcon : InsertDriveFileIcon;
+  const NodeIconSx = { color: COLORS.midGray };
+  const dirtyDir = item.type === "directory" && item.gitStatus != null;
+
   return (
     <TreeItemProvider {...getContextProviderProps()}>
       <TreeItemRoot {...getRootProps(other)}>
@@ -75,16 +101,22 @@ const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function
           <TreeItemIconContainer {...getIconContainerProps()}>
             <TreeItemIcon status={status} />
           </TreeItemIconContainer>
-          {item.type === "directory" ? (
-            status.expanded ? (
-              <FolderOpenIcon sx={itemIconSx} />
-            ) : (
-              <FolderIcon sx={itemIconSx} />
-            )
-          ) : (
-            <InsertDriveFileIcon sx={itemIconSx} />
+          <NodeIcon sx={NodeIconSx} />
+          <TreeItemLabel {...getLabelProps()} sx={labelSx} />
+          {dirtyDir && (
+            <Box
+              sx={{
+                flexGrow: 1,
+                mr: 1,
+                width: 6,
+                height: 6,
+                aspectRatio: 1 / 1,
+                borderRadius: "50%",
+                backgroundColor: COLORS.gitModified,
+                alignSelf: "center",
+              }}
+            />
           )}
-          <TreeItemLabel {...getLabelProps()} />
         </TreeItemContent>
         {children && (
           <Collapse {...getGroupTransitionProps()} sx={{ pl: 1 }}>
@@ -102,7 +134,7 @@ export default function ProjectSection({
   defaultSelectedPath,
 }: ProjectSectionProps) {
   const REF_MAX_DISPLAY_SIZE = 7;
-  const { isDeveloper, fetchRepoTreeList } = useEditorContext();
+  const { isDeveloper, updateReposTreeInfo } = useEditorContext();
 
   const [sectionExpanded, setSectionExpanded] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -126,7 +158,10 @@ export default function ProjectSection({
   const handleRefChange = async (ref: string) => {
     try {
       await checkoutRepoRef({ path: { repo_id: repo.id }, query: { ref } });
-      await fetchRepoTreeList();
+      // @TODO: update only this repo instead of all of them.
+      // API endpoint for that already exists. Will need to create a method to find
+      // and replace single repo into reposTreeInfo
+      await updateReposTreeInfo();
       notifyUser(`Success: HEAD at ${shortRef(ref)}`, "success");
     } catch (err) {
       notifyUser(`Failed to checkout: ${err as string}`, "error");
@@ -174,16 +209,36 @@ export default function ProjectSection({
     return null;
   }, []);
 
+  const gitStatusByPath = useMemo(() => {
+    const map = new Map<string, GitFileStatus["status"]>();
+
+    repo.working_tree_status?.files.forEach((f) => {
+      map.set(f.path, f.status);
+    });
+
+    return map;
+  }, [repo.working_tree_status]);
+
   // convert TreeNode[] to RichTree accepted format
-  const toRichItems = useCallback((nodes: TreeNode[]): RichTreeItem[] => {
-    return nodes.map((node) => ({
-      id: node.path,
-      label: node.name,
-      type: node.type,
-      path: node.path,
-      children: node.children ? toRichItems(node.children) : undefined,
-    }));
-  }, []);
+  const toRichItems = useCallback(
+    (nodes: TreeNode[]): RichTreeItem[] => {
+      return nodes.map((node) => {
+        const children = node.children ? toRichItems(node.children) : undefined;
+        const fileStatus = gitStatusByPath.get(node.path);
+        const dirDirty = node.type === "directory" && hasDirtyDescendant(children);
+
+        return {
+          id: node.path,
+          label: node.name,
+          type: node.type,
+          path: node.path,
+          gitStatus: fileStatus ?? (dirDirty ? "modified" : undefined),
+          children,
+        };
+      });
+    },
+    [gitStatusByPath]
+  );
 
   const items = useMemo(() => toRichItems(repo.tree), [repo.tree, toRichItems]);
 
@@ -214,7 +269,10 @@ export default function ProjectSection({
         {isDeveloper && (
           <>
             <CustomGitIcon fontSize="small" />
-            <Tooltip placement="top" title="Checked-out ref">
+            <Tooltip
+              placement="top"
+              title={`Checked-out ref${repo.working_tree_status?.dirty ? " (Dirty)" : ""}`}
+            >
               <Select
                 size="small"
                 value={selectedRef}
@@ -248,19 +306,19 @@ export default function ProjectSection({
             </IconButton>
 
             <Menu anchorEl={menuAnchor} open={menuOpen} onClose={() => setMenuAnchor(null)}>
-              <Tooltip title="Commit and push current changes">
+              <Tooltip placement="top" title="Commit and push current changes">
                 <MenuItem disabled>
                   <CommitIcon fontSize="small" sx={{ mr: 1 }} />
                   Commit
                 </MenuItem>
               </Tooltip>
-              <Tooltip title="Sync repo with remote (fetch)">
+              <Tooltip placement="top" title="Sync repo with remote (fetch)">
                 <MenuItem onClick={() => void handleSyncClick()}>
                   <SyncIcon fontSize="small" sx={{ mr: 1 }} />
                   Sync
                 </MenuItem>
               </Tooltip>
-              <Tooltip title="Deploy this version to operators">
+              <Tooltip placement="top" title="Deploy this version to operators">
                 <MenuItem onClick={() => void handleDeploy()} disabled={!selectedRef}>
                   <CloudUploadIcon fontSize="small" sx={{ mr: 1 }} />
                   Deploy

@@ -1,25 +1,21 @@
 import { Box } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getDeployedRepoFile,
-  getStagingRepoFile,
-  type RepoTreeInfo,
-} from "@src/services/APIClient";
+import { getDeployedRepoFile, getStagingRepoFile } from "@src/services/APIClient";
 import { useEditorContext } from "@src/context/useEditorContext";
 import ProjectSection from "./ProjectSection";
-
 export interface SelectedFileInfo {
   repo_id: string;
   path: string;
 }
-export interface RepoTreeProps {
-  repoTreeList: RepoTreeInfo[];
-}
 
-export default function ProjectNavigator({ repoTreeList }: RepoTreeProps) {
-  const { isDeveloper, loadWidgets } = useEditorContext();
+export default function ProjectsTab() {
+  const { isDeveloper, loadWidgets, reposTreeInfo, updateReposTreeInfo } = useEditorContext();
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedFileInfo | null>(null);
+
+  useEffect(() => {
+    void updateReposTreeInfo();
+  }, [updateReposTreeInfo]);
 
   const loadRepoFile = useCallback(
     async (repo_id: string, path: string, opts: { persist?: boolean } = { persist: true }) => {
@@ -38,7 +34,7 @@ export default function ProjectNavigator({ repoTreeList }: RepoTreeProps) {
 
   // On first render, restore last loaded file
   useEffect(() => {
-    if (restoredRef.current || !repoTreeList.length) return;
+    if (restoredRef.current || !reposTreeInfo?.length) return;
 
     const raw = localStorage.getItem("lastLoadedFile");
     if (!raw) {
@@ -47,7 +43,7 @@ export default function ProjectNavigator({ repoTreeList }: RepoTreeProps) {
     }
 
     const parsed = JSON.parse(raw) as SelectedFileInfo;
-    const repo = repoTreeList.find((r) => r.id === parsed.repo_id);
+    const repo = reposTreeInfo.find((r) => r.id === parsed.repo_id);
     if (!repo) {
       restoredRef.current = true;
       return;
@@ -57,20 +53,24 @@ export default function ProjectNavigator({ repoTreeList }: RepoTreeProps) {
     // trigger file load once
     void loadRepoFile(parsed.repo_id, parsed.path, { persist: false });
     restoredRef.current = true;
-  }, [repoTreeList, loadRepoFile]);
+  }, [reposTreeInfo, loadRepoFile]);
 
   return (
     <Box sx={{ height: "100%", overflowY: "auto" }}>
-      {repoTreeList.map((repo) => (
-        <ProjectSection
-          key={repo.id}
-          repo={repo}
-          onFileSelect={loadRepoFile}
-          defaultSelectedPath={
-            initialSelection?.repo_id === repo.id ? initialSelection.path : undefined
-          }
-        />
-      ))}
+      {reposTreeInfo?.length ? (
+        reposTreeInfo.map((repo) => (
+          <ProjectSection
+            key={repo.id}
+            repo={repo}
+            onFileSelect={loadRepoFile}
+            defaultSelectedPath={
+              initialSelection?.repo_id === repo.id ? initialSelection.path : undefined
+            }
+          />
+        ))
+      ) : (
+        <div style={{ padding: 16 }}>No repositories available.</div>
+      )}
     </Box>
   );
 }
