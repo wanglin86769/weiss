@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoFileData, GetStagingRepoFileErrors, GetStagingRepoFileResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, RootInfoData, RootInfoResponses } from './types.gen';
+import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoFileData, GetStagingRepoFileErrors, GetStagingRepoFileResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, RootInfoData, RootInfoResponses, UpdateStagingRepoFileData, UpdateStagingRepoFileErrors, UpdateStagingRepoFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -89,6 +89,22 @@ export const fetchRepo = <ThrowOnError extends boolean = true>(options: Options<
  * Return the content of a file from the current state of staging repo.
  */
 export const getStagingRepoFile = <ThrowOnError extends boolean = true>(options: Options<GetStagingRepoFileData, ThrowOnError>) => (options.client ?? client).get<GetStagingRepoFileResponses, GetStagingRepoFileErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/file', ...options });
+
+/**
+ * Staging Update Repo File
+ *
+ * Overwrite the contents of an existing file in the staging repository.
+ * Path must always be relative to repo root.
+ * Fails if the file does not already exist.
+ */
+export const updateStagingRepoFile = <ThrowOnError extends boolean = true>(options: Options<UpdateStagingRepoFileData, ThrowOnError>) => (options.client ?? client).put<UpdateStagingRepoFileResponses, UpdateStagingRepoFileErrors, ThrowOnError>({
+    url: '/api/v1/repos/staging/{repo_id}/file',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Deploy Repo

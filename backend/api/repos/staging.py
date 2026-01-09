@@ -52,6 +52,10 @@ class DeployRequest(BaseModel):
     deployment_version: str  # tag or commit hash to deploy
 
 
+class FileUpdateRequest(BaseModel):
+    content: str = Field(..., description="Full file content to write")
+
+
 # -----------------------------------------------------------------------------
 # Helper functions
 # -----------------------------------------------------------------------------
@@ -232,6 +236,51 @@ def staging_get_repo_file(
         content = f.read()
 
     return FileResponse(path=path, content=content)
+
+
+@router.put(
+    "/{repo_id}/file",
+    status_code=204,
+    operation_id="updateStagingRepoFile",
+)
+def staging_update_repo_file(
+    repo_id: str,
+    path: str = Query(
+        ..., description="Path to existing file inside repository (relative to root)"
+    ),
+    payload: FileUpdateRequest = ...,
+):
+    """
+    Overwrite the contents of an existing file in the staging repository.
+    Path must always be relative to repo root.
+    Fails if the file does not already exist.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    # Normalize and validate path
+    rel_path = os.path.normpath(path).lstrip(os.sep)
+    if rel_path.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+
+    full_path = os.path.join(repo_path, rel_path)
+
+    # Must exist and be a regular file
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    if not os.path.isfile(full_path):
+        raise HTTPException(
+            status_code=400,
+            detail="Target path is not a file",
+        )
+
+    try:
+        with open(full_path, "w", encoding="utf-8") as f:
+            f.write(payload.content)
+    except OSError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update file: {str(e)}",
+        )
 
 
 @router.post("/{repo_id}/deploy", response_model=DeploymentInfo, operation_id="deployRepo")

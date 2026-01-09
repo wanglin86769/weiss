@@ -74,6 +74,18 @@ export type FileResponse = {
 };
 
 /**
+ * FileUpdateRequest
+ */
+export type FileUpdateRequest = {
+    /**
+     * Content
+     *
+     * Full file content to write
+     */
+    content: string;
+};
+
+/**
  * GitFileStatus
  */
 export type GitFileStatus = {
@@ -574,6 +586,43 @@ export type GetStagingRepoFileResponses = {
 };
 
 export type GetStagingRepoFileResponse = GetStagingRepoFileResponses[keyof GetStagingRepoFileResponses];
+
+export type UpdateStagingRepoFileData = {
+    body: FileUpdateRequest;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query: {
+        /**
+         * Path
+         *
+         * Path to existing file inside repository (relative to root)
+         */
+        path: string;
+    };
+    url: '/api/v1/repos/staging/{repo_id}/file';
+};
+
+export type UpdateStagingRepoFileErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateStagingRepoFileError = UpdateStagingRepoFileErrors[keyof UpdateStagingRepoFileErrors];
+
+export type UpdateStagingRepoFileResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UpdateStagingRepoFileResponse = UpdateStagingRepoFileResponses[keyof UpdateStagingRepoFileResponses];
 
 export type DeployRepoData = {
     body: DeployRequest;
