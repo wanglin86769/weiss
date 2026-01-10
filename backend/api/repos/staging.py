@@ -56,6 +56,20 @@ class FileUpdateRequest(BaseModel):
     content: str = Field(..., description="Full file content to write")
 
 
+class CommitRequest(BaseModel):
+    message: str = Field(..., description="Git commit message")
+    tag: str | None = Field(None, description="Optional Git tag to add after commit")
+
+
+class PathCreateRequest(BaseModel):
+    path: str = Field(..., description="Path to create, relative to repo root")
+    type: str = Field(
+        ...,
+        description="Type of path to create: 'file' or 'directory'.",
+        pattern="^(file|directory)$",
+    )
+
+
 # -----------------------------------------------------------------------------
 # Helper functions
 # -----------------------------------------------------------------------------
@@ -240,8 +254,8 @@ def staging_get_repo_file(
 
 @router.put(
     "/{repo_id}/file",
-    status_code=204,
     operation_id="updateStagingRepoFile",
+    response_model=RepoTreeInfo,
 )
 def staging_update_repo_file(
     repo_id: str,
@@ -274,13 +288,191 @@ def staging_update_repo_file(
         )
 
     try:
-        with open(full_path, "w", encoding="utf-8") as f:
-            f.write(payload.content)
+        with open(full_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(payload.content.rstrip() + "\n")
+        run_git(["add", "."], cwd=repo_path)
     except OSError as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to update file: {str(e)}",
         )
+    return get_staging_repo_tree(repo_id)
+
+
+@router.post(
+    "/{repo_id}/file/reset",
+    response_model=RepoTreeInfo,
+    operation_id="resetStagingRepoFile",
+)
+def reset_staging_repo_file(
+    repo_id: str,
+    path: str = Query(..., description="Path to file inside repository (relative to root)"),
+):
+    """
+    Reset changes of a single file in the staging repository.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    # Normalize and validate path
+    rel_path = os.path.normpath(path).lstrip(os.sep)
+    if rel_path.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+
+    full_path = os.path.join(repo_path, rel_path)
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    run_git(["restore", "--staged", rel_path], cwd=repo_path)
+    run_git(["restore", rel_path], cwd=repo_path)
+
+    return get_staging_repo_tree(repo_id)
+
+
+@router.post(
+    "/{repo_id}/reset",
+    response_model=RepoTreeInfo,
+    operation_id="resetStagingRepo",
+)
+def reset_staging_repo(repo_id: str):
+    """
+    Return the staging repository to the checked-out ref.
+    This discards all local changes, including untracked files and directories.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    # Unstage everything, then restore working tree
+    run_git(["restore", "--staged", "."], cwd=repo_path)
+    run_git(["restore", "."], cwd=repo_path)
+    run_git(["clean", "-fd"], cwd=repo_path)
+
+    return get_staging_repo_tree(repo_id)
+
+
+@router.post(
+    "/{repo_id}/path",
+    response_model=RepoTreeInfo,
+    operation_id="createStagingRepoPath",
+)
+def create_staging_repo_path(repo_id: str, payload: PathCreateRequest):
+    """
+    Create a file or directory in the staging repository.
+    - Intermediate directories will be created if necessary.
+    - Directories get a .gitkeep file to ensure they are tracked by Git.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    rel_path = os.path.normpath(payload.path).lstrip(os.sep)
+    if rel_path.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    full_path = os.path.join(repo_path, rel_path)
+    parent_dir = os.path.dirname(full_path)
+
+    if os.path.exists(full_path):
+        raise HTTPException(status_code=400, detail="File or directory already exists")
+
+    try:
+        os.makedirs(parent_dir, exist_ok=True)
+
+        if payload.type == "file":
+            # Create empty file
+            if not full_path.endswith(".json"):
+                full_path += ".json"
+            open(full_path, "w").close()
+            run_git(["add", full_path], cwd=repo_path)
+        elif payload.type == "directory":
+            # Create directory and .gitkeep
+            os.makedirs(full_path, exist_ok=True)
+            gitkeep = os.path.join(full_path, ".gitkeep")
+            open(gitkeep, "w").close()
+            run_git(["add", full_path], cwd=repo_path)
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create {payload.type}: {str(e)}")
+
+    return get_staging_repo_tree(repo_id)
+
+
+@router.delete(
+    "/{repo_id}/path",
+    response_model=RepoTreeInfo,
+    operation_id="deleteStagingRepoPath",
+)
+def delete_staging_repo_path(
+    repo_id: str,
+    path: str = Query(
+        ...,
+        description="FIle or directory path inside repository, relative to root.",
+    ),
+):
+    """
+    Delete a file or directory from the staging repository.
+    Directories are deleted recursively.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    rel_path = os.path.normpath(path).lstrip(os.sep)
+    if rel_path.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    full_path = os.path.join(repo_path, rel_path)
+
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="Path not found")
+
+    if os.path.isdir(full_path):
+        run_git(["rm", "-r", "--", rel_path], cwd=repo_path)
+    else:
+        run_git(["rm", "--", rel_path], cwd=repo_path)
+
+    return get_staging_repo_tree(repo_id)
+
+
+@router.post(
+    "/{repo_id}/commit",
+    response_model=RepoTreeInfo,
+    operation_id="commitStagingRepo",
+)
+def commit_staging_repo(repo_id: str, payload: CommitRequest):
+    """
+    Commit staged changes in the staging repository.
+    Fails if there is nothing to commit.
+    """
+    repo_path = get_staging_path(repo_id)
+
+    # Ensure there is something staged
+    staged = run_git(["diff", "--cached", "--name-only"], cwd=repo_path)
+    if not staged.strip():
+        raise HTTPException(status_code=400, detail="No staged changes to commit")
+
+    try:
+        run_git(
+            [
+                "commit",
+                "-m",
+                payload.message,
+                "-m",
+                "Commited by WEISS API on behalf of $USER (#TODO)",
+            ],
+            cwd=repo_path,
+        )
+        commit_hash = run_git(["rev-parse", "HEAD"], cwd=repo_path)
+        if payload.tag:
+            run_git(["tag", payload.tag, commit_hash], cwd=repo_path)
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to commit changes: {e.detail}",
+        )
+
+    # Update repo metadata
+    repo_info_path, repo_info = get_repo_info(repo_id)
+    repo_info["checked_out_ref"] = run_git(["rev-parse", "HEAD"], cwd=repo_path)
+    repo_info["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    with open(repo_info_path, "w") as f:
+        json.dump(repo_info, f, indent=2)
+
+    return get_staging_repo_tree(repo_id)
 
 
 @router.post("/{repo_id}/deploy", response_model=DeploymentInfo, operation_id="deployRepo")
@@ -343,7 +535,7 @@ def checkout_repo_ref(repo_id: str, ref: str):
 def get_staging_repo_tree(repo_id: str):
     repo_path = get_staging_path(repo_id)
     tree = build_path_tree(repo_path)
-    repo_info = get_repo_info(repo_id)
+    _, repo_info = get_repo_info(repo_id)
     working_tree_status = get_working_tree_status(repo_path)
     return RepoTreeInfo(
         **repo_info.model_dump(),

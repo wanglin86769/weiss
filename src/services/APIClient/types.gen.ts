@@ -20,6 +20,24 @@ export type AuthUrl = {
 };
 
 /**
+ * CommitRequest
+ */
+export type CommitRequest = {
+    /**
+     * Message
+     *
+     * Git commit message
+     */
+    message: string;
+    /**
+     * Tag
+     *
+     * Optional Git tag to add after commit
+     */
+    tag?: string | null;
+};
+
+/**
  * DeployRequest
  */
 export type DeployRequest = {
@@ -146,6 +164,24 @@ export type OAuthCallbackRequest = {
      * Redirect Uri
      */
     redirect_uri?: string | null;
+};
+
+/**
+ * PathCreateRequest
+ */
+export type PathCreateRequest = {
+    /**
+     * Path
+     *
+     * Path to create, relative to repo root
+     */
+    path: string;
+    /**
+     * Type
+     *
+     * Type of path to create: 'file' or 'directory'.
+     */
+    type: string;
 };
 
 /**
@@ -619,10 +655,174 @@ export type UpdateStagingRepoFileResponses = {
     /**
      * Successful Response
      */
-    204: void;
+    200: RepoTreeInfo;
 };
 
 export type UpdateStagingRepoFileResponse = UpdateStagingRepoFileResponses[keyof UpdateStagingRepoFileResponses];
+
+export type ResetStagingRepoFileData = {
+    body?: never;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query: {
+        /**
+         * Path
+         *
+         * Path to file inside repository (relative to root)
+         */
+        path: string;
+    };
+    url: '/api/v1/repos/staging/{repo_id}/file/reset';
+};
+
+export type ResetStagingRepoFileErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetStagingRepoFileError = ResetStagingRepoFileErrors[keyof ResetStagingRepoFileErrors];
+
+export type ResetStagingRepoFileResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepoTreeInfo;
+};
+
+export type ResetStagingRepoFileResponse = ResetStagingRepoFileResponses[keyof ResetStagingRepoFileResponses];
+
+export type ResetStagingRepoData = {
+    body?: never;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repos/staging/{repo_id}/reset';
+};
+
+export type ResetStagingRepoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetStagingRepoError = ResetStagingRepoErrors[keyof ResetStagingRepoErrors];
+
+export type ResetStagingRepoResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepoTreeInfo;
+};
+
+export type ResetStagingRepoResponse = ResetStagingRepoResponses[keyof ResetStagingRepoResponses];
+
+export type DeleteStagingRepoPathData = {
+    body?: never;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query: {
+        /**
+         * Path
+         *
+         * FIle or directory path inside repository, relative to root.
+         */
+        path: string;
+    };
+    url: '/api/v1/repos/staging/{repo_id}/path';
+};
+
+export type DeleteStagingRepoPathErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteStagingRepoPathError = DeleteStagingRepoPathErrors[keyof DeleteStagingRepoPathErrors];
+
+export type DeleteStagingRepoPathResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepoTreeInfo;
+};
+
+export type DeleteStagingRepoPathResponse = DeleteStagingRepoPathResponses[keyof DeleteStagingRepoPathResponses];
+
+export type CreateStagingRepoPathData = {
+    body: PathCreateRequest;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repos/staging/{repo_id}/path';
+};
+
+export type CreateStagingRepoPathErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateStagingRepoPathError = CreateStagingRepoPathErrors[keyof CreateStagingRepoPathErrors];
+
+export type CreateStagingRepoPathResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepoTreeInfo;
+};
+
+export type CreateStagingRepoPathResponse = CreateStagingRepoPathResponses[keyof CreateStagingRepoPathResponses];
+
+export type CommitStagingRepoData = {
+    body: CommitRequest;
+    path: {
+        /**
+         * Repo Id
+         */
+        repo_id: string;
+    };
+    query?: never;
+    url: '/api/v1/repos/staging/{repo_id}/commit';
+};
+
+export type CommitStagingRepoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CommitStagingRepoError = CommitStagingRepoErrors[keyof CommitStagingRepoErrors];
+
+export type CommitStagingRepoResponses = {
+    /**
+     * Successful Response
+     */
+    200: RepoTreeInfo;
+};
+
+export type CommitStagingRepoResponse = CommitStagingRepoResponses[keyof CommitStagingRepoResponses];
 
 export type DeployRepoData = {
     body: DeployRequest;

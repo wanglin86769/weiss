@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoFileData, GetStagingRepoFileErrors, GetStagingRepoFileResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, RootInfoData, RootInfoResponses, UpdateStagingRepoFileData, UpdateStagingRepoFileErrors, UpdateStagingRepoFileResponses } from './types.gen';
+import type { AuthCallbackData, AuthCallbackErrors, AuthCallbackResponses, AuthGetAuthUrlData, AuthGetAuthUrlErrors, AuthGetAuthUrlResponses, AuthLogoutData, AuthLogoutResponses, AuthMeData, AuthMeResponses, CheckoutRepoRefData, CheckoutRepoRefErrors, CheckoutRepoRefResponses, CommitStagingRepoData, CommitStagingRepoErrors, CommitStagingRepoResponses, CreateStagingRepoPathData, CreateStagingRepoPathErrors, CreateStagingRepoPathResponses, DeleteStagingRepoPathData, DeleteStagingRepoPathErrors, DeleteStagingRepoPathResponses, DeployRepoData, DeployRepoErrors, DeployRepoResponses, FetchRepoData, FetchRepoErrors, FetchRepoResponses, GetAllDeployedReposTreeData, GetAllDeployedReposTreeResponses, GetAllReposTreeData, GetAllReposTreeResponses, GetCurrentDeploymentInfoData, GetCurrentDeploymentInfoErrors, GetCurrentDeploymentInfoResponses, GetDeployedRepoFileData, GetDeployedRepoFileErrors, GetDeployedRepoFileResponses, GetDeployedRepoTreeData, GetDeployedRepoTreeErrors, GetDeployedRepoTreeResponses, GetStagingRepoFileData, GetStagingRepoFileErrors, GetStagingRepoFileResponses, GetStagingRepoTreeData, GetStagingRepoTreeErrors, GetStagingRepoTreeResponses, HealthCheckData, HealthCheckResponses, ListDeployedReposData, ListDeployedReposResponses, ListRepoRefsData, ListRepoRefsErrors, ListRepoRefsResponses, ListReposData, ListReposResponses, RegisterRepoData, RegisterRepoErrors, RegisterRepoResponses, ResetStagingRepoData, ResetStagingRepoErrors, ResetStagingRepoFileData, ResetStagingRepoFileErrors, ResetStagingRepoFileResponses, ResetStagingRepoResponses, RootInfoData, RootInfoResponses, UpdateStagingRepoFileData, UpdateStagingRepoFileErrors, UpdateStagingRepoFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -99,6 +99,60 @@ export const getStagingRepoFile = <ThrowOnError extends boolean = true>(options:
  */
 export const updateStagingRepoFile = <ThrowOnError extends boolean = true>(options: Options<UpdateStagingRepoFileData, ThrowOnError>) => (options.client ?? client).put<UpdateStagingRepoFileResponses, UpdateStagingRepoFileErrors, ThrowOnError>({
     url: '/api/v1/repos/staging/{repo_id}/file',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Reset Staging Repo File
+ *
+ * Reset changes of a single file in the staging repository.
+ */
+export const resetStagingRepoFile = <ThrowOnError extends boolean = true>(options: Options<ResetStagingRepoFileData, ThrowOnError>) => (options.client ?? client).post<ResetStagingRepoFileResponses, ResetStagingRepoFileErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/file/reset', ...options });
+
+/**
+ * Reset Staging Repo
+ *
+ * Return the staging repository to the checked-out ref.
+ * This discards all local changes, including untracked files and directories.
+ */
+export const resetStagingRepo = <ThrowOnError extends boolean = true>(options: Options<ResetStagingRepoData, ThrowOnError>) => (options.client ?? client).post<ResetStagingRepoResponses, ResetStagingRepoErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/reset', ...options });
+
+/**
+ * Delete Staging Repo Path
+ *
+ * Delete a file or directory from the staging repository.
+ * Directories are deleted recursively.
+ */
+export const deleteStagingRepoPath = <ThrowOnError extends boolean = true>(options: Options<DeleteStagingRepoPathData, ThrowOnError>) => (options.client ?? client).delete<DeleteStagingRepoPathResponses, DeleteStagingRepoPathErrors, ThrowOnError>({ url: '/api/v1/repos/staging/{repo_id}/path', ...options });
+
+/**
+ * Create Staging Repo Path
+ *
+ * Create a file or directory in the staging repository.
+ * - Intermediate directories will be created if necessary.
+ * - Directories get a .gitkeep file to ensure they are tracked by Git.
+ */
+export const createStagingRepoPath = <ThrowOnError extends boolean = true>(options: Options<CreateStagingRepoPathData, ThrowOnError>) => (options.client ?? client).post<CreateStagingRepoPathResponses, CreateStagingRepoPathErrors, ThrowOnError>({
+    url: '/api/v1/repos/staging/{repo_id}/path',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Commit Staging Repo
+ *
+ * Commit staged changes in the staging repository.
+ * Fails if there is nothing to commit.
+ */
+export const commitStagingRepo = <ThrowOnError extends boolean = true>(options: Options<CommitStagingRepoData, ThrowOnError>) => (options.client ?? client).post<CommitStagingRepoResponses, CommitStagingRepoErrors, ThrowOnError>({
+    url: '/api/v1/repos/staging/{repo_id}/commit',
     ...options,
     headers: {
         'Content-Type': 'application/json',
