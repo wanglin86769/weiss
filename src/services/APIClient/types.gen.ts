@@ -778,11 +778,9 @@ export type GetDeployedRepoTreeError = GetDeployedRepoTreeErrors[keyof GetDeploy
 
 export type GetDeployedRepoTreeResponses = {
     /**
-     * Response Getdeployedrepotree
-     *
      * Successful Response
      */
-    200: Array<TreeNode>;
+    200: RepoTreeInfo;
 };
 
 export type GetDeployedRepoTreeResponse = GetDeployedRepoTreeResponses[keyof GetDeployedRepoTreeResponses];

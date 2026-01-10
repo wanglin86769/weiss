@@ -4,12 +4,12 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from datetime import datetime
 from api.repos.common import (
-    TreeNode,
     FileResponse,
     RepoInfo,
     RepoTreeInfo,
     DeploymentInfo,
     build_path_tree,
+    get_repo_info,
     list_all_repositories,
     REPOS_BASE_PATH,
     DEPLOYMENTS_REL_FOLDER,
@@ -74,13 +74,31 @@ def get_all_repos_tree():
     return all_trees
 
 
-@router.get("/{repo_id}/tree", response_model=List[TreeNode], operation_id="getDeployedRepoTree")
-def get_runtime_repo_tree(repo_id: str):
+@router.get(
+    "/{repo_id}/tree",
+    response_model=RepoTreeInfo,
+    operation_id="getDeployedRepoTree",
+)
+def get_deployed_repo_tree(repo_id: str):
     """
-    Return the full tree of the currently deployed snapshot.
+    Return the full tree of the currently deployed snapshot
+    for a single repository, wrapped in RepoTreeInfo.
     """
+    repo = get_repo_info(repo_id)
+
+    if repo.current_deployment is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository has no active deployment",
+        )
+
     snapshot_path = get_current_snapshot_path(repo_id)
-    return build_path_tree(snapshot_path)
+    tree = build_path_tree(snapshot_path)
+
+    return RepoTreeInfo(
+        **repo.model_dump(),
+        tree=tree,
+    )
 
 
 @router.get("/{repo_id}/file", response_model=FileResponse, operation_id="getDeployedRepoFile")

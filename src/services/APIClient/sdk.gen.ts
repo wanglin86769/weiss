@@ -143,9 +143,10 @@ export const listDeployedRepos = <ThrowOnError extends boolean = true>(options?:
 export const getAllDeployedReposTree = <ThrowOnError extends boolean = true>(options?: Options<GetAllDeployedReposTreeData, ThrowOnError>) => (options?.client ?? client).get<GetAllDeployedReposTreeResponses, unknown, ThrowOnError>({ url: '/api/v1/repos/runtime/tree', ...options });
 
 /**
- * Get Runtime Repo Tree
+ * Get Deployed Repo Tree
  *
- * Return the full tree of the currently deployed snapshot.
+ * Return the full tree of the currently deployed snapshot
+ * for a single repository, wrapped in RepoTreeInfo.
  */
 export const getDeployedRepoTree = <ThrowOnError extends boolean = true>(options: Options<GetDeployedRepoTreeData, ThrowOnError>) => (options.client ?? client).get<GetDeployedRepoTreeResponses, GetDeployedRepoTreeErrors, ThrowOnError>({ url: '/api/v1/repos/runtime/{repo_id}/tree', ...options });
 
