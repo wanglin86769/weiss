@@ -29,6 +29,8 @@ import {
   checkoutRepoRef,
   deployRepo,
   fetchRepo,
+  getDeployedRepoTree,
+  getStagingRepoTree,
   type GitFileStatus,
   type RepoTreeInfo,
   type TreeNode,
@@ -134,7 +136,7 @@ export default function ProjectSection({
   defaultSelectedPath,
 }: ProjectSectionProps) {
   const REF_MAX_DISPLAY_SIZE = 7;
-  const { isDeveloper, updateReposTreeInfo } = useEditorContext();
+  const { isDeveloper, setReposTreeInfo } = useEditorContext();
 
   const [sectionExpanded, setSectionExpanded] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -158,10 +160,23 @@ export default function ProjectSection({
   const handleRefChange = async (ref: string) => {
     try {
       await checkoutRepoRef({ path: { repo_id: repo.id }, query: { ref } });
-      // @TODO: update only this repo instead of all of them.
-      // API endpoint for that already exists. Will need to create a method to find
-      // and replace single repo into reposTreeInfo
-      await updateReposTreeInfo();
+      // update this instance on the tree
+      const response = isDeveloper
+        ? await getStagingRepoTree({ path: { repo_id: repo.id } })
+        : await getDeployedRepoTree({ path: { repo_id: repo.id } });
+
+      const updatedRepo = response.data;
+
+      setReposTreeInfo((prev) => {
+        if (!prev) return prev;
+        let found = false;
+        const updatedTree = prev.map((pRepo) => {
+          if (pRepo.id !== repo.id) return pRepo;
+          found = true;
+          return updatedRepo;
+        });
+        return found ? updatedTree : prev;
+      });
       notifyUser(`Success: HEAD at ${shortRef(ref)}`, "success");
     } catch (err) {
       notifyUser(`Failed to checkout: ${err as string}`, "error");

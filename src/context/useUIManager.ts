@@ -157,6 +157,7 @@ export default function useUIManager(
     login,
     logout,
     reposTreeInfo,
+    setReposTreeInfo,
     updateReposTreeInfo,
   };
 }
