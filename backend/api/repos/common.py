@@ -1,7 +1,7 @@
 import os
 import json
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Tuple
 from datetime import datetime
 
 REPOS_BASE_PATH = "/app/storage/repos"  # Abs path inside container - adjust if running locally
@@ -90,15 +90,14 @@ def build_path_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
 
         if entry.is_dir(follow_symlinks=False):
             children = build_path_tree(root_path, entry_rel_path)
-            if children:  # avoid empty directories
-                nodes.append(
-                    TreeNode(
-                        name=entry.name,
-                        path=entry_rel_path,
-                        type="directory",
-                        children=children,
-                    )
+            nodes.append(
+                TreeNode(
+                    name=entry.name,
+                    path=entry_rel_path,
+                    type="directory",
+                    children=children,
                 )
+            )
         else:
             if entry.name in [REPO_META, DEPLOYMENT_META] or not entry.name.lower().endswith(
                 ".json"
@@ -116,7 +115,7 @@ def build_path_tree(root_path: str, rel_path: str = "") -> List[TreeNode]:
     return nodes
 
 
-def get_repo_info(repo_id: str) -> RepoInfo:
+def get_repo_info(repo_id: str) -> Tuple[(str, RepoInfo)]:
     """Get content of repository metadata file (repo.json)"""
     meta_file_path = os.path.join(REPOS_BASE_PATH, repo_id, REPO_META)
     if not os.path.exists(meta_file_path):

@@ -3,7 +3,7 @@ import uuid
 import subprocess
 import json
 from .common import REPOS_BASE_PATH
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import List
 from datetime import datetime, timezone
@@ -171,7 +171,7 @@ def get_all_repos_tree():
 def register_repository(payload: RepoCreateRequest):
     """Register a Git repository and create a clone"""
     repo_id = str(uuid.uuid4())
-    created_at = datetime.now(timezone.utc)
+    created_at = datetime.now(timezone.utc).isoformat()
     repo_path = clone(payload.git_url, repo_id)
     # @TODO: sanitize git_url to prevent duplicates between ssh/https clones
     REGISTERED_REPO_URLS.append(payload.git_url)
@@ -180,7 +180,7 @@ def register_repository(payload: RepoCreateRequest):
     refs = list_repository_refs(repo_id)
 
     repo_info = RepoInfo(
-        id=str(uuid.uuid4()),
+        id=repo_id,
         alias=payload.alias,
         git_url=payload.git_url,
         created_at=created_at,
@@ -190,7 +190,7 @@ def register_repository(payload: RepoCreateRequest):
 
     meta_file = os.path.join(REPOS_BASE_PATH, repo_info.id, REPO_META)
     with open(meta_file, "w", encoding="utf-8") as f:
-        f.write(repo_info.model_dump_json(exclude_none=True, indent=2))
+        f.write(repo_info.model_dump_json(indent=2))
 
     return repo_info
 
@@ -220,18 +220,17 @@ def list_repository_refs(repo_id: str) -> list[str]:
     return refs
 
 
-@router.post("/{repo_id}/fetch", operation_id="fetchRepo")
+@router.post("/{repo_id}/fetch", response_model=RepoTreeInfo, operation_id="fetchRepo")
 def update_repo(repo_id: str):
     """Fetch new tags/commits from remote"""
     repo_path = get_staging_path(repo_id)
     run_git(["fetch", "--all", "--tags", "--prune"], cwd=repo_path)
     info_path, repo_info = get_repo_info(repo_id)
     refs = list_repository_refs(repo_id)
-    repo_info["refs"] = refs
-    repo_info["updated_at"] = datetime.now(timezone.utc).isoformat()
+    repo_info.refs = refs
     with open(info_path, "w") as f:
-        json.dump(repo_info, f, indent=2)
-    return Response(status_code=204)
+        f.write(repo_info.model_dump_json(indent=2))
+    return get_working_tree_status(repo_path)
 
 
 @router.get("/{repo_id}/file", response_model=FileResponse, operation_id="getStagingRepoFile")
@@ -466,11 +465,10 @@ def commit_staging_repo(repo_id: str, payload: CommitRequest):
 
     # Update repo metadata
     repo_info_path, repo_info = get_repo_info(repo_id)
-    repo_info["checked_out_ref"] = run_git(["rev-parse", "HEAD"], cwd=repo_path)
-    repo_info["updated_at"] = datetime.now(timezone.utc).isoformat()
+    repo_info.checked_out_ref = run_git(["rev-parse", "HEAD"], cwd=repo_path)
 
     with open(repo_info_path, "w") as f:
-        json.dump(repo_info, f, indent=2)
+        f.write(repo_info.model_dump_json(indent=2))
 
     return get_staging_repo_tree(repo_id)
 
@@ -498,12 +496,12 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
         json.dump(deployment_meta, f, indent=2)
 
     repo_info_path, repo_info = get_repo_info(repo_id)
-    repo_info["current_deployment"] = deployment_id
-    repo_info["deployed_ref"] = ref_to_deploy
-    repo_info["deployed_at"] = deployment_meta["deployed_at"]
+    repo_info.current_deployment = deployment_id
+    repo_info.deployed_ref = ref_to_deploy
+    repo_info.deployed_at = deployment_meta["deployed_at"]
 
     with open(repo_info_path, "w") as f:
-        json.dump(repo_info, f, indent=2)
+        f.write(repo_info.model_dump_json(indent=2))
     current_link = os.path.join(REPOS_BASE_PATH, repo_id, DEPLOYMENTS_REL_FOLDER, CURRENT_SYMLINK)
     if os.path.islink(current_link) or os.path.exists(current_link):
         os.remove(current_link)
@@ -513,11 +511,11 @@ def deploy_repo(repo_id: str, payload: DeployRequest):
         repo_id=repo_id,
         ref=ref_to_deploy,
         commit_hash=commit_hash,
-        deployed_at=datetime.fromisoformat(deployment_meta["deployed_at"]),
+        deployed_at=deployment_meta["deployed_at"],
     )
 
 
-@router.post("/{repo_id}/checkout", status_code=204, operation_id="checkoutRepoRef")
+@router.post("/{repo_id}/checkout", response_model=RepoTreeInfo, operation_id="checkoutRepoRef")
 def checkout_repo_ref(repo_id: str, ref: str):
     """Checkout a specific ref in the staging repo"""
     repo_path = get_staging_path(repo_id)
@@ -525,10 +523,10 @@ def checkout_repo_ref(repo_id: str, ref: str):
     repo_info_path, repo_info = get_repo_info(repo_id)
     # get actual hash to avoid tags
     checked_out_ref = run_git(["rev-parse", "HEAD"], cwd=repo_path)
-    repo_info["checked_out_ref"] = checked_out_ref
-    repo_info["updated_at"] = datetime.now(timezone.utc).isoformat()
+    repo_info.checked_out_ref = checked_out_ref
     with open(repo_info_path, "w") as f:
-        json.dump(repo_info, f, indent=2)
+        f.write(repo_info.model_dump_json(indent=2))
+    return get_staging_repo_tree(repo_id)
 
 
 @router.get("/{repo_id}/tree", response_model=RepoTreeInfo, operation_id="getStagingRepoTree")

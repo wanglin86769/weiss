@@ -583,8 +583,10 @@ export type FetchRepoResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: RepoTreeInfo;
 };
+
+export type FetchRepoResponse = FetchRepoResponses[keyof FetchRepoResponses];
 
 export type GetStagingRepoFileData = {
     body?: never;
@@ -884,7 +886,7 @@ export type CheckoutRepoRefResponses = {
     /**
      * Successful Response
      */
-    204: void;
+    200: RepoTreeInfo;
 };
 
 export type CheckoutRepoRefResponse = CheckoutRepoRefResponses[keyof CheckoutRepoRefResponses];
