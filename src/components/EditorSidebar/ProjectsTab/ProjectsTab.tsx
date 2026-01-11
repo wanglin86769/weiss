@@ -1,13 +1,15 @@
-import { Box } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getDeployedRepoFile,
   getStagingRepoFile,
   updateStagingRepoFile,
+  type RepoTreeInfo,
 } from "@src/services/APIClient";
 import { useEditorContext } from "@src/context/useEditorContext";
 import ProjectSection from "./ProjectSection";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import type { ExportedWidget } from "@src/types/widgets";
+import { Box } from "@mui/material";
 export interface SelectedFileInfo {
   repo_id: string;
   path: string;
@@ -18,6 +20,7 @@ export default function ProjectsTab() {
     isDeveloper,
     loadWidgets,
     reposTreeInfo,
+    setReposTreeInfo,
     updateReposTreeInfo,
     inEditMode,
     editorWidgets,
@@ -26,22 +29,30 @@ export default function ProjectsTab() {
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedFileInfo | null>(null);
   const [selectedFile, setSelectedFile] = useState<SelectedFileInfo | null>(null);
-  const lastSavedRef = useRef<string | null>(null);
+  const lastSavedRef = useRef<ExportedWidget[] | null>(null);
+  const hasFileChanged = useRef(true);
   const saveTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     void updateReposTreeInfo();
   }, [updateReposTreeInfo]);
 
+  const refreshRepoTree = (updt: RepoTreeInfo) => {
+    setReposTreeInfo((prev) => (prev ? prev.map((r) => (updt.id === r.id ? updt : r)) : prev));
+  };
   // throttle file update to backend
   useEffect(() => {
     if (!isDeveloper || !inEditMode) return;
     if (!selectedFile?.repo_id || !selectedFile.path) return;
-
+    // Skip the first render after selecting a new file
+    if (hasFileChanged.current) {
+      hasFileChanged.current = false;
+      return;
+    }
     const exportable = editorWidgets.map(formatWdgToExport);
-    const serialized = JSON.stringify(exportable);
     // Skip if content didn't change
-    if (lastSavedRef.current === serialized) return;
+    if (lastSavedRef.current === exportable) return;
+    const serialized = JSON.stringify(exportable, null, 2);
 
     // debounce
     if (saveTimeoutRef.current) {
@@ -50,15 +61,19 @@ export default function ProjectsTab() {
 
     const updateFileContent = async () => {
       try {
-        await updateStagingRepoFile({
+        const updtd = await updateStagingRepoFile({
           path: { repo_id: selectedFile.repo_id },
           query: { path: selectedFile.path },
           body: { content: serialized },
-        });
+        }).then((r) => r.data);
 
-        lastSavedRef.current = serialized;
-      } catch {
-        notifyUser("Failed to save file", "error");
+        setReposTreeInfo((prev) => {
+          if (!prev) return prev;
+          return prev.map((r) => (r.id === updtd.id ? updtd : r));
+        });
+        lastSavedRef.current = exportable;
+      } catch (err) {
+        notifyUser(`Failed to save file: ${err as string}`, "error");
       }
     };
 
@@ -69,7 +84,7 @@ export default function ProjectsTab() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [editorWidgets, selectedFile, isDeveloper, inEditMode]);
+  }, [editorWidgets, selectedFile, isDeveloper, inEditMode, formatWdgToExport, setReposTreeInfo]);
 
   const loadRepoFile = useCallback(
     async (repo_id: string, path: string, opts: { persist?: boolean } = { persist: true }) => {
@@ -79,6 +94,7 @@ export default function ProjectsTab() {
 
       loadWidgets(res.data.content);
       setSelectedFile({ repo_id, path });
+      hasFileChanged.current = true;
 
       if (opts.persist) {
         localStorage.setItem("lastLoadedFile", JSON.stringify({ repo_id, path }));
@@ -118,6 +134,7 @@ export default function ProjectsTab() {
             key={repo.id}
             repo={repo}
             onFileSelect={loadRepoFile}
+            onRepoUpdate={refreshRepoTree}
             defaultSelectedPath={
               initialSelection?.repo_id === repo.id ? initialSelection.path : undefined
             }

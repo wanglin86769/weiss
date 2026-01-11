@@ -21,6 +21,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommitIcon from "@mui/icons-material/Commit";
 import SyncIcon from "@mui/icons-material/Sync";
+import RestoreIcon from "@mui/icons-material/Restore";
 import { useTreeItem, type UseTreeItemParameters } from "@mui/x-tree-view/useTreeItem";
 import { TreeItemRoot, TreeItemContent, TreeItemIconContainer } from "@mui/x-tree-view/TreeItem";
 import { TreeItemProvider } from "@mui/x-tree-view/TreeItemProvider";
@@ -29,8 +30,7 @@ import {
   checkoutRepoRef,
   deployRepo,
   fetchRepo,
-  getDeployedRepoTree,
-  getStagingRepoTree,
+  resetStagingRepo,
   type GitFileStatus,
   type RepoTreeInfo,
   type TreeNode,
@@ -39,6 +39,7 @@ import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
 import { useEditorContext } from "@src/context/useEditorContext";
 import { notifyUser } from "@src/services/Notifications/Notification";
 import { COLORS } from "@src/constants/constants";
+import FileToolbar from "./FileToolbar";
 
 type RichTreeItem = TreeViewBaseItem & {
   type: "file" | "directory";
@@ -50,6 +51,7 @@ type RichTreeItem = TreeViewBaseItem & {
 export interface ProjectSectionProps {
   repo: RepoTreeInfo;
   onFileSelect: (repo_id: string, path: string) => Promise<void>;
+  onRepoUpdate: (update: RepoTreeInfo) => void;
   defaultSelectedPath?: string;
 }
 
@@ -133,10 +135,11 @@ const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function
 export default function ProjectSection({
   repo,
   onFileSelect,
+  onRepoUpdate,
   defaultSelectedPath,
 }: ProjectSectionProps) {
   const REF_MAX_DISPLAY_SIZE = 7;
-  const { isDeveloper, setReposTreeInfo } = useEditorContext();
+  const { isDeveloper } = useEditorContext();
 
   const [sectionExpanded, setSectionExpanded] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -159,24 +162,11 @@ export default function ProjectSection({
 
   const handleRefChange = async (ref: string) => {
     try {
-      await checkoutRepoRef({ path: { repo_id: repo.id }, query: { ref } });
-      // update this instance on the tree
-      const response = isDeveloper
-        ? await getStagingRepoTree({ path: { repo_id: repo.id } })
-        : await getDeployedRepoTree({ path: { repo_id: repo.id } });
-
-      const updatedRepo = response.data;
-
-      setReposTreeInfo((prev) => {
-        if (!prev) return prev;
-        let found = false;
-        const updatedTree = prev.map((pRepo) => {
-          if (pRepo.id !== repo.id) return pRepo;
-          found = true;
-          return updatedRepo;
-        });
-        return found ? updatedTree : prev;
-      });
+      const updatedTree = await checkoutRepoRef({
+        path: { repo_id: repo.id },
+        query: { ref },
+      }).then((r) => r.data);
+      onRepoUpdate(updatedTree);
       notifyUser(`Success: HEAD at ${shortRef(ref)}`, "success");
     } catch (err) {
       notifyUser(`Failed to checkout: ${err as string}`, "error");
@@ -206,10 +196,23 @@ export default function ProjectSection({
 
   const handleSyncClick = async () => {
     try {
-      await fetchRepo({ path: { repo_id: repo.id } });
+      const updatedTree = await fetchRepo({ path: { repo_id: repo.id } }).then((r) => r.data);
+      onRepoUpdate(updatedTree);
       notifyUser(`Successfully updated ${repo.alias}`, "success");
     } catch (err) {
       notifyUser(`Failed to update ${repo.alias}: ${err as string}`, "error");
+    }
+  };
+
+  const handleResetClick = async () => {
+    try {
+      const updatedTree = await resetStagingRepo({ path: { repo_id: repo.id } }).then(
+        (r) => r.data
+      );
+      onRepoUpdate(updatedTree);
+      notifyUser(`Successfully restored ${repo.alias}`, "success");
+    } catch (err) {
+      notifyUser(`Failed to restore ${repo.alias}: ${err as string}`, "error");
     }
   };
 
@@ -333,6 +336,12 @@ export default function ProjectSection({
                   Sync
                 </MenuItem>
               </Tooltip>
+              <Tooltip placement="top" title="Discard all uncommited changes">
+                <MenuItem onClick={() => void handleResetClick()}>
+                  <RestoreIcon fontSize="small" sx={{ mr: 1 }} />
+                  Discard changes
+                </MenuItem>
+              </Tooltip>
               <Tooltip placement="top" title="Deploy this version to operators">
                 <MenuItem onClick={() => void handleDeploy()} disabled={!selectedRef}>
                   <CloudUploadIcon fontSize="small" sx={{ mr: 1 }} />
@@ -348,6 +357,11 @@ export default function ProjectSection({
 
       {/* Repo content */}
       <Collapse in={sectionExpanded} timeout="auto" unmountOnExit>
+        <FileToolbar
+          selectedFile={selectedItem ? { repo_id: repo.id, path: selectedItem } : null}
+          onRepoUpdate={onRepoUpdate}
+        />
+
         <Box sx={{ px: 1, py: 0.5 }}>
           <RichTreeView
             items={items}

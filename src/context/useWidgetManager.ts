@@ -591,7 +591,7 @@ export function useWidgetManager() {
 
     const simplified = editorWidgets.map(formatWdgToExport);
 
-    const dataStr = JSON.stringify(simplified, null, 2);
+    const dataStr = JSON.stringify(simplified, null, 2) + "\n"; // end data with empty line
     const blob = new Blob([dataStr], { type: "application/json" });
 
     // Extend the Window type locally with File System Access API
@@ -689,6 +689,8 @@ export function useWidgetManager() {
         updateEditorWidgetList(imported);
         setSelectedWidgetIDs([]);
         setFileLoadedTrig((t) => t + 1);
+        setUndoStack([]);
+        setRedoStack([]);
       } catch (err) {
         console.error("Failed to load widgets:", err);
       }
