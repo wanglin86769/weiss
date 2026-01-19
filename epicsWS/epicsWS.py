@@ -25,7 +25,7 @@ clients = {PVA_PROVIDER_KEY: None, CA_PROVIDER_KEY: None}
 DEFAULT_PROTOCOL = os.getenv("EPICS_DEFAULT_PROTOCOL", PVA_PROVIDER_KEY).lower()
 
 
-def parse_protocol(pv_name: str) -> str:
+def parse_protocol(pv_name: str) -> Tuple[str, str]:
     """Decide protocol from PV prefix or default env var.
     Returns PV without protocol prefix"""
     if pv_name.startswith("pva://"):
