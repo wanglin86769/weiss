@@ -25,7 +25,10 @@ class CAClient:
         if not pvname:
             return
         val = {"value": value, **kwargs}
-        self._latest_value[pvname] = val
+
+        with self._lock:
+            self._latest_value[pvname] = val
+
         self._handle_update(pvname, val)
 
     def subscribe(self, client_id: str, pv_name: str):
