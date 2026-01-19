@@ -90,7 +90,7 @@ def encode_array(arr: Any) -> tuple[Optional[str], Optional[str]]:
 
     if np.issubdtype(arr.dtype, np.integer):
         min_val, max_val = arr.min(), arr.max()
-        if -128 <= min_val <= max_val <= 255:
+        if -128 <= min_val <= max_val <= 127:
             dtype = "int8"
         elif -32768 <= min_val <= max_val <= 32767:
             dtype = "int16"
