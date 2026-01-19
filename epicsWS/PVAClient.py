@@ -24,7 +24,8 @@ class PVAClient:
         """Return a callback for monitor updates."""
 
         def callback(value: Any):
-            self._latest_value[pv_name] = value
+            with self._lock:
+                self._latest_value[pv_name] = value
             self._handle_update(pv_name, value)
 
         return callback
