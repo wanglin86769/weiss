@@ -24,7 +24,7 @@ import {
 export default function useUIManager(
   ws: ReturnType<typeof useEpicsWS>,
   setSelectedWidgetIDs: ReturnType<typeof useWidgetManager>["setSelectedWidgetIDs"],
-  fileLoadedTrig: ReturnType<typeof useWidgetManager>["fileLoadedTrig"]
+  fileLoadedTrig: ReturnType<typeof useWidgetManager>["fileLoadedTrig"],
 ) {
   const lastFileLoadedTrig = useRef(0);
   const [releaseShortcuts, setReleaseShortcuts] = useState(false);
@@ -53,8 +53,9 @@ export default function useUIManager(
   }, [isDeveloper]);
 
   useEffect(() => {
+    if (authChecked) return;
     void authService.restoreSession().finally(() => setAuthChecked(true));
-  }, []);
+  }, [authChecked]);
 
   // ensure session is restored after file change
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function useUIManager(
       }
       setMode(newMode);
     },
-    [setSelectedWidgetIDs, ws]
+    [setSelectedWidgetIDs, ws],
   );
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function useUIManager(
       if (isAuthenticated) return;
       await authService.login(provider, demoProfile);
     },
-    [isAuthenticated]
+    [isAuthenticated],
   );
 
   const logout = useCallback(() => {

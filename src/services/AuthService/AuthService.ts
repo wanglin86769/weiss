@@ -74,7 +74,7 @@ class AuthService {
     try {
       const params = demoProfile ? { demo_profile: demoProfile } : undefined;
       const response = await authGetAuthUrl({ path: { provider }, query: params }).then(
-        (r) => r.data
+        (r) => r.data,
       );
       return response.authorize_url;
     } catch (err) {
@@ -97,7 +97,7 @@ class AuthService {
   async handleCallback(
     provider: OAuthProvider,
     code: string,
-    redirectUri: string
+    redirectUri: string,
   ): Promise<User | null> {
     if (this.callbackPromise) return this.callbackPromise;
 
@@ -113,7 +113,7 @@ class AuthService {
         this.logAndNotifyError(err);
         notifyUser(
           "Authentication failed. Auth code might have expired or was already used.",
-          "error"
+          "error",
         );
         return null;
       } finally {
@@ -125,6 +125,12 @@ class AuthService {
   }
 
   async restoreSession(): Promise<User | null> {
+    if (this.callbackPromise) {
+      return this.callbackPromise;
+    }
+    if (this.currentUser) {
+      return this.currentUser;
+    }
     try {
       const user = await authMe().then((r) => r.data);
       this.currentUser = user;

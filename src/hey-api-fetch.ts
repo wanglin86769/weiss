@@ -1,8 +1,19 @@
 import type { CreateClientConfig } from "./services/APIClient/client.gen";
 
+function resolveApiBaseUrl(): string {
+  const { protocol, hostname } = window.location;
+  if (protocol === "https:") {
+    return `${protocol}//${hostname}`;
+  }
+  // dev
+  return `${protocol}//${hostname}:8000`;
+}
+
 // define custom fetch to always include credentials and throw on error
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
+  baseUrl: resolveApiBaseUrl(),
+
   fetch: async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const res = await fetch(input, {
       ...init,
