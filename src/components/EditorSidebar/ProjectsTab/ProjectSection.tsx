@@ -358,7 +358,7 @@ export default function ProjectSection({
       {/* Repo content */}
       <Collapse in={sectionExpanded} timeout="auto" unmountOnExit>
         <FileToolbar
-          selectedFile={selectedItem ? { repo_id: repo.id, path: selectedItem } : null}
+          selectedPath={selectedItem ? { repo_id: repo.id, path: selectedItem } : null}
           onRepoUpdate={onRepoUpdate}
         />
 

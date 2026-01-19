@@ -10,7 +10,7 @@ import ProjectSection from "./ProjectSection";
 import { notifyUser } from "@src/services/Notifications/Notification";
 import type { ExportedWidget } from "@src/types/widgets";
 import { Box } from "@mui/material";
-export interface SelectedFileInfo {
+export interface SelectedPathInfo {
   repo_id: string;
   path: string;
 }
@@ -27,8 +27,8 @@ export default function ProjectsTab() {
     formatWdgToExport,
   } = useEditorContext();
   const restoredRef = useRef(false);
-  const [initialSelection, setInitialSelection] = useState<SelectedFileInfo | null>(null);
-  const [selectedFile, setSelectedFile] = useState<SelectedFileInfo | null>(null);
+  const [initialSelection, setInitialSelection] = useState<SelectedPathInfo | null>(null);
+  const [selectedFile, setSelectedFile] = useState<SelectedPathInfo | null>(null);
   const lastSavedRef = useRef<ExportedWidget[] | null>(null);
   const hasFileChanged = useRef(true);
   const saveTimeoutRef = useRef<number | null>(null);
@@ -113,7 +113,7 @@ export default function ProjectsTab() {
       return;
     }
 
-    const parsed = JSON.parse(raw) as SelectedFileInfo;
+    const parsed = JSON.parse(raw) as SelectedPathInfo;
     const repo = reposTreeInfo.find((r) => r.id === parsed.repo_id);
     if (!repo) {
       restoredRef.current = true;

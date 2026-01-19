@@ -11,7 +11,21 @@ SNAPSHOT_REL_FOLDER = "snapshot"
 CURRENT_SYMLINK = "current"
 DEPLOYMENT_META = "deployment.json"
 REPO_META = "repo.json"
-
+NEW_FILE_CONTENT = [
+    {
+        "id": "__grid__",
+        "widgetName": "GridZone",
+        "properties": {
+            "backgroundColor": "#e9ecef",
+            "gridLineColor": "#dee2e6",
+            "gridSize": 5,
+            "gridLineVisible": True,
+            "snapToGrid": True,
+            "centerVisible": True,
+            "macros": {},
+        },
+    }
+]
 os.makedirs(REPOS_BASE_PATH, exist_ok=True)
 
 

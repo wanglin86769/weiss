@@ -23,6 +23,7 @@ from api.repos.common import (
     REPO_META,
     DEPLOYMENT_META,
     REGISTERED_REPO_URLS,
+    NEW_FILE_CONTENT,
 )
 
 router = APIRouter(
@@ -230,7 +231,7 @@ def update_repo(repo_id: str):
     repo_info.refs = refs
     with open(info_path, "w") as f:
         f.write(repo_info.model_dump_json(indent=2))
-    return get_working_tree_status(repo_path)
+    return get_staging_repo_tree(repo_id)
 
 
 @router.get("/{repo_id}/file", response_model=FileResponse, operation_id="getStagingRepoFile")
@@ -377,7 +378,9 @@ def create_staging_repo_path(repo_id: str, payload: PathCreateRequest):
             # Create empty file
             if not full_path.endswith(".json"):
                 full_path += ".json"
-            open(full_path, "w").close()
+            with open(full_path, "w", encoding="utf-8") as f:
+                json.dump(NEW_FILE_CONTENT, f, indent=2)
+                f.write("\n")
             run_git(["add", full_path], cwd=repo_path)
         elif payload.type == "directory":
             # Create directory and .gitkeep
@@ -419,9 +422,9 @@ def delete_staging_repo_path(
         raise HTTPException(status_code=404, detail="Path not found")
 
     if os.path.isdir(full_path):
-        run_git(["rm", "-r", "--", rel_path], cwd=repo_path)
+        run_git(["rm", "-r", "-f", "--", rel_path], cwd=repo_path)
     else:
-        run_git(["rm", "--", rel_path], cwd=repo_path)
+        run_git(["rm", "-f", "--", rel_path], cwd=repo_path)
 
     return get_staging_repo_tree(repo_id)
 

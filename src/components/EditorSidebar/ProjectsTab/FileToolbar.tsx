@@ -1,5 +1,5 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import type { SelectedFileInfo } from "./ProjectsTab";
+import type { SelectedPathInfo } from "./ProjectsTab";
 import { CreateNewFolderOutlined, DeleteOutlined, NoteAddOutlined } from "@mui/icons-material";
 import {
   createStagingRepoPath,
@@ -9,11 +9,38 @@ import {
 import { notifyUser } from "@src/services/Notifications/Notification";
 
 interface FileToolbarProps {
-  selectedFile: SelectedFileInfo | null;
+  selectedPath: SelectedPathInfo | null;
   onRepoUpdate: (update: RepoTreeInfo) => void;
 }
 
-export default function FileToolbar({ selectedFile, onRepoUpdate }: FileToolbarProps) {
+function getParentDir(path: string): string {
+  const idx = path.lastIndexOf("/");
+  return idx > 0 ? path.slice(0, idx) : "";
+}
+
+function getCreateBasePath(selected: SelectedPathInfo): string {
+  return selected.path.endsWith(".json") ? getParentDir(selected.path) : selected.path;
+}
+
+function normalizeJsonFileName(name: string): string | null {
+  const trimmed = name.trim();
+
+  if (!trimmed) return null;
+
+  const dotIdx = trimmed.lastIndexOf(".");
+  if (dotIdx === -1) {
+    return `${trimmed}.json`;
+  }
+
+  const ext = trimmed.slice(dotIdx).toLowerCase();
+  if (ext !== ".json") {
+    return null;
+  }
+
+  return trimmed;
+}
+
+export default function FileToolbar({ selectedPath, onRepoUpdate }: FileToolbarProps) {
   const iconSx = { fontSize: 18 };
 
   async function createPath(repo_id: string, path: string, type: "file" | "directory") {
@@ -51,10 +78,19 @@ export default function FileToolbar({ selectedFile, onRepoUpdate }: FileToolbarP
       <Tooltip title="Create new file">
         <IconButton
           onClick={() => {
-            if (!selectedFile) return;
-            const name = prompt("Enter new file name (without extension):");
-            if (!name) return;
-            void createPath(selectedFile.repo_id, `${selectedFile.path}/${name}`, "file");
+            if (!selectedPath) return;
+            const input = prompt("Enter new file name:");
+            if (!input) return;
+            const fileName = normalizeJsonFileName(input);
+            if (!fileName) {
+              notifyUser(
+                "Only .json files are allowed. Either leave extension empty or use .json",
+                "error"
+              );
+              return;
+            }
+            const basePath = getCreateBasePath(selectedPath);
+            void createPath(selectedPath.repo_id, `${basePath}/${fileName}`, "file");
           }}
         >
           <NoteAddOutlined sx={iconSx} />
@@ -65,10 +101,11 @@ export default function FileToolbar({ selectedFile, onRepoUpdate }: FileToolbarP
       <Tooltip title="Create new folder">
         <IconButton
           onClick={() => {
-            if (!selectedFile) return;
+            if (!selectedPath) return;
             const name = prompt("Enter new folder name:");
             if (!name) return;
-            void createPath(selectedFile.repo_id, `${selectedFile.path}/${name}`, "directory");
+            const basePath = getCreateBasePath(selectedPath);
+            void createPath(selectedPath.repo_id, `${basePath}/${name}`, "directory");
           }}
         >
           <CreateNewFolderOutlined sx={iconSx} />
@@ -79,10 +116,10 @@ export default function FileToolbar({ selectedFile, onRepoUpdate }: FileToolbarP
       <Tooltip title="Delete selected path">
         <IconButton
           onClick={() => {
-            if (!selectedFile) return;
-            const confirmDelete = confirm(`Delete "${selectedFile.path}"?`);
+            if (!selectedPath) return;
+            const confirmDelete = confirm(`Delete "${selectedPath.path}"?`);
             if (!confirmDelete) return;
-            void deletePath(selectedFile.repo_id, selectedFile.path);
+            void deletePath(selectedPath.repo_id, selectedPath.path);
           }}
         >
           <DeleteOutlined sx={iconSx} />
