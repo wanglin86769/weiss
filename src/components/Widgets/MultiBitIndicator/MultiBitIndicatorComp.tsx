@@ -22,7 +22,7 @@ const MultiBitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
   const mainAvailable = (isHorizontal ? containerWidth : containerHeight) - (bitsCount - 1) * gap;
   const maxCircleSize = Math.min(
     mainAvailable / bitsCount,
-    isHorizontal ? containerHeight : containerWidth
+    isHorizontal ? containerHeight : containerWidth,
   );
 
   const bitSize = Math.max(maxCircleSize, 0);
@@ -46,8 +46,8 @@ const MultiBitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
           background: inEditMode
             ? `linear-gradient(-45deg, ${onColor} 50%,${offColor} 50%)`
             : bitOn
-            ? onColor
-            : offColor,
+              ? onColor
+              : offColor,
           borderStyle: p.borderStyle?.value,
           borderWidth: p.borderWidth?.value,
           borderColor: p.borderColor?.value,

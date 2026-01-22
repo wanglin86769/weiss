@@ -5,9 +5,9 @@ services:
       target: prod
       args:
         GIT_REPO: ${GIT_REPO}
-        APP_VERSION: ${APP_VERSION}
+        VITE_APP_VERSION: ${VITE_APP_VERSION}
         VITE_DEMO_MODE: ${VITE_DEMO_MODE}
-    image: weiss:${APP_VERSION}
+    image: weiss:${VITE_APP_VERSION}
     container_name: weiss
     network_mode: host
     restart: always
@@ -24,10 +24,8 @@ services:
 
   weiss-epicsws:
     build:
-      context: ./epicsWS
-    volumes:
-      - ./epicsWS:/app
-    image: weiss-epicsws:${APP_VERSION}
+      context: ./backend/epicsWS
+    image: weiss-epicsws:${VITE_APP_VERSION}
     container_name: weiss-epicsws
     ports:
       - "8080:8080"
@@ -36,3 +34,18 @@ services:
       EPICS_DEFAULT_PROTOCOL: ${EPICS_DEFAULT_PROTOCOL}
       EPICS_CA_ADDR_LIST: ${EPICS_CA_ADDR_LIST}
       EPICS_PVA_ADDR_LIST: ${EPICS_PVA_ADDR_LIST}
+
+  weiss-api:
+    build:
+      context: ./backend/api
+    volumes:
+      - ${REPOS_MOUNT_PATH}:/app/repos
+    image: weiss-api:${VITE_APP_VERSION}
+    container_name: weiss-api
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      MS_AUTH_CLIENT_ID: ${MS_AUTH_CLIENT_ID}
+      MS_AUTH_TENANT_ID: ${MS_AUTH_TENANT_ID}
+      MS_AUTH_CLIENT_SECRET: ${MS_AUTH_CLIENT_SECRET}

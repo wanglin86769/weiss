@@ -18,7 +18,7 @@ export function deepCloneWidget(widget: Widget): Widget {
     ...widget,
     // clone editableProperties deeply
     editableProperties: Object.fromEntries(
-      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
+      Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }]),
     ),
     // recursively clone children if any
     children: widget.children?.map((child) => deepCloneWidget(child)),
@@ -99,7 +99,7 @@ export function getSelectedWidgets(widgets: Widget[], selectedIds: string[]): Wi
 export function createGroupWidget(
   id: string,
   children: Widget[] = [],
-  bounds?: DOMRectLike
+  bounds?: DOMRectLike,
 ): Widget {
   return {
     id,
@@ -130,7 +130,7 @@ export function getNestedMoveUpdates(
   parentOldX?: number,
   parentOldY?: number,
   parentNewX?: number,
-  parentNewY?: number
+  parentNewY?: number,
 ) {
   const oldX = widget.editableProperties.x?.value ?? 0;
   const oldY = widget.editableProperties.y?.value ?? 0;

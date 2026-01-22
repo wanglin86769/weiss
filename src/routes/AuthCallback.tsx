@@ -1,0 +1,29 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService, type OAuthProvider } from "@src/services/AuthService/AuthService";
+
+export default function AuthCallback() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const provider = params.get("state") as OAuthProvider | null;
+
+    if (!code || !provider) {
+      console.error("OAuth callback missing parameters");
+      void navigate("/login", { replace: true });
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}/auth/callback`;
+
+    authService
+      .handleCallback(provider, code, redirectUri)
+      .then(() => authService.restoreSession())
+      .then(() => navigate("/", { replace: true }))
+      .catch(() => navigate("/login", { replace: true }));
+  }, [navigate]);
+
+  return null;
+}

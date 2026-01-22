@@ -9,32 +9,6 @@
   -moz-osx-font-smoothing: grayscale;
   --back-ui-zidx: 0;
   --front-ui-zidx: 1000;
-  /* default-colors */
-  /* Palletes:
-     https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd
-     https://coolors.co/palette/0466c8-0353a4-023e7d-002855-001845-001233-33415c-5c677d-7d8597-979dac
-     https://coolors.co/palette/f8f9fa-e9ecef-dee2e6-ced4da-adb5bd-6c757d-495057-343a40-212529
-  */
-  --title-bar-color: #415a77;
-  --background-color: #e9ecef;
-  --grid-line-color: #dee2e6;
-  --text-color: #000000;
-  --button-color: #979dac;
-  --label-color: "transparent";
-  --input-color: #ffffff;
-  --read-color: #ced4da;
-  --light-gray: #adb5bd;
-  --transparent: "transparent";
-  --highlighted: #0466c8;
-  --on-color: #00ac25;
-  --off-color: #ac0000;
-  --graph-line-color: #0353a4;
-  --mid-dark-blue: #023e7d;
-  /* epics alarm border colors */
-  --minor: #ffff00;
-  --major: #ff0000;
-  --invalid: #5b00c4;
-  --disconnected: #5b00c4;
 }
 
 body {

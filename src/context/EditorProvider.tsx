@@ -28,10 +28,10 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const ws = useEpicsWS(widgetManager.PVMap);
   const ui = useUIManager(
     ws,
-    widgetManager.editorWidgets,
     widgetManager.setSelectedWidgetIDs,
-    widgetManager.loadWidgets,
-    widgetManager.formatWdgToExport
+    widgetManager.editorWidgets,
+    widgetManager.formatWdgToExport,
+    widgetManager.fileLoadedTrig,
   );
 
   const value = React.useMemo<EditorContextType>(
@@ -40,7 +40,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...ws,
       ...ui,
     }),
-    [widgetManager, ws, ui]
+    [widgetManager, ws, ui],
   );
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

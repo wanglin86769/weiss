@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { WSClient } from "@src/WSClient/WSClient";
+import { WSClient } from "@src/services/WSClient/WSClient";
 import type { PVData, PVValue, WSMessage } from "@src/types/epicsWS";
 import type { useWidgetManager } from "./useWidgetManager";
 import { WS_URL } from "@src/constants/constants";
@@ -64,7 +64,7 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         return { ...prev, [pvData.pv]: pvData };
       });
     },
-    [reversePVMap]
+    [reversePVMap],
   );
 
   /**
@@ -78,21 +78,31 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         ws.current?.subscribe(substitutedList);
       }
     },
-    [setWSConnected, substitutedList]
+    [setWSConnected, substitutedList],
   );
+
+  /**
+   * Stops the current WebSocket session.
+   */
+  const stopSession = useCallback(() => {
+    if (!ws.current) return;
+    ws.current.unsubscribe(substitutedList);
+    ws.current.close();
+    ws.current = null;
+    setWSConnected(false);
+    setPVState({});
+  }, [setWSConnected, substitutedList]);
 
   /**
    * Starts a new WebSocket session.
    */
   const startNewSession = useCallback(() => {
     if (ws.current) {
-      ws.current.unsubscribe(substitutedList);
-      ws.current.close();
-      ws.current = null;
+      stopSession();
     }
     ws.current = new WSClient(WS_URL, handleConnect, onMessage);
     ws.current.open();
-  }, [substitutedList, handleConnect, onMessage]);
+  }, [handleConnect, onMessage, stopSession]);
 
   /**
    * Writes a new value to a PV.
@@ -108,20 +118,8 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         console.warn(`writePVValue: unknown PV ${pv}`);
       }
     },
-    [PVMap]
+    [PVMap],
   );
-
-  /**
-   * Stops the current WebSocket session.
-   */
-  const stopSession = useCallback(() => {
-    if (!ws.current) return;
-    ws.current.unsubscribe(substitutedList);
-    ws.current.close();
-    ws.current = null;
-    setWSConnected(false);
-    setPVState({});
-  }, [setWSConnected, substitutedList]);
 
   return {
     ws,
