@@ -73,14 +73,21 @@ class CAClient:
     def unsubscribe_all(self, client_id: str):
         """Remove a client from all subscriptions."""
         with self._lock:
-            empty_pvs = [
-                pv
-                for pv, clients in self._subscribers.items()
-                if client_id in clients and len(clients) == 1
-            ]
+            empty_pvs = []
+            for pv_name, clients in self._subscribers.items():
+                clients.discard(client_id)
+                if not clients:
+                    empty_pvs.append(pv_name)
 
-        for pv in empty_pvs:
-            self.unsubscribe(client_id, pv)
+            for pv_name in empty_pvs:
+                pv = self._pvs.pop(pv_name, None)
+                self._subscribers.pop(pv_name, None)
+                self._latest_value.pop(pv_name, None)
+                if pv:
+                    try:
+                        pv.clear_callbacks()
+                    except Exception as e:
+                        print(f"[CAClient]: Failed to clear callbacks for {pv_name}: {e}")
 
     def write_to_pv(self, pv_name: str, value: Any):
         """Write synchronously to a PV."""
