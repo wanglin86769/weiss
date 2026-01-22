@@ -9,8 +9,11 @@ import { useEditorContext } from "@src/context/useEditorContext";
 import ProjectSection from "./ProjectSection";
 import { notifyUser } from "@src/services/Notifications/Notification";
 import type { ExportedWidget } from "@src/types/widgets";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import type { SelectedPathInfo } from "@src/context/useUIManager";
+import GitImportDialog from "@src/components/GitImportDialog/GitImportDialog";
+import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
+import { COLORS } from "@src/constants/constants";
 
 export default function ProjectsTab() {
   const {
@@ -27,6 +30,7 @@ export default function ProjectsTab() {
   } = useEditorContext();
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedPathInfo | null>(null);
+  const [GitImportOpen, setGitImportOpen] = useState(false);
   const lastSavedRef = useRef<ExportedWidget[] | null>(null);
   const hasFileChanged = useRef(true);
   const saveTimeoutRef = useRef<number | null>(null);
@@ -125,7 +129,15 @@ export default function ProjectsTab() {
   }, [reposTreeInfo, loadRepoFile]);
 
   return (
-    <Box sx={{ height: "100%", overflowY: "auto" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
       {reposTreeInfo?.length ? (
         reposTreeInfo.map((repo) => (
           <ProjectSection
@@ -139,8 +151,21 @@ export default function ProjectsTab() {
           />
         ))
       ) : (
-        <div style={{ padding: 16 }}>No repositories available.</div>
+        <Box sx={{ p: 2 }}>No repositories available.</Box>
       )}
+      <Button
+        variant="contained"
+        onClick={() => setGitImportOpen(true)}
+        startIcon={<CustomGitIcon />}
+        sx={{
+          backgroundColor: COLORS.titleBarColor,
+          textTransform: "none",
+          "&:hover": { backgroundColor: COLORS.midDarkBlue },
+        }}
+      >
+        Import OPI repository
+      </Button>
+      <GitImportDialog open={GitImportOpen} onClose={() => setGitImportOpen(false)} />
     </Box>
   );
 }

@@ -28,10 +28,8 @@ import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstruct
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService.ts";
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
-import ImportGitRepoDialog from "./ImportGitRepoDialog";
+import GitImportDialog from "@components/GitImportDialog/GitImportDialog.tsx";
 import { notifyUser } from "@src/services/Notifications/Notification.ts";
-import { registerRepo } from "@src/services/APIClient/sdk.gen.ts";
-import type { RepoCreateRequest } from "@src/services/APIClient/types.gen.ts";
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
   drawerWidth: number;
@@ -113,7 +111,6 @@ export default function NavBar() {
     login,
     logout,
     isDeveloper,
-    updateReposTreeInfo,
   } = useEditorContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
@@ -166,19 +163,6 @@ export default function NavBar() {
   const handleImportGitRepo = () => {
     handleImportMenuClose();
     setGitImportOpen(true);
-  };
-
-  const handleConfirmGitImport = async (importData: RepoCreateRequest) => {
-    try {
-      const data = await registerRepo({ body: importData }).then((r) => r.data);
-      if (data) {
-        notifyUser("Git repository imported successfully.", "success");
-        void updateReposTreeInfo();
-      }
-    } catch (err) {
-      notifyUser(`Git import failed: ${err instanceof Error ? err.message : String(err)}`, "error");
-    }
-    setGitImportOpen(false);
   };
 
   const handleLogin = async (provider: OAuthProvider, demoProfile?: Roles) => {
@@ -368,11 +352,7 @@ export default function NavBar() {
               </>
             )}
           </Box>
-          <ImportGitRepoDialog
-            open={gitImportOpen}
-            onClose={() => setGitImportOpen(false)}
-            onConfirm={(data) => void handleConfirmGitImport(data)}
-          />
+          <GitImportDialog open={gitImportOpen} onClose={() => setGitImportOpen(false)} />
         </Toolbar>
       </StyledAppBar>
     </Box>

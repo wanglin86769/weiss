@@ -260,7 +260,7 @@ export default function ProjectSection({
   const items = useMemo(() => toRichItems(repo.tree), [repo.tree, toRichItems]);
 
   return (
-    <Paper variant="outlined" sx={{ mb: 2, overflow: "hidden" }}>
+    <Paper variant="outlined" sx={{ mb: 2, width: "100%" }}>
       {/* Header */}
       <Box sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
         <IconButton size="small" onClick={() => setSectionExpanded((v) => !v)}>
@@ -351,9 +351,7 @@ export default function ProjectSection({
           </>
         )}
       </Box>
-
       <Divider />
-
       {/* Repo content */}
       <Collapse in={sectionExpanded} timeout="auto" unmountOnExit>
         <FileToolbar

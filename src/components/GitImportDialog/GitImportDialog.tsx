@@ -13,69 +13,70 @@ import {
 } from "@mui/material";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
 import { useEditorContext } from "@src/context/useEditorContext";
-import type { RepoCreateRequest } from "@src/services/APIClient";
+import type { RepoCreateRequest } from "@src/services/APIClient/types.gen";
+import { registerRepo } from "@src/services/APIClient/sdk.gen";
+import { notifyUser } from "@src/services/Notifications/Notification";
 
 function isValidGitUrl(url: string): boolean {
-  if (!url) return false;
-
   const httpsPattern = /^https:\/\/[\w.-]+\/[\w.-]+\/[\w.-]+(\.git)?$/;
-
   return httpsPattern.test(url);
 }
 
-interface ImportGitRepoDialogProps {
+function suggestAliasFromGitUrl(url: string): string {
+  const normalized = url.replace(/\/$/, "");
+  const lastSegment = normalized.split("/").pop() ?? "";
+  return lastSegment.replace(/\.git$/, "");
+}
+
+interface GitImportDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (data: RepoCreateRequest) => void;
 }
 
-function suggestAliasFromGitUrl(url: string): string {
-  try {
-    const normalized = url.replace(/\/$/, "");
-    const lastSegment = normalized.split("/").pop() ?? "";
-    return lastSegment.replace(/\.git$/, "");
-  } catch {
-    return "";
-  }
-}
-
-export default function ImportGitRepoDialog({
-  open,
-  onClose,
-  onConfirm,
-}: ImportGitRepoDialogProps) {
+export default function GitImportDialog({ open, onClose }: GitImportDialogProps) {
+  const { setReleaseShortcuts, updateReposTreeInfo, isDemo } = useEditorContext();
   const [alias, setAlias] = useState("");
-  const [gitUrl, setGitUrl] = useState("");
+  const [gitUrl, setGitUrl] = useState(
+    isDemo ? "https://github.com/weiss-controls/weiss-demo-opis.git" : "",
+  );
   const [aliasEdited, setAliasEdited] = useState(false);
-  const { setReleaseShortcuts } = useEditorContext();
+  const [loading, setLoading] = useState(false);
+
   const gitUrlValid = isValidGitUrl(gitUrl.trim());
   const showGitUrlError = gitUrl.length > 0 && !gitUrlValid;
 
   useEffect(() => {
     if (!aliasEdited && gitUrl.trim() && gitUrlValid) {
-      const suggested = suggestAliasFromGitUrl(gitUrl.trim());
-      if (suggested) {
-        setAlias(suggested);
-      }
+      setAlias(suggestAliasFromGitUrl(gitUrl.trim()));
     }
   }, [gitUrl, aliasEdited, gitUrlValid]);
-
-  const handleConfirm = () => {
-    if (!alias.trim() || !gitUrl.trim()) return;
-
-    onConfirm({
-      alias: alias.trim(),
-      git_url: gitUrl.trim(),
-    });
-
-    resetAndClose();
-  };
 
   const resetAndClose = () => {
     setAlias("");
     setGitUrl("");
     setAliasEdited(false);
+    setLoading(false);
     onClose();
+  };
+
+  const handleConfirm = async () => {
+    if (!alias.trim() || !gitUrlValid) return;
+
+    const payload: RepoCreateRequest = {
+      alias: alias.trim(),
+      git_url: gitUrl.trim(),
+    };
+
+    try {
+      setLoading(true);
+      await registerRepo({ body: payload });
+      notifyUser("Git repository imported successfully.", "success");
+      await updateReposTreeInfo();
+      resetAndClose();
+    } catch (err) {
+      notifyUser(`Git import failed: ${err instanceof Error ? err.message : String(err)}`, "error");
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,7 +100,7 @@ export default function ImportGitRepoDialog({
             <TextField
               fullWidth
               label="Git repository URL"
-              placeholder="https://github.com/organization/repository.git"
+              placeholder="https://github.com/org/repo.git"
               value={gitUrl}
               onChange={(e) => setGitUrl(e.target.value)}
               error={showGitUrlError}
@@ -119,7 +120,6 @@ export default function ImportGitRepoDialog({
               autoFocus
               fullWidth
               label="Repository alias"
-              placeholder="weiss-example-opi"
               value={alias}
               onChange={(e) => {
                 setAlias(e.target.value);
@@ -131,11 +131,13 @@ export default function ImportGitRepoDialog({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={resetAndClose}>Cancel</Button>
+        <Button onClick={resetAndClose} disabled={loading}>
+          Cancel
+        </Button>
         <Button
           variant="contained"
-          onClick={handleConfirm}
-          disabled={!alias.trim() || !gitUrlValid}
+          onClick={() => void handleConfirm()}
+          disabled={!alias.trim() || !gitUrlValid || loading}
         >
           Import
         </Button>
