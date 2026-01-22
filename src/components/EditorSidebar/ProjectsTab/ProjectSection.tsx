@@ -73,64 +73,63 @@ const getGitStatusHighlight = (status?: GitFileStatus["status"]) => {
 const hasDirtyDescendant = (children?: RichTreeItem[]): boolean =>
   !!children?.some((c) => c.gitStatus ?? hasDirtyDescendant(c.children));
 
-const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(function CustomTreeItem(
-  props,
-  ref
-) {
-  const { id, itemId, label, disabled, children, ...other } = props;
-  const {
-    getContextProviderProps,
-    getRootProps,
-    getContentProps,
-    getIconContainerProps,
-    getLabelProps,
-    getGroupTransitionProps,
-    status,
-  } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
+const CustomTreeItem = forwardRef<HTMLLIElement, UseTreeItemParameters>(
+  function CustomTreeItem(props, ref) {
+    const { id, itemId, label, disabled, children, ...other } = props;
+    const {
+      getContextProviderProps,
+      getRootProps,
+      getContentProps,
+      getIconContainerProps,
+      getLabelProps,
+      getGroupTransitionProps,
+      status,
+    } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
 
-  const item = useTreeItemModel<RichTreeItem>(itemId)!;
-  const labelSx = {
-    ...getGitStatusHighlight(item.gitStatus),
-    fontWeight: item.gitStatus ? 600 : 200,
-  };
+    const item = useTreeItemModel<RichTreeItem>(itemId)!;
+    const labelSx = {
+      ...getGitStatusHighlight(item.gitStatus),
+      fontWeight: item.gitStatus ? 600 : 200,
+    };
 
-  const NodeIcon = item.type === "directory" ? FolderIcon : InsertDriveFileIcon;
-  const NodeIconSx = { color: COLORS.midGray };
-  const dirtyDir = item.type === "directory" && item.gitStatus != null;
+    const NodeIcon = item.type === "directory" ? FolderIcon : InsertDriveFileIcon;
+    const NodeIconSx = { color: COLORS.midGray };
+    const dirtyDir = item.type === "directory" && item.gitStatus != null;
 
-  return (
-    <TreeItemProvider {...getContextProviderProps()}>
-      <TreeItemRoot {...getRootProps(other)}>
-        <TreeItemContent {...getContentProps()}>
-          <TreeItemIconContainer {...getIconContainerProps()}>
-            <TreeItemIcon status={status} />
-          </TreeItemIconContainer>
-          <NodeIcon sx={NodeIconSx} />
-          <TreeItemLabel {...getLabelProps()} sx={labelSx} />
-          {dirtyDir && (
-            <Box
-              sx={{
-                flexGrow: 1,
-                mr: 1,
-                width: 6,
-                height: 6,
-                aspectRatio: 1 / 1,
-                borderRadius: "50%",
-                backgroundColor: COLORS.gitModified,
-                alignSelf: "center",
-              }}
-            />
+    return (
+      <TreeItemProvider {...getContextProviderProps()}>
+        <TreeItemRoot {...getRootProps(other)}>
+          <TreeItemContent {...getContentProps()}>
+            <TreeItemIconContainer {...getIconContainerProps()}>
+              <TreeItemIcon status={status} />
+            </TreeItemIconContainer>
+            <NodeIcon sx={NodeIconSx} />
+            <TreeItemLabel {...getLabelProps()} sx={labelSx} />
+            {dirtyDir && (
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  mr: 1,
+                  width: 6,
+                  height: 6,
+                  aspectRatio: 1 / 1,
+                  borderRadius: "50%",
+                  backgroundColor: COLORS.gitModified,
+                  alignSelf: "center",
+                }}
+              />
+            )}
+          </TreeItemContent>
+          {children && (
+            <Collapse {...getGroupTransitionProps()} sx={{ pl: 1 }}>
+              {children}
+            </Collapse>
           )}
-        </TreeItemContent>
-        {children && (
-          <Collapse {...getGroupTransitionProps()} sx={{ pl: 1 }}>
-            {children}
-          </Collapse>
-        )}
-      </TreeItemRoot>
-    </TreeItemProvider>
-  );
-});
+        </TreeItemRoot>
+      </TreeItemProvider>
+    );
+  },
+);
 
 export default function ProjectSection({
   repo,
@@ -158,7 +157,7 @@ export default function ProjectSection({
       const parents = parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join("/"));
       setExpandedItems(parents);
     }
-  }, [defaultSelectedPath]);
+  }, [setSelectedItem, defaultSelectedPath]);
 
   const handleRefChange = async (ref: string) => {
     try {
@@ -207,7 +206,7 @@ export default function ProjectSection({
   const handleResetClick = async () => {
     try {
       const updatedTree = await resetStagingRepo({ path: { repo_id: repo.id } }).then(
-        (r) => r.data
+        (r) => r.data,
       );
       onRepoUpdate(updatedTree);
       notifyUser(`Successfully restored ${repo.alias}`, "success");
@@ -255,7 +254,7 @@ export default function ProjectSection({
         };
       });
     },
-    [gitStatusByPath]
+    [gitStatusByPath],
   );
 
   const items = useMemo(() => toRichItems(repo.tree), [repo.tree, toRichItems]);

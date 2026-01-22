@@ -9,6 +9,7 @@ import WidgetRenderer from "@components/WidgetRenderer/WidgetRenderer.tsx";
 import ToolbarButtons from "@components/Toolbar/Toolbar.tsx";
 import { v4 as uuidv4 } from "uuid";
 import SelectionManager from "./SelectionManager/SelectionManager";
+import { Box } from "@mui/material";
 
 /**
  * GridZoneComp renders the main editor canvas where widgets are displayed, moved, and interacted with.
@@ -48,6 +49,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     isPanning,
     setIsPanning,
     inEditMode,
+    selectedFile,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -73,7 +75,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     (coord: number) => {
       return snapToGrid ? Math.round(coord / gridSize) * gridSize : coord;
     },
-    [snapToGrid, gridSize]
+    [snapToGrid, gridSize],
   );
 
   const centerScreen = () => {
@@ -138,7 +140,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
 
     // Deep copy
     const editableProperties = Object.fromEntries(
-      Object.entries(droppedComp.editableProperties).map(([k, v]) => [k, { ...v }])
+      Object.entries(droppedComp.editableProperties).map(([k, v]) => [k, { ...v }]),
     );
 
     // Drop position
@@ -387,6 +389,23 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
           setContextMenuVisible(false);
         }}
       />
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: inEditMode ? "60px" : 0,
+          padding: "4px 12px",
+          fontSize: "12px",
+          bgcolor: "rgba(88, 88, 88, 0.5)",
+          borderRadius: "3px 3px 0 0",
+          pointerEvents: "none",
+          userSelect: "none",
+          boxShadow: 4,
+          zIndex: FRONT_UI_ZIDX,
+        }}
+      >
+        {selectedFile?.path}
+      </Box>
     </div>
   );
 };

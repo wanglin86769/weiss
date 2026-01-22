@@ -1,5 +1,4 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import type { SelectedPathInfo } from "./ProjectsTab";
 import { CreateNewFolderOutlined, DeleteOutlined, NoteAddOutlined } from "@mui/icons-material";
 import {
   createStagingRepoPath,
@@ -7,6 +6,7 @@ import {
   type RepoTreeInfo,
 } from "@src/services/APIClient";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import type { SelectedPathInfo } from "@src/context/useUIManager";
 
 interface FileToolbarProps {
   selectedPath: SelectedPathInfo | null;
@@ -85,7 +85,7 @@ export default function FileToolbar({ selectedPath, onRepoUpdate }: FileToolbarP
             if (!fileName) {
               notifyUser(
                 "Only .json files are allowed. Either leave extension empty or use .json",
-                "error"
+                "error",
               );
               return;
             }

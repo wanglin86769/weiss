@@ -10,10 +10,7 @@ import ProjectSection from "./ProjectSection";
 import { notifyUser } from "@src/services/Notifications/Notification";
 import type { ExportedWidget } from "@src/types/widgets";
 import { Box } from "@mui/material";
-export interface SelectedPathInfo {
-  repo_id: string;
-  path: string;
-}
+import type { SelectedPathInfo } from "@src/context/useUIManager";
 
 export default function ProjectsTab() {
   const {
@@ -25,10 +22,11 @@ export default function ProjectsTab() {
     inEditMode,
     editorWidgets,
     formatWdgToExport,
+    selectedFile,
+    setSelectedFile,
   } = useEditorContext();
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedPathInfo | null>(null);
-  const [selectedFile, setSelectedFile] = useState<SelectedPathInfo | null>(null);
   const lastSavedRef = useRef<ExportedWidget[] | null>(null);
   const hasFileChanged = useRef(true);
   const saveTimeoutRef = useRef<number | null>(null);
@@ -100,7 +98,7 @@ export default function ProjectsTab() {
         localStorage.setItem("lastLoadedFile", JSON.stringify({ repo_id, path }));
       }
     },
-    [isDeveloper, loadWidgets]
+    [isDeveloper, loadWidgets, setSelectedFile],
   );
 
   // On first render, restore last loaded file
