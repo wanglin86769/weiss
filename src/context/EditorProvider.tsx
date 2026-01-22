@@ -34,7 +34,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...ws,
       ...ui,
     }),
-    [widgetManager, ws, ui]
+    [widgetManager, ws, ui],
   );
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

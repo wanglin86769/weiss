@@ -49,12 +49,12 @@ export const COLORS = {
 
 /** z-index value for back layer of the UI (read from CSS variable) */
 export const BACK_UI_ZIDX = parseInt(
-  getComputedStyle(document.documentElement, null).getPropertyValue("--back-ui-zidx")
+  getComputedStyle(document.documentElement, null).getPropertyValue("--back-ui-zidx"),
 );
 
 /** z-index value for front layer of the UI (read from CSS variable) */
 export const FRONT_UI_ZIDX = parseInt(
-  getComputedStyle(document.documentElement, null).getPropertyValue("--front-ui-zidx")
+  getComputedStyle(document.documentElement, null).getPropertyValue("--front-ui-zidx"),
 );
 
 /** URL of the project source repository */

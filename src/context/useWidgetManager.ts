@@ -46,12 +46,12 @@ export function useWidgetManager() {
 
   const allWidgetIDs = useMemo(
     () => editorWidgets.map((w) => w.id).filter((id) => id !== GRID_ID),
-    [editorWidgets]
+    [editorWidgets],
   );
 
   const selectedWidgets: Widget[] = useMemo(
     () => getSelectedWidgets(editorWidgets, selectedWidgetIDs),
-    [editorWidgets, selectedWidgetIDs]
+    [editorWidgets, selectedWidgetIDs],
   );
 
   /* Widgets being edited (shown at the property editor) */
@@ -76,12 +76,12 @@ export function useWidgetManager() {
       const maxY = Math.max(...ys.map((y, i) => y + hs[i]));
       return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     },
-    [editorWidgets]
+    [editorWidgets],
   );
 
   const selectionBounds = useMemo(
     () => computeGroupBounds(selectedWidgetIDs),
-    [selectedWidgetIDs, computeGroupBounds]
+    [selectedWidgetIDs, computeGroupBounds],
   );
 
   /**
@@ -104,7 +104,7 @@ export function useWidgetManager() {
         return typeof newWidgets === "function" ? newWidgets(prev) : newWidgets;
       });
     },
-    [editorWidgets]
+    [editorWidgets],
   );
 
   /**
@@ -114,7 +114,7 @@ export function useWidgetManager() {
    */
   const getWidget = useCallback(
     (id: string) => getWidgetNested(editorWidgets, id),
-    [editorWidgets]
+    [editorWidgets],
   );
 
   /**
@@ -148,7 +148,7 @@ export function useWidgetManager() {
 
       updateEditorWidgetList((prev) => updateWidgets(prev, updates), keepHistory);
     },
-    [updateEditorWidgetList, getWidget]
+    [updateEditorWidgetList, getWidget],
   );
 
   /**
@@ -215,7 +215,7 @@ export function useWidgetManager() {
       const updates: MultiWidgetPropertyUpdates = { [id]: changes };
       batchWidgetUpdate(updates, keepHistory);
     },
-    [batchWidgetUpdate]
+    [batchWidgetUpdate],
   );
 
   /**
@@ -263,7 +263,7 @@ export function useWidgetManager() {
         return [gridZone, ...newWidgets];
       });
     },
-    [selectedWidgetIDs, updateEditorWidgetList]
+    [selectedWidgetIDs, updateEditorWidgetList],
   );
 
   const stepForward = useCallback(() => {
@@ -302,8 +302,8 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 2) return;
     const rightX = Math.max(
       ...selectedWidgets.map(
-        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
-      )
+        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0),
+      ),
     );
     const updates: MultiWidgetPropertyUpdates = {};
     selectedWidgets.forEach((w) => {
@@ -333,8 +333,8 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 2) return;
     const bottomY = Math.max(
       ...selectedWidgets.map(
-        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
-      )
+        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0),
+      ),
     );
     const updates: MultiWidgetPropertyUpdates = {};
     selectedWidgets.forEach((w) => {
@@ -352,8 +352,8 @@ export function useWidgetManager() {
     const minX = Math.min(...selectedWidgets.map((w) => w.editableProperties.x?.value ?? 0));
     const maxX = Math.max(
       ...selectedWidgets.map(
-        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0)
-      )
+        (w) => (w.editableProperties.x?.value ?? 0) + (w.editableProperties.width?.value ?? 0),
+      ),
     );
     const centerX = (minX + maxX) / 2;
 
@@ -373,8 +373,8 @@ export function useWidgetManager() {
     const minY = Math.min(...selectedWidgets.map((w) => w.editableProperties.y?.value ?? 0));
     const maxY = Math.max(
       ...selectedWidgets.map(
-        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0)
-      )
+        (w) => (w.editableProperties.y?.value ?? 0) + (w.editableProperties.height?.value ?? 0),
+      ),
     );
     const centerY = (minY + maxY) / 2;
 
@@ -394,7 +394,7 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 3) return;
 
     const sorted = [...selectedWidgets].sort(
-      (a, b) => (a.editableProperties.x?.value ?? 0) - (b.editableProperties.x?.value ?? 0)
+      (a, b) => (a.editableProperties.x?.value ?? 0) - (b.editableProperties.x?.value ?? 0),
     );
 
     const leftX = sorted[0].editableProperties.x?.value ?? 0;
@@ -426,7 +426,7 @@ export function useWidgetManager() {
     if (selectedWidgets.length < 3) return;
 
     const sorted = [...selectedWidgets].sort(
-      (a, b) => (a.editableProperties.y?.value ?? 0) - (b.editableProperties.y?.value ?? 0)
+      (a, b) => (a.editableProperties.y?.value ?? 0) - (b.editableProperties.y?.value ?? 0),
     );
 
     const topY = sorted[0].editableProperties.y?.value ?? 0;
@@ -436,7 +436,7 @@ export function useWidgetManager() {
 
     const totalHeight = sorted.reduce(
       (sum, w) => sum + (w.editableProperties.height?.value ?? 0),
-      0
+      0,
     );
     const spacing = (bottomY - topY - totalHeight) / (sorted.length - 1);
 
@@ -470,7 +470,7 @@ export function useWidgetManager() {
       }
       batchWidgetUpdate(updates);
     },
-    [selectedWidgets, batchWidgetUpdate]
+    [selectedWidgets, batchWidgetUpdate],
   );
 
   /**
@@ -546,14 +546,14 @@ export function useWidgetManager() {
       const cloneWidgetWithNewIds = (widget: Widget, dxOffset = 0, dyOffset = 0): Widget => {
         const newId = `${widget.widgetName}-${uuidv4()}`;
         const newEditableProps: Widget["editableProperties"] = Object.fromEntries(
-          Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }])
+          Object.entries(widget.editableProperties).map(([k, v]) => [k, { ...v }]),
         );
 
         if (newEditableProps.x) newEditableProps.x.value += dxOffset;
         if (newEditableProps.y) newEditableProps.y.value += dyOffset;
 
         const newChildren = widget.children?.map((child) =>
-          cloneWidgetWithNewIds(child, dxOffset, dyOffset)
+          cloneWidgetWithNewIds(child, dxOffset, dyOffset),
         );
 
         return {
@@ -569,7 +569,7 @@ export function useWidgetManager() {
       updateEditorWidgetList((prev) => [...prev, ...newWidgets]);
       setSelectedWidgetIDs(newWidgets.map((w) => w.id));
     },
-    [updateEditorWidgetList, copiedSelectionBounds]
+    [updateEditorWidgetList, copiedSelectionBounds],
   );
 
   const formatWdgToExport = useCallback((widget: Widget): ExportedWidget => {
@@ -577,7 +577,7 @@ export function useWidgetManager() {
       id: widget.id,
       widgetName: widget.widgetName,
       properties: Object.fromEntries(
-        Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value])
+        Object.entries(widget.editableProperties).map(([key, def]) => [key, def.value]),
       ),
       children: widget.children?.map((child) => formatWdgToExport(child)),
     };
@@ -695,7 +695,7 @@ export function useWidgetManager() {
         console.error("Failed to load widgets:", err);
       }
     },
-    [updateEditorWidgetList]
+    [updateEditorWidgetList],
   );
 
   /**
@@ -715,7 +715,7 @@ export function useWidgetManager() {
         return replacement ?? macro;
       });
     },
-    [macros]
+    [macros],
   );
 
   /**

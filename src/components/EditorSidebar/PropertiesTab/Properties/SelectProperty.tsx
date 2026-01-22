@@ -50,12 +50,12 @@ const SelectProperty: React.FC<SelectPropertyProps> = ({
         { key: "bottom", icon: <VerticalAlignBottom /> },
       ]
     : isHAlign
-    ? [
-        { key: "left", icon: <FormatAlignLeft /> },
-        { key: "center", icon: <FormatAlignCenter /> },
-        { key: "right", icon: <FormatAlignRight /> },
-      ]
-    : [];
+      ? [
+          { key: "left", icon: <FormatAlignLeft /> },
+          { key: "center", icon: <FormatAlignCenter /> },
+          { key: "right", icon: <FormatAlignRight /> },
+        ]
+      : [];
 
   return (
     <ListItem

@@ -18,7 +18,7 @@ const BitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
 
   const useStr = p.useStringVal?.value;
   const enumOption = validValue && pvData?.enumChoices ? pvData?.enumChoices[value] : "";
-  const pvText = useStr ? enumOption ?? "" : (value as string) ?? "";
+  const pvText = useStr ? (enumOption ?? "") : ((value as string) ?? "");
 
   const labelFromPV = p.labelFromPV?.value;
   const offLabel = p.offLabel?.value ?? "";
@@ -34,8 +34,8 @@ const BitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
   const background = inEditMode
     ? `linear-gradient(-45deg, ${onColor} 50%, ${offColor} 50%)`
     : bitOn
-    ? onColor
-    : offColor;
+      ? onColor
+      : offColor;
 
   const containerWidth = p.width!.value;
   const containerHeight = p.height!.value;

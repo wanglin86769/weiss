@@ -163,7 +163,12 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }
       >
         {renderWidgetContent(w)}
         {w.children?.map((child) =>
-          renderRecursive(child, w.editableProperties.x!.value, w.editableProperties.y!.value, true)
+          renderRecursive(
+            child,
+            w.editableProperties.x!.value,
+            w.editableProperties.y!.value,
+            true,
+          ),
         )}
       </Rnd>
     );
@@ -196,8 +201,8 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }
             renderRecursiveForSelection(
               child,
               w.editableProperties.x!.value,
-              w.editableProperties.y!.value
-            )
+              w.editableProperties.y!.value,
+            ),
           )}
         </div>
       );
@@ -225,7 +230,7 @@ const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }
         }}
       >
         {selectedWidgets.map((w) =>
-          renderRecursiveForSelection(w, selectionBounds.x, selectionBounds.y)
+          renderRecursiveForSelection(w, selectionBounds.x, selectionBounds.y),
         )}
       </Rnd>
     );

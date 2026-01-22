@@ -12,7 +12,7 @@ const App: React.FC = () => {
   const { editorWidgets } = useEditorContext();
   const gridProperties = useMemo(
     () => editorWidgets.find((w) => w.id === GRID_ID),
-    [editorWidgets]
+    [editorWidgets],
   );
   return (
     <div className="app">

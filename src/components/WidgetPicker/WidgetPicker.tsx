@@ -131,7 +131,7 @@ const WidgetPicker: React.FC = () => {
         string,
         Widget
       >,
-    []
+    [],
   );
 
   const categories = React.useMemo(() => {

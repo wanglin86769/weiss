@@ -216,7 +216,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ pos, mousePos, visible, onClo
                 </Typography>
               )}
             </MenuItem>
-          )
+          ),
         )}
       </MenuList>
     </Paper>

@@ -19,7 +19,7 @@ const ToggleButtonComp: React.FC<WidgetUpdate> = ({ data }) => {
   const offColor = p.offColor?.value;
   const bitColor = bitOn ? onColor : offColor;
 
-  const runtimeText = useStr ? enumOption ?? "" : (value as string) ?? "";
+  const runtimeText = useStr ? (enumOption ?? "") : ((value as string) ?? "");
   const labelFromPV = p.labelFromPV?.value;
   const offLabel = p.offLabel?.value ?? "";
   const onLabel = p.onLabel?.value ?? "";
@@ -57,7 +57,9 @@ const ToggleButtonComp: React.FC<WidgetUpdate> = ({ data }) => {
   return (
     <AlarmBorder alarmData={pvData?.alarm} enable={p.alarmBorder?.value}>
       <Button
-        title={!validValue ? "Cannot toggle PV: invalid type or UDF state" : p.tooltip?.value ?? ""}
+        title={
+          !validValue ? "Cannot toggle PV: invalid type or UDF state" : (p.tooltip?.value ?? "")
+        }
         sx={{
           width: "100%",
           height: "100%",

@@ -64,7 +64,7 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         return { ...prev, [pvData.pv]: pvData };
       });
     },
-    [reversePVMap]
+    [reversePVMap],
   );
 
   /**
@@ -78,7 +78,7 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         ws.current?.subscribe(substitutedList);
       }
     },
-    [setWSConnected, substitutedList]
+    [setWSConnected, substitutedList],
   );
 
   /**
@@ -118,7 +118,7 @@ export default function useEpicsWS(PVMap: ReturnType<typeof useWidgetManager>["P
         console.warn(`writePVValue: unknown PV ${pv}`);
       }
     },
-    [PVMap]
+    [PVMap],
   );
 
   return {

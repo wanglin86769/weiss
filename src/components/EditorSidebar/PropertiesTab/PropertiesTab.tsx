@@ -33,7 +33,7 @@ const getGroupedProperties = (properties: WidgetProperties) => {
     const sorted = [
       ...entries.filter(
         ([, p]) =>
-          p.selType !== "boolean" && p.selType !== "colorSel" && p.selType !== "colorSelList"
+          p.selType !== "boolean" && p.selType !== "colorSel" && p.selType !== "colorSelList",
       ),
       ...entries.filter(([, p]) => p.selType === "colorSelList"),
       ...entries.filter(([, p]) => p.selType === "colorSel"),

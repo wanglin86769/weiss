@@ -78,8 +78,8 @@ const GraphYComp: React.FC<WidgetUpdate> = ({ data }) => {
           typeof v === "number"
             ? [...(valueBuffers.current[pvName] ?? [])]
             : Array.isArray(v)
-            ? [...v]
-            : null;
+              ? [...v]
+              : null;
 
         if (!y) return null;
 

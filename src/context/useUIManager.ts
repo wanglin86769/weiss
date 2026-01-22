@@ -18,6 +18,11 @@ import {
   type User,
 } from "@src/services/APIClient";
 
+export interface SelectedPathInfo {
+  repo_id: string;
+  path: string;
+}
+
 /**
  * Hook that manages global UI state for WEISS.
  */
@@ -37,6 +42,7 @@ export default function useUIManager(
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [reposTreeInfo, setReposTreeInfo] = useState<RepoTreeInfo[] | null>(null);
+  const [selectedFile, setSelectedFile] = useState<SelectedPathInfo | null>(null);
   const inEditMode = mode === EDIT_MODE;
   const RECONNECT_TIMEOUT = 3000;
   const isDemo = import.meta.env.VITE_DEMO_MODE === "true";
@@ -160,5 +166,7 @@ export default function useUIManager(
     reposTreeInfo,
     setReposTreeInfo,
     updateReposTreeInfo,
+    selectedFile,
+    setSelectedFile,
   };
 }

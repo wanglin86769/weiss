@@ -83,7 +83,7 @@ const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan 
         }
         if (e.ctrlKey) {
           setSelectedWidgetIDs((prev) =>
-            prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId]
+            prev.includes(wId) ? prev.filter((pid) => pid !== wId) : [...prev, wId],
           );
         } else if (!selectedWidgetIDs.includes(wId)) {
           setSelectedWidgetIDs([wId]);

@@ -47,7 +47,7 @@ const renderBinding = (binding: string, idx: number) => {
           </Typography>
         ) : (
           <KeyPill key={i} label={token} />
-        )
+        ),
       )}
     </Box>
   );
