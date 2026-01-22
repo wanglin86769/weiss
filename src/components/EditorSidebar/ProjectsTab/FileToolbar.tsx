@@ -1,5 +1,11 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import { CreateNewFolderOutlined, DeleteOutlined, NoteAddOutlined } from "@mui/icons-material";
+import {
+  CreateNewFolderOutlined,
+  DeleteOutlined,
+  NoteAddOutlined,
+  UnfoldLessOutlined,
+  UnfoldMoreOutlined,
+} from "@mui/icons-material";
 import {
   createStagingRepoPath,
   deleteStagingRepoPath,
@@ -11,6 +17,8 @@ import type { SelectedPathInfo } from "@src/context/useUIManager";
 interface FileToolbarProps {
   selectedPath: SelectedPathInfo | null;
   onRepoUpdate: (update: RepoTreeInfo) => void;
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
 }
 
 function getParentDir(path: string): string {
@@ -40,7 +48,12 @@ function normalizeJsonFileName(name: string): string | null {
   return trimmed;
 }
 
-export default function FileToolbar({ selectedPath, onRepoUpdate }: FileToolbarProps) {
+export default function FileToolbar({
+  selectedPath,
+  onRepoUpdate,
+  onExpandAll,
+  onCollapseAll,
+}: FileToolbarProps) {
   const iconSx = { fontSize: 18 };
 
   async function createPath(repo_id: string, path: string, type: "file" | "directory") {
@@ -123,6 +136,20 @@ export default function FileToolbar({ selectedPath, onRepoUpdate }: FileToolbarP
           }}
         >
           <DeleteOutlined sx={iconSx} />
+        </IconButton>
+      </Tooltip>
+
+      {/* Expand all */}
+      <Tooltip title="Expand all folders">
+        <IconButton onClick={onExpandAll}>
+          <UnfoldMoreOutlined sx={iconSx} />
+        </IconButton>
+      </Tooltip>
+
+      {/* Collapse all */}
+      <Tooltip title="Collapse all folders">
+        <IconButton onClick={onCollapseAll}>
+          <UnfoldLessOutlined sx={iconSx} />
         </IconButton>
       </Tooltip>
     </Box>

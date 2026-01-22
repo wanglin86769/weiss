@@ -149,6 +149,22 @@ export default function ProjectSection({
 
   const shortRef = (ref: string) => ref.substring(0, REF_MAX_DISPLAY_SIZE);
 
+  function expandAll(repo: RepoTreeInfo) {
+    const allDirs: string[] = [];
+
+    function walk(node: TreeNode) {
+      if (node.type === "directory") {
+        allDirs.push(node.path);
+        node.children?.forEach(walk);
+      }
+    }
+    repo.tree.forEach(walk);
+    setExpandedItems(allDirs);
+  }
+
+  function collapseAll() {
+    setExpandedItems([]);
+  }
   // restore selected path on mount
   useEffect(() => {
     if (defaultSelectedPath) {
@@ -357,6 +373,8 @@ export default function ProjectSection({
         <FileToolbar
           selectedPath={selectedItem ? { repo_id: repo.id, path: selectedItem } : null}
           onRepoUpdate={onRepoUpdate}
+          onExpandAll={() => expandAll(repo)}
+          onCollapseAll={() => collapseAll()}
         />
 
         <Box sx={{ px: 1, py: 0.5 }}>
