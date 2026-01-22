@@ -35,8 +35,8 @@ export interface TimeStamp {
  * @property description - Optional description of the PV
  * @property units - Optional engineering units
  * @property precision - Optional number of decimal places
- * @property form - Optional display format (e.g., "linear", "log", "enum")
- * @property choices - Optional list of choices if PV is enumerated
+ * @property form - Optional display format enum index
+ * @property choices - Optional list of form string choices
  */
 export interface Display {
   limitLow?: number;
@@ -44,7 +44,7 @@ export interface Display {
   description?: string;
   units?: string;
   precision?: number;
-  form?: string;
+  form?: number;
   choices?: string[];
 }
 

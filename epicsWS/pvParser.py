@@ -30,7 +30,7 @@ class Display:
     description: Optional[str] = None
     units: Optional[str] = None
     precision: Optional[int] = None
-    form: Optional[str] = None
+    form: Optional[int] = None
     choices: Optional[List[str]] = None
 
 
@@ -52,13 +52,13 @@ class ValueAlarm:
     lowWarningSeverity: Optional[int] = None
     highWarningSeverity: Optional[int] = None
     highAlarmSeverity: Optional[int] = None
-    hysteresis: Optional[int] = None
+    hysteresis: Optional[float] = None
 
 
 @dataclass
 class PVData:
     pv: Optional[str] = None
-    value: Optional[Union[float, int, List[float], List[int], List[str]]] = None
+    value: Optional[Union[float, int, str, List[float], List[int], List[str]]] = None
     enumChoices: Optional[List[str]] = None
     alarm: Optional[Alarm] = None
     timeStamp: Optional[TimeStamp] = None
@@ -147,7 +147,7 @@ class PVParser:
             units=d.get("units"),
             precision=d.get("precision"),
             form=(d.get("form")).get("index") if d.get("form") else None,
-            choices=d.get("choices"),
+            choices=(d.get("form")).get("choices") if d.get("form") else None,
         )
 
         c = pv_obj.get("control", {})
@@ -219,7 +219,6 @@ class PVParser:
             limitHigh=normalize_value(pv_obj.get("upper_disp_limit")),
             units=pv_obj.get("units"),
             precision=normalize_value(pv_obj.get("precision")),
-            choices=enumChoices,
         )
 
         control = Control(
