@@ -2,13 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getDeployedRepoFile,
   getStagingRepoFile,
-  updateStagingRepoFile,
   type RepoTreeInfo,
 } from "@src/services/APIClient";
 import { useEditorContext } from "@src/context/useEditorContext";
 import ProjectSection from "./ProjectSection";
-import { notifyUser } from "@src/services/Notifications/Notification";
-import type { ExportedWidget } from "@src/types/widgets";
 import { Box, Button } from "@mui/material";
 import type { SelectedPathInfo } from "@src/context/useUIManager";
 import GitImportDialog from "@src/components/GitImportDialog/GitImportDialog";
@@ -23,17 +20,12 @@ export default function ProjectsTab() {
     setReposTreeInfo,
     updateReposTreeInfo,
     inEditMode,
-    editorWidgets,
-    formatWdgToExport,
-    selectedFile,
     setSelectedFile,
+    selectedFile,
   } = useEditorContext();
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedPathInfo | null>(null);
   const [GitImportOpen, setGitImportOpen] = useState(false);
-  const lastSavedRef = useRef<ExportedWidget[] | null>(null);
-  const hasFileChanged = useRef(true);
-  const saveTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     void updateReposTreeInfo();
@@ -41,52 +33,11 @@ export default function ProjectsTab() {
 
   const refreshRepoTree = (updt: RepoTreeInfo) => {
     setReposTreeInfo((prev) => (prev ? prev.map((r) => (updt.id === r.id ? updt : r)) : prev));
+    // update opened file if it belongs to synced repo
+    if (selectedFile?.repo_id === updt.id) {
+      void loadRepoFile(selectedFile.repo_id, selectedFile.path);
+    }
   };
-  // throttle file update to backend
-  useEffect(() => {
-    if (!isDeveloper || !inEditMode) return;
-    if (!selectedFile?.repo_id || !selectedFile.path) return;
-    // Skip the first render after selecting a new file
-    if (hasFileChanged.current) {
-      hasFileChanged.current = false;
-      return;
-    }
-    const exportable = editorWidgets.map(formatWdgToExport);
-    // Skip if content didn't change
-    if (lastSavedRef.current === exportable) return;
-    const serialized = JSON.stringify(exportable, null, 2);
-
-    // debounce
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    const updateFileContent = async () => {
-      try {
-        const updtd = await updateStagingRepoFile({
-          path: { repo_id: selectedFile.repo_id },
-          query: { path: selectedFile.path },
-          body: { content: serialized },
-        }).then((r) => r.data);
-
-        setReposTreeInfo((prev) => {
-          if (!prev) return prev;
-          return prev.map((r) => (r.id === updtd.id ? updtd : r));
-        });
-        lastSavedRef.current = exportable;
-      } catch (err) {
-        notifyUser(`Failed to save file: ${err as string}`, "error");
-      }
-    };
-
-    saveTimeoutRef.current = window.setTimeout(() => void updateFileContent(), 500);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [editorWidgets, selectedFile, isDeveloper, inEditMode, formatWdgToExport, setReposTreeInfo]);
 
   const loadRepoFile = useCallback(
     async (repo_id: string, path: string, opts: { persist?: boolean } = { persist: true }) => {
@@ -96,7 +47,6 @@ export default function ProjectsTab() {
 
       loadWidgets(res.data.content);
       setSelectedFile({ repo_id, path });
-      hasFileChanged.current = true;
 
       if (opts.persist) {
         localStorage.setItem("lastLoadedFile", JSON.stringify({ repo_id, path }));
@@ -131,7 +81,8 @@ export default function ProjectsTab() {
   return (
     <Box
       sx={{
-        height: "100%",
+        mx: 2,
+        my: 1,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -151,20 +102,22 @@ export default function ProjectsTab() {
           />
         ))
       ) : (
-        <Box sx={{ p: 2 }}>No repositories available.</Box>
+        <Box sx={{ p: 2 }}>{`No repositories ${isDeveloper ? "available" : "deployed"}`}</Box>
       )}
-      <Button
-        variant="contained"
-        onClick={() => setGitImportOpen(true)}
-        startIcon={<CustomGitIcon />}
-        sx={{
-          backgroundColor: COLORS.titleBarColor,
-          textTransform: "none",
-          "&:hover": { backgroundColor: COLORS.midDarkBlue },
-        }}
-      >
-        Import OPI repository
-      </Button>
+      {inEditMode && isDeveloper && (
+        <Button
+          variant="contained"
+          onClick={() => setGitImportOpen(true)}
+          startIcon={<CustomGitIcon />}
+          sx={{
+            backgroundColor: COLORS.titleBarColor,
+            textTransform: "none",
+            "&:hover": { backgroundColor: COLORS.midDarkBlue },
+          }}
+        >
+          Import new repository
+        </Button>
+      )}
       <GitImportDialog open={GitImportOpen} onClose={() => setGitImportOpen(false)} />
     </Box>
   );

@@ -216,13 +216,7 @@ const EditorSidebar: React.FC = () => {
 
         {/* Content */}
         <div style={{ flex: "1 1 auto", overflowY: "auto" }}>
-          {tabIndex === 0 ? (
-            <PropertyNavigator />
-          ) : (
-            <div style={{ padding: 16 }}>
-              <ProjectsTab />
-            </div>
-          )}
+          {tabIndex === 0 ? <PropertyNavigator /> : <ProjectsTab />}
         </div>
 
         {/* Tabs */}

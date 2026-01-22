@@ -50,6 +50,7 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     setIsPanning,
     inEditMode,
     selectedFile,
+    isDeveloper,
   } = useEditorContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -404,7 +405,9 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
           zIndex: FRONT_UI_ZIDX,
         }}
       >
-        {selectedFile?.path}
+        {selectedFile
+          ? selectedFile.path
+          : `No file selected${inEditMode && isDeveloper ? ". Progress will not be saved!" : ""}`}
       </Box>
     </div>
   );

@@ -165,7 +165,8 @@ export default function ProjectSection({
   function collapseAll() {
     setExpandedItems([]);
   }
-  // restore selected path on mount
+
+  // highlight selected file on mount
   useEffect(() => {
     if (defaultSelectedPath) {
       setSelectedItem(defaultSelectedPath);

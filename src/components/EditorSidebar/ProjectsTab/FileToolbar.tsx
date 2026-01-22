@@ -140,14 +140,14 @@ export default function FileToolbar({
       </Tooltip>
 
       {/* Expand all */}
-      <Tooltip title="Expand all folders">
+      <Tooltip title="Expand all">
         <IconButton onClick={onExpandAll}>
           <UnfoldMoreOutlined sx={iconSx} />
         </IconButton>
       </Tooltip>
 
       {/* Collapse all */}
-      <Tooltip title="Collapse all folders">
+      <Tooltip title="Collapse all">
         <IconButton onClick={onCollapseAll}>
           <UnfoldLessOutlined sx={iconSx} />
         </IconButton>

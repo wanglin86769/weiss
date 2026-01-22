@@ -13,6 +13,7 @@ import StrListProperty from "./Properties/StrListProperty";
 import StrRecordProperty from "./Properties/StrRecordProperty";
 import ColorListProperty from "./Properties/ColorListProperty";
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
+import { Box } from "@mui/material";
 
 interface PropertyGroupsProps {
   groupedProperties: Record<string, Record<string, WidgetProperty>>;
@@ -33,7 +34,7 @@ const PropertyGroups: React.FC<PropertyGroupsProps> = ({
         const collapsed = collapsedGroups[category] ?? false;
 
         return (
-          <React.Fragment key={category}>
+          <Box key={category} sx={{ mx: 1 }}>
             <ListSubheader
               onClick={() => onToggleGroup(category)}
               sx={{
@@ -113,7 +114,7 @@ const PropertyGroups: React.FC<PropertyGroupsProps> = ({
               </List>
             )}
             <Divider />
-          </React.Fragment>
+          </Box>
         );
       })}
     </>
