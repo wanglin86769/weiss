@@ -45,7 +45,7 @@ export const COLORS = {
 
   // Utility
   transparent: "transparent",
-} as const;
+};
 
 /** z-index value for back layer of the UI (read from CSS variable) */
 export const BACK_UI_ZIDX = parseInt(
