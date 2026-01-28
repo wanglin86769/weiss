@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { EDIT_MODE, RUNTIME_MODE, type Mode } from "@src/constants/constants";
 import { useWidgetManager } from "./useWidgetManager";
-import type { ExportedWidget, Widget } from "@src/types/widgets";
+import type { ExportedWidget } from "@src/types/widgets";
 import useEpicsWS from "./useEpicsWS";
 import {
   authService,
@@ -40,7 +40,6 @@ export default function useUIManager(
   const saveTimeoutRef = useRef<number | null>(null);
   const [releaseShortcuts, setReleaseShortcuts] = useState(false);
   const [wdgPickerOpen, setWdgPickerOpen] = useState(false);
-  const [pickedWidget, setPickedWidget] = useState<Widget | null>(null);
   const [mode, setMode] = useState<Mode>(EDIT_MODE);
   const [isDragging, setIsDragging] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
@@ -202,8 +201,6 @@ export default function useUIManager(
     updateMode,
     wdgPickerOpen,
     setWdgPickerOpen,
-    pickedWidget,
-    setPickedWidget,
     inEditMode,
     isDragging,
     setIsDragging,

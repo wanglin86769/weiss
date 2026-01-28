@@ -4,25 +4,26 @@ import {
   getStagingRepoFile,
   type RepoTreeInfo,
 } from "@src/services/APIClient";
-import { useEditorContext } from "@src/context/useEditorContext";
 import ProjectSection from "./ProjectSection";
 import { Box, Button } from "@mui/material";
 import type { SelectedPathInfo } from "@src/context/useUIManager";
 import GitImportDialog from "@src/components/GitImportDialog/GitImportDialog";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
 import { COLORS } from "@src/constants/constants";
+import { useUIContext } from "@src/context/useUIContext";
+import { useWidgetContext } from "@src/context/useWidgetContext";
 
 export default function ProjectsTab() {
+  const { loadWidgets } = useWidgetContext();
   const {
     isDeveloper,
-    loadWidgets,
     reposTreeInfo,
     setReposTreeInfo,
     updateReposTreeInfo,
     inEditMode,
     setSelectedFile,
     selectedFile,
-  } = useEditorContext();
+  } = useUIContext();
   const restoredRef = useRef(false);
   const [initialSelection, setInitialSelection] = useState<SelectedPathInfo | null>(null);
   const [GitImportOpen, setGitImportOpen] = useState(false);

@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@src/index.css";
-import { EditorProvider } from "@src/context/EditorProvider.tsx";
+import { ContextProvider } from "@src/context/ContextProvider.tsx";
 import App from "@src/App.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthCallback from "@src/routes/AuthCallback.tsx";
@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <NotificationService />
-      <EditorProvider>
+      <ContextProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -26,7 +26,7 @@ createRoot(document.getElementById("root")!).render(
             }
           />
         </Routes>
-      </EditorProvider>
+      </ContextProvider>
     </BrowserRouter>
   </StrictMode>,
 );

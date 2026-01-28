@@ -2,7 +2,7 @@ import React from "react";
 import type { ReactNode, CSSProperties } from "react";
 import type { Alarm } from "@src/types/epicsWS";
 import { COLORS } from "@src/constants/constants";
-import { useEditorContext } from "@src/context/useEditorContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 interface AlarmBorderProps {
   alarmData?: Alarm | Alarm[];
@@ -11,7 +11,7 @@ interface AlarmBorderProps {
 }
 
 const AlarmBorder: React.FC<AlarmBorderProps> = ({ alarmData, children, enable }) => {
-  const { inEditMode } = useEditorContext();
+  const { inEditMode } = useUIContext();
 
   const getWorstSeverity = (a: Alarm | Alarm[] | undefined): number | undefined => {
     if (!a) return undefined;

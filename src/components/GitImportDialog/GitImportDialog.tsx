@@ -12,10 +12,10 @@ import {
   Stack,
 } from "@mui/material";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
-import { useEditorContext } from "@src/context/useEditorContext";
 import type { RepoCreateRequest } from "@src/services/APIClient/types.gen";
 import { registerRepo } from "@src/services/APIClient/sdk.gen";
 import { notifyUser } from "@src/services/Notifications/Notification";
+import { useUIContext } from "@src/context/useUIContext";
 
 function isValidGitUrl(url: string): boolean {
   const httpsPattern = /^https:\/\/[\w.-]+\/[\w.-]+\/[\w.-]+(\.git)?$/;
@@ -34,7 +34,7 @@ interface GitImportDialogProps {
 }
 
 export default function GitImportDialog({ open, onClose }: GitImportDialogProps) {
-  const { setReleaseShortcuts, updateReposTreeInfo, isDemo } = useEditorContext();
+  const { setReleaseShortcuts, updateReposTreeInfo, isDemo } = useUIContext();
   const [alias, setAlias] = useState("");
   const [gitUrl, setGitUrl] = useState(
     isDemo ? "https://github.com/weiss-controls/weiss-demo-opis.git" : "",

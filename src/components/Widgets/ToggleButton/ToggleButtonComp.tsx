@@ -1,12 +1,14 @@
 import React from "react";
 import { Button } from "@mui/material";
-import { useEditorContext } from "@src/context/useEditorContext";
 import type { WidgetUpdate } from "@src/types/widgets";
 import { FLEX_ALIGN_MAP } from "@src/constants/constants";
 import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
+import { useEpicsWSContext } from "@src/context/useEpicsWSContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 const ToggleButtonComp: React.FC<WidgetUpdate> = ({ data }) => {
-  const { inEditMode, writePVValue } = useEditorContext();
+  const { writePVValue } = useEpicsWSContext();
+  const { inEditMode } = useUIContext();
   const p = data.editableProperties;
   const pvData = data.pvData;
   const value = pvData?.value;

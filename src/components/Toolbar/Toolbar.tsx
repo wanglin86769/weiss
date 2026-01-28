@@ -1,5 +1,4 @@
 import React from "react";
-import { useEditorContext } from "@src/context/useEditorContext";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
@@ -22,10 +21,12 @@ import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import { Rnd } from "react-rnd";
 import { grey } from "@mui/material/colors";
 import "./Toolbar.css";
+import { useWidgetContext } from "@src/context/useWidgetContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 const ToolbarButtons: React.FC = () => {
+  const { inEditMode } = useUIContext();
   const {
-    inEditMode,
     selectedWidgetIDs,
     handleUndo,
     undoStack,
@@ -44,7 +45,7 @@ const ToolbarButtons: React.FC = () => {
     ungroupSelected,
     stepForward,
     stepBackwards,
-  } = useEditorContext();
+  } = useWidgetContext();
 
   if (!inEditMode) return null;
 

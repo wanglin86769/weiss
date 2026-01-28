@@ -1,11 +1,13 @@
 import React from "react";
 import { FormControl, InputLabel, MenuItem, Select, type SelectChangeEvent } from "@mui/material";
-import { useEditorContext } from "@src/context/useEditorContext";
 import type { WidgetUpdate } from "@src/types/widgets";
 import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
+import { useEpicsWSContext } from "@src/context/useEpicsWSContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 const SelectionBoxComp: React.FC<WidgetUpdate> = ({ data }) => {
-  const { inEditMode, writePVValue } = useEditorContext();
+  const { writePVValue } = useEpicsWSContext();
+  const { inEditMode } = useUIContext();
   const p = data.editableProperties;
   const pvData = data.pvData;
 

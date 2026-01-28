@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import type { WidgetUpdate } from "@src/types/widgets";
 import Plot from "react-plotly.js";
-import { useEditorContext } from "@src/context/useEditorContext";
 import { COLORS } from "@src/constants/constants";
 import type { TimeStamp } from "@src/types/epicsWS";
 import AlarmBorder from "@src/components/AlarmBorder/AlarmBorder";
+import { useUIContext } from "@src/context/useUIContext";
 
 const GraphYComp: React.FC<WidgetUpdate> = ({ data }) => {
-  const { inEditMode } = useEditorContext();
+  const { inEditMode } = useUIContext();
   const p = data.editableProperties;
   const pvData = data.multiPvData ?? {};
   const alarmData = Object.values(pvData)

@@ -1,5 +1,6 @@
 import { FRONT_UI_ZIDX, GRID_ID } from "@src/constants/constants";
-import { useEditorContext } from "@src/context/useEditorContext";
+import { useUIContext } from "@src/context/useUIContext";
+import { useWidgetContext } from "@src/context/useWidgetContext";
 import React, { useRef, useState, useEffect } from "react";
 
 interface SelectionManagerProps {
@@ -12,7 +13,8 @@ interface SelectionManagerProps {
 const CLICK_THRESHOLD = 3;
 
 const SelectionManager: React.FC<SelectionManagerProps> = ({ gridRef, zoom, pan }) => {
-  const { editorWidgets, setSelectedWidgetIDs, selectedWidgetIDs, isDragging } = useEditorContext();
+  const { editorWidgets, setSelectedWidgetIDs, selectedWidgetIDs } = useWidgetContext();
+  const { isDragging } = useUIContext();
   const [selectionArea, setSelectionArea] = useState<{
     start?: { x: number; y: number };
     end?: { x: number; y: number };

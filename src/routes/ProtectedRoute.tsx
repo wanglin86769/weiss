@@ -1,14 +1,13 @@
 import { type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
-import { useEditorContext } from "@src/context/useEditorContext";
-
+import { useUIContext } from "@src/context/useUIContext";
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, authChecked } = useEditorContext();
+  const { isAuthenticated, authChecked } = useUIContext();
 
   if (!authChecked) {
     return (

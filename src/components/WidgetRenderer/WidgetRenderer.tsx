@@ -1,11 +1,13 @@
 import React, { useMemo, type ReactNode } from "react";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
-import { useEditorContext } from "@src/context/useEditorContext";
 import type { Widget, MultiWidgetPropertyUpdates, DOMRectLike } from "@src/types/widgets";
 import { Rnd, type DraggableData, type Position, type RndDragEvent } from "react-rnd";
 import { GRID_ID } from "@src/constants/constants";
 import "./WidgetRenderer.css";
 import type { PVData } from "@src/types/epicsWS";
+import { useUIContext } from "@src/context/useUIContext";
+import { useWidgetContext } from "@src/context/useWidgetContext";
+import { useEpicsWSContext } from "@src/context/useEpicsWSContext";
 
 const DRAG_END_DELAY = 80; //ms
 
@@ -15,18 +17,16 @@ interface RendererProps {
 }
 
 const WidgetRenderer: React.FC<RendererProps> = ({ scale, ensureGridCoordinate }) => {
+  const { inEditMode, setIsDragging, isPanning } = useUIContext();
+  const { pvState } = useEpicsWSContext();
   const {
-    inEditMode,
     editorWidgets,
     selectedWidgetIDs,
     batchWidgetUpdate,
     selectionBounds,
-    setIsDragging,
-    isPanning,
     updateWidgetProperties,
     selectedWidgets,
-    pvState,
-  } = useEditorContext();
+  } = useWidgetContext();
 
   const widgetsForRender = useMemo(() => {
     const mergeWidget = (w: Widget): Widget => {

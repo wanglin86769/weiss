@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import type { WidgetUpdate } from "@src/types/widgets";
-import { useEditorContext } from "@src/context/useEditorContext";
 import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
+import { useUIContext } from "@src/context/useUIContext";
+import { useEpicsWSContext } from "@src/context/useEpicsWSContext";
 
 const InputFieldComp: React.FC<WidgetUpdate> = ({ data }) => {
-  const { inEditMode, writePVValue } = useEditorContext();
+  const { writePVValue } = useEpicsWSContext();
+  const { inEditMode } = useUIContext();
   const [inputValue, setInputValue] = useState<string>("");
 
   const p = data.editableProperties;

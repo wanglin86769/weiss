@@ -1,13 +1,13 @@
 import React from "react";
 import type { WidgetUpdate } from "@src/types/widgets";
 import { FLEX_ALIGN_MAP } from "@src/constants/constants";
-import { useEditorContext } from "@src/context/useEditorContext";
 import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
+import { useUIContext } from "@src/context/useUIContext";
 
 const TextUpdateComp: React.FC<WidgetUpdate> = ({ data }) => {
   const p = data.editableProperties;
   const pvData = data.pvData;
-  const { inEditMode } = useEditorContext();
+  const { inEditMode } = useUIContext();
 
   if (!p.visible?.value) return null;
 

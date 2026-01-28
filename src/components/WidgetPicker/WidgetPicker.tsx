@@ -2,7 +2,6 @@ import * as React from "react";
 import { WIDGET_SELECTOR_WIDTH } from "@src/constants/constants";
 import type { Widget } from "@src/types/widgets";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
-import { useEditorContext } from "@src/context/useEditorContext";
 import { styled } from "@mui/material/styles";
 import type { Theme, CSSObject } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -19,6 +18,8 @@ import WidgetsIcon from "@mui/icons-material/Widgets";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Tooltip from "@mui/material/Tooltip";
+import { useWidgetContext } from "@src/context/useWidgetContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: WIDGET_SELECTOR_WIDTH,
@@ -72,7 +73,7 @@ interface DraggableItemProps {
 }
 
 const DraggableItem: React.FC<DraggableItemProps> = ({ item, open }) => {
-  const { setPickedWidget } = useEditorContext();
+  const { setPickedWidget } = useWidgetContext();
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));
@@ -112,19 +113,9 @@ const DraggableItem: React.FC<DraggableItemProps> = ({ item, open }) => {
 
 /**
  * WidgetPicker renders the sidebar containing all available widgets for the editor.
- *
- * Features:
- * - Groups widgets by category and displays them in a collapsible drawer
- * - Allows widgets to be dragged from the selector into the grid/editor
- * - Shows icons and labels, with tooltips when collapsed
- * - Automatically hides when editor is not in EDIT_MODE
- *
- * Context:
- * - Relies on `useEditorContext` for editor mode and drawer open state
- * - Uses WidgetRegistry to dynamically fetch all available widget definitions
  */
 const WidgetPicker: React.FC = () => {
-  const { inEditMode, wdgPickerOpen, setWdgPickerOpen } = useEditorContext();
+  const { inEditMode, wdgPickerOpen, setWdgPickerOpen } = useUIContext();
   const palette: Record<string, Widget> = React.useMemo(
     () =>
       Object.fromEntries(Object.values(WidgetRegistry).map((w) => [w.widgetName, w])) as Record<

@@ -4,12 +4,12 @@ import { GridZone } from "./components/GridZone";
 import WidgetPicker from "./components/WidgetPicker/WidgetPicker";
 import EditorSidebar from "./components/EditorSidebar/EditorSidebar";
 import NavBar from "./components/NavBar/NavBar";
-import { useEditorContext } from "./context/useEditorContext";
 import { GRID_ID } from "./constants/constants";
 import { ScreenGuard } from "./components/ScreenGuard/ScreenGuard";
+import { useWidgetContext } from "./context/useWidgetContext";
 
 const App: React.FC = () => {
-  const { editorWidgets } = useEditorContext();
+  const { editorWidgets } = useWidgetContext();
   const gridProperties = useMemo(
     () => editorWidgets.find((w) => w.id === GRID_ID),
     [editorWidgets],
