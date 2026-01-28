@@ -3,7 +3,7 @@
 WEISS is a no-code, drag-and-drop system for building web-based EPICS operation interfaces. It
 provides a responsive editor, live PV communication, and a lightweight deployment model.
 
-> If you are in a hurry: [Getting Started](#getting-started).
+> If you are in a hurry: [Quick Start](#quick-start).
 
 Try it out: https://demo.weiss-controls.org.
 
@@ -42,7 +42,7 @@ Demo** anytime to restore.
 Planned improvements (access control, OPI distribution, repository integration, etc.) are tracked in
 the [WEISS Project Dashboard](https://github.com/orgs/weiss-controls/projects/1/).
 
-## Getting started
+## Quick start
 
 1. Install Docker
 
@@ -51,7 +51,7 @@ Tested with Docker Engine 28.1.1, but other versions should work.
 
 > Tested with Docker Engine from 28.1.1, but most versions are expected to work fine.
 
-1. Clone the repository:
+2. Clone the repository:
 
 ```sh
 git clone https://github.com/weiss-controls/weiss.git
@@ -63,43 +63,37 @@ git clone https://github.com/weiss-controls/weiss.git
 cp .env.example .env
 ```
 
-Adjust EPICS variables as needed (`DEFAULT_PROTOCOL`, `EPICS_XXX_ADDR_LIST`, etc.). Other options
-can remain at default values if desired.
+> The whole behaviour of the app is configured via environment variables. The easiest way to
+> validate your build is to start with `VITE_DEMO_MODE=true`. This allows you to spin up an instance
+> of [WEISS Demo](https://demo.weiss-controls.org) locally and quickly explore the tool.
+> Instructions on setting up HTTPS, Microsoft Auth and Git credentials coming soon.
 
-## Running WEISS
+Adjust EPICS variables as needed (`DEFAULT_PROTOCOL`, `EPICS_XXX_ADDR_LIST`, etc.) so WEISS can find
+your PVs. If running on a server (not localhost), make sure to modify `FRONTEND_URL` with your
+server's IP address or DNS name - this allows .
 
-### Production
-
-The production setup is configured entirely through .env. HTTP and HTTPS are both supported.  
-If using HTTPS, set:
-
-```ini
-ENABLE_HTTPS=true
-SSL_CERT_FILE=/path/to/fullchain.pem
-SSL_KEY_FILE=/path/to/privkey.pem
-```
-
-And start the system:
+4. Build and start the system. From the root of the repo, run:
 
 ```sh
 docker compose up -d
 ```
 
-Once built, two services should be launched:
+Once built, three services should be launched:
 
 - `weiss-epicsws`: the EPICS communication layer.
-- `weiss`: WEISS front-end application - accessible at http://<server_addr>:80 for HTTP or
-  https://<server_addr>:443 for HTTPS (default ports).
+- `weiss-api`: the backend API for file and git interaction.
+- `weiss`: WEISS front-end application - accessible at http://localhost (or your server address if
+  applicable).
 
-Nginx handles routing and proxying. Configuration files are under [./nginx](./nginx).
-
-> :bulb: **_TIP:_** you can test connectivity by loading the demo OPI from the development setup
-> (see below).
+> :bulb: **_TIP:_** if you do not have an IOC available for testing, try running the development
+> demo IOC: `docker compose -f docker-compose-dev.yml up -d weiss-demoioc`. This will build and run
+> the IOC from [examples](./examples/). The corresponding OPIs can be imported from
+> [weiss-demo-opis](https://github.com/weiss-controls/weiss-demo-opis) using WEISS file browser.
 
 ### Development
 
-The development version mounts the source code so you can see live changes. It also provides a
-demoioc for convenience.
+The development version mounts the source code so you can see live changes while coding. It also
+provides a demoioc for convenience.
 
 Run:
 
@@ -107,26 +101,15 @@ Run:
 docker compose -f docker-compose-dev.yml up
 ```
 
-This launches three services:
+This launches four services:
 
-- `weiss-demoioc`: EPICS demonstration IOC (see [examples/exampleIOC](examples/exampleIOC)).
-- `weiss-epicsws`: EPICS WebSocket / PV communication layer
+- `weiss-epicsws-dev`: the EPICS communication layer.
+- `weiss-api-dev`: the backend API for file and git interaction.
 - `weiss-dev`: The WEISS front-end application. It should be accessible in `http://localhost:5173`.
+- `weiss-demoioc`: EPICS demonstration IOC (see [examples/exampleIOC](examples/exampleIOC)).
 
-**Optional:** Use [example-opi.json](./examples/example-opi.json) to test the demo IOC.  
-This can be done manually:
-
-1. Upload via the navbar "Upload File" button
-2. Edit as desired
-3. Click Preview to start EPICS communication
-
-Or automatically by setting `VITE_DEMO_MODE` in your `.env` file:
-
-```ini
-VITE_DEMO_MODE=true # Optional: set if you want the "Load demo" button as the live demo
-```
-
-This will make your app show a button that automatically does the example OPI.
+> For the API, the service should be restarted for endpoint changes to take effect. Remind to set
+> `FRONTEND_URL` to `http://localhost:5173`.
 
 ## Notes
 
