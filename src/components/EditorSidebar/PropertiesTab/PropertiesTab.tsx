@@ -7,8 +7,8 @@ import type {
   MultiWidgetPropertyUpdates,
 } from "@src/types/widgets";
 import { CATEGORY_DISPLAY_ORDER } from "@src/types/widgetProperties";
-import { useEditorContext } from "@src/context/useEditorContext";
 import PropertyGroups from "./PropertyGroups";
+import { useWidgetContext } from "@src/context/useWidgetContext";
 
 const getGroupedProperties = (properties: WidgetProperties) => {
   const groups: Record<string, Record<string, WidgetProperty>> = {};
@@ -47,7 +47,7 @@ const getGroupedProperties = (properties: WidgetProperties) => {
 };
 
 const PropertiesTab: React.FC = () => {
-  const { editingWidgets, batchWidgetUpdate } = useEditorContext();
+  const { editingWidgets, batchWidgetUpdate } = useWidgetContext();
 
   const singleWidget = editingWidgets.length === 1;
 

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { GridPosition, Widget, WidgetUpdate } from "@src/types/widgets";
 import WidgetRegistry from "@components/WidgetRegistry/WidgetRegistry";
-import { useEditorContext } from "@src/context/useEditorContext.tsx";
 import { FRONT_UI_ZIDX, GRID_ID, MAX_ZOOM, MIN_ZOOM } from "@src/constants/constants";
 import ContextMenu from "@components/ContextMenu/ContextMenu";
 import "./GridZone.css";
@@ -10,6 +9,8 @@ import ToolbarButtons from "@components/Toolbar/Toolbar.tsx";
 import { v4 as uuidv4 } from "uuid";
 import SelectionManager from "./SelectionManager/SelectionManager";
 import { Box } from "@mui/material";
+import { useWidgetContext } from "@src/context/useWidgetContext";
+import { useUIContext } from "@src/context/useUIContext";
 
 /**
  * GridZoneComp renders the main editor canvas where widgets are displayed, moved, and interacted with.
@@ -29,8 +30,11 @@ import { Box } from "@mui/material";
  */
 const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
   const props = data.editableProperties;
+
+  const { mode, releaseShortcuts, isPanning, setIsPanning, inEditMode, selectedFile, isDeveloper } =
+    useUIContext();
+
   const {
-    mode,
     addWidget,
     selectedWidgetIDs,
     setSelectedWidgetIDs,
@@ -40,18 +44,12 @@ const GridZoneComp: React.FC<WidgetUpdate> = ({ data }) => {
     pasteWidget,
     downloadWidgets,
     deleteWidget,
-    releaseShortcuts,
     allWidgetIDs,
     pickedWidget,
     groupSelected,
     ungroupSelected,
     moveSelected,
-    isPanning,
-    setIsPanning,
-    inEditMode,
-    selectedFile,
-    isDeveloper,
-  } = useEditorContext();
+  } = useWidgetContext();
 
   const gridRef = useRef<HTMLDivElement>(null);
   const lastPosRef = useRef<GridPosition>({ x: 0, y: 0 });

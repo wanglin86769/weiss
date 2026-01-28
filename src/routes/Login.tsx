@@ -2,16 +2,16 @@ import { Box, Typography, Button, Paper, Tooltip } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
-import { useEditorContext } from "@src/context/useEditorContext";
 import { OAuthProviders, Roles, type OAuthProvider } from "@src/services/AuthService/AuthService";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_SRC_URL, APP_VERSION, COLORS } from "@src/constants/constants";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import IconButton from "@mui/material/IconButton";
+import { useUIContext } from "@src/context/useUIContext";
 
 export default function LoginPage() {
-  const { login, isAuthenticated, user, isDemo } = useEditorContext();
+  const { login, isAuthenticated, user, isDemo } = useUIContext();
   const navigate = useNavigate();
 
   useEffect(() => {

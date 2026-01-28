@@ -5,7 +5,6 @@ import MenuItem from "@mui/material/MenuItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Typography from "@mui/material/Typography";
-import { useEditorContext } from "@src/context/useEditorContext";
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
 import type { GridPosition } from "@src/types/widgets";
 
@@ -24,6 +23,8 @@ import ContentCopy from "@mui/icons-material/ContentCopy";
 import ContentPaste from "@mui/icons-material/ContentPaste";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
+import { useUIContext } from "@src/context/useUIContext";
+import { useWidgetContext } from "@src/context/useWidgetContext";
 
 export interface ContextMenuProps {
   pos: GridPosition;
@@ -33,8 +34,8 @@ export interface ContextMenuProps {
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ pos, mousePos, visible, onClose }) => {
+  const { inEditMode } = useUIContext();
   const {
-    inEditMode,
     selectedWidgetIDs,
     bringToFront,
     sendToBack,
@@ -51,7 +52,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ pos, mousePos, visible, onClo
     pasteWidget,
     stepForward,
     stepBackwards,
-  } = useEditorContext();
+  } = useWidgetContext();
 
   if (!visible) return null;
   if (!inEditMode) return null; //TODO: add context menu for runtime

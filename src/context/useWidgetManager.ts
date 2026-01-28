@@ -38,6 +38,7 @@ export function useWidgetManager() {
   const [undoStack, setUndoStack] = useState<Widget[][]>([]);
   const [redoStack, setRedoStack] = useState<Widget[][]>([]);
   const [editorWidgets, setEditorWidgets] = useState<Widget[]>([GridZone]);
+  const [pickedWidget, setPickedWidget] = useState<Widget | null>(null); // widget picked from pallete
   const [selectedWidgetIDs, setSelectedWidgetIDs] = useState<string[]>([]);
   const [fileLoadedTrig, setFileLoadedTrig] = useState(0);
 
@@ -797,5 +798,7 @@ export function useWidgetManager() {
     allWidgetIDs,
     formatWdgToExport,
     fileLoadedTrig,
+    pickedWidget,
+    setPickedWidget,
   };
 }

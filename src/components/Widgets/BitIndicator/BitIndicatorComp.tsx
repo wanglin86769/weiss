@@ -1,12 +1,12 @@
 import React from "react";
 import type { WidgetUpdate } from "@src/types/widgets";
-import { useEditorContext } from "@src/context/useEditorContext";
 import AlarmBorder from "@components/AlarmBorder/AlarmBorder";
+import { useUIContext } from "@src/context/useUIContext";
 
 const BitIndicatorComp: React.FC<WidgetUpdate> = ({ data }) => {
   const p = data.editableProperties;
   const pvData = data.pvData;
-  const { inEditMode } = useEditorContext();
+  const { inEditMode } = useUIContext();
 
   if (!p.visible?.value) return null;
 

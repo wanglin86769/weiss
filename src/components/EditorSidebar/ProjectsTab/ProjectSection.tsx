@@ -36,10 +36,10 @@ import {
   type TreeNode,
 } from "@src/services/APIClient";
 import CustomGitIcon from "@src/components/CustomIcons/GitIcon";
-import { useEditorContext } from "@src/context/useEditorContext";
 import { notifyUser } from "@src/services/Notifications/Notification";
 import { COLORS } from "@src/constants/constants";
 import FileToolbar from "./FileToolbar";
+import { useUIContext } from "@src/context/useUIContext";
 
 type RichTreeItem = TreeViewBaseItem & {
   type: "file" | "directory";
@@ -138,7 +138,7 @@ export default function ProjectSection({
   defaultSelectedPath,
 }: ProjectSectionProps) {
   const REF_MAX_DISPLAY_SIZE = 7;
-  const { isDeveloper } = useEditorContext();
+  const { isDeveloper } = useUIContext();
 
   const [sectionExpanded, setSectionExpanded] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);

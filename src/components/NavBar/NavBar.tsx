@@ -12,7 +12,6 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Tooltip from "@mui/material/Tooltip";
 import { COLORS, RUNTIME_MODE, EDIT_MODE } from "@src/constants/constants";
-import { useEditorContext } from "@src/context/useEditorContext.tsx";
 import { WIDGET_SELECTOR_WIDTH } from "@src/constants/constants";
 import "./NavBar.css";
 import Switch from "@mui/material/Switch";
@@ -30,6 +29,8 @@ import { Roles, type OAuthProvider } from "@src/services/AuthService/AuthService
 import { OAuthProviders } from "@src/services/AuthService/AuthService.ts";
 import GitImportDialog from "@components/GitImportDialog/GitImportDialog.tsx";
 import { notifyUser } from "@src/services/Notifications/Notification.ts";
+import { useWidgetContext } from "@src/context/useWidgetContext.tsx";
+import { useUIContext } from "@src/context/useUIContext.tsx";
 interface StyledAppBarProps extends MuiAppBarProps {
   open?: boolean;
   drawerWidth: number;
@@ -98,20 +99,19 @@ const StyledAppBar = styled(MuiAppBar, {
 }));
 
 export default function NavBar() {
+  const { downloadWidgets, loadWidgets } = useWidgetContext();
   const {
     inEditMode,
     updateMode,
     wdgPickerOpen,
     setWdgPickerOpen,
-    downloadWidgets,
-    loadWidgets,
     isDemo,
     user,
     isAuthenticated,
     login,
     logout,
     isDeveloper,
-  } = useEditorContext();
+  } = useUIContext();
   const drawerWidth = WIDGET_SELECTOR_WIDTH;
   const [importMenuAnchor, setImportMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);

@@ -18,11 +18,12 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 
-import { useEditorContext } from "@src/context/useEditorContext";
 import { FRONT_UI_ZIDX } from "@src/constants/constants";
 
 import PropertyNavigator from "./PropertiesTab/PropertiesTab";
 import ProjectsTab from "./ProjectsTab/ProjectsTab";
+import { useUIContext } from "@src/context/useUIContext";
+import { useWidgetContext } from "@src/context/useWidgetContext";
 
 const Drawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -60,8 +61,8 @@ const ResizeHandle = styled("div")({
 });
 
 const EditorSidebar: React.FC = () => {
-  const { inEditMode, isAuthenticated, selectedWidgetIDs, editingWidgets, setReleaseShortcuts } =
-    useEditorContext();
+  const { selectedWidgetIDs, editingWidgets } = useWidgetContext();
+  const { inEditMode, isAuthenticated, setReleaseShortcuts } = useUIContext();
 
   const DEFAULT_WIDTH = 360;
   const MIN_WIDTH = 300;
