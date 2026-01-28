@@ -1,45 +1,24 @@
-FROM debian:11-slim AS epicsbuilder
+FROM mambaorg/micromamba:2.5.0
 
-ENV EPICS_VERSION=7.0.9
-ENV EPICS_BASE=/epics/base
+RUN mkdir -p /home/${MAMBA_USER}/app && \
+    chown -R ${MAMBA_USER}:${MAMBA_USER} /home/${MAMBA_USER}
 
-WORKDIR /epics
+WORKDIR /home/${MAMBA_USER}/app
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    wget autoconf libtool check patch \
-    build-essential libreadline-dev re2c libxml2-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN micromamba install -y -n base -c conda-forge \
+        epics-base=7.0.9 \
+        readline \
+        make \
+        compilers \
+    && micromamba clean --all --yes
 
-RUN wget --no-check-certificate https://epics-controls.org/download/base/base-${EPICS_VERSION}.tar.gz && \
-    tar -xvf base-${EPICS_VERSION}.tar.gz && \ 
-    rm -rf base-${EPICS_VERSION}.tar.gz && \
-    ln -s /epics/base-${EPICS_VERSION} /epics/base && \ 
-    cd /epics/base && \
-    make -j $(nproc)
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-FROM debian:11-slim AS demoioc
+COPY --chown=${MAMBA_USER}:${MAMBA_USER} . .
 
-WORKDIR /epics
-
-COPY --from=epicsbuilder /epics /epics
-
-ENV EPICS_VERSION=7.0.9
-ENV EPICS_BASE=/epics/base
-ENV EPICS_HOST_ARCH=linux-x86_64
-ENV PATH=${EPICS_BASE}/bin/${EPICS_HOST_ARCH}:${PATH}
-
-WORKDIR /app/examples/exampleIOC
-
-COPY . /app/examples/exampleIOC
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential libreadline-dev
-  
 RUN echo -n "EPICS_BASE=${EPICS_BASE}" > configure/RELEASE.local && \
     make
 
-WORKDIR /app/examples/exampleIOC/iocBoot/iocexample
+WORKDIR /home/${MAMBA_USER}/app/iocBoot/iocexample
 
-ENTRYPOINT [ "./st.cmd" ]
+ENTRYPOINT ["/usr/local/bin/_entrypoint.sh", "./st.cmd"]

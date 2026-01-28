@@ -1,3 +1,0 @@
-pyepics==3.5.8
-p4p==4.2.1
-websockets==15.0.1

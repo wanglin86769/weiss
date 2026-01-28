@@ -1,17 +1,19 @@
-FROM python:3.12-slim
+FROM mambaorg/micromamba:2.5.0
 
 WORKDIR /app
 
-COPY . .
+COPY --chown=$MAMBA_USER:$MAMBA_USER . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN micromamba install -y -n base -f environment.yml && \
+    micromamba clean --all --yes
 
-ENV PYTHONUNBUFFERED=1
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 ENV EPICS_DEFAULT_PROTOCOL=pva
 ENV EPICS_CA_ADDR_LIST=localhost
 ENV EPICS_PVA_ADDR_LIST=localhost
 
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 CMD ["python", "epicsWS.py"]
